@@ -14,5 +14,7 @@ namespace MyApp.Application.Interfaces
         Task<List<JobApplicationDto>> GetMyApplicationsAsync(int studentId);
         Task<List<ApplicantDto>?> GetApplicantsAsync(int jobId);
         Task<bool> UpdateApplicationStatusAsync(int applicationId, UpdateApplicationStatusRequest request, int adminId);
+
+        Task<List<ApplicantDto>?> GetApplicantsForExportAsync(int jobId, List<string>? statuses);
     }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getJobApplicants, updateApplicationStatus, downloadResume } from "../services/jobsApi";
+import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants } from "../services/jobsApi";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
@@ -10,6 +10,9 @@ export default function JobApplicants() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState(null);
+  const [job, setJob] = useState(null);
+  const [exportStatuses, setExportStatuses] = useState([]);
+  const [exporting, setExporting] = useState(false);
 
   async function loadApplicants() {
     setLoading(true);
@@ -24,7 +27,17 @@ export default function JobApplicants() {
     }
   }
 
+  async function loadJob() {
+    try {
+      const data = await getJobById(id);
+      setJob(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   useEffect(() => {
+    loadJob();
     loadApplicants();
   }, [id]);
 
@@ -61,12 +74,71 @@ export default function JobApplicants() {
     }
   }
 
+  function toggleExportStatus(status) {
+    setExportStatuses((prev) =>
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+    );
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    setError("");
+    try {
+      await exportApplicants(id, exportStatuses);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div>
       <Link to="/jobs">← Back to Jobs</Link>
       <h2>Applicants</h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {job && (
+        <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+          <h3 style={{ marginTop: 0 }}>{job.jobTitle} — {job.company}</h3>
+          <p>
+            <strong>Location:</strong> {job.location || "—"} |{" "}
+            <strong>Industry:</strong> {job.industry || "—"} |{" "}
+            <strong>Type:</strong> {job.employmentType || "—"}
+          </p>
+          <p>
+            <strong>Salary:</strong> {job.salaryMin ? `₱${job.salaryMin}` : "—"} – {job.salaryMax ? `₱${job.salaryMax}` : "—"}
+          </p>
+          <p>
+            <strong>Deadline:</strong> {job.deadline ? new Date(job.deadline).toLocaleDateString() : "—"} |{" "}
+            <strong>Status:</strong> {job.isActive ? "Active" : "Inactive"}
+          </p>
+          <p>{job.description}</p>
+        </div>
+      )}
+
+      <div style={{ marginBottom: 20, padding: 12, border: "1px solid #ccc", borderRadius: 8 }}>
+        <p style={{ marginTop: 0 }}><strong>Export Applicants</strong></p>
+        <p style={{ fontSize: 13, color: "#555" }}>
+          Select which statuses to include (leave all unchecked to export everyone):
+        </p>
+        {STATUS_OPTIONS.map((status) => (
+          <label key={status} style={{ marginRight: 12 }}>
+            <input
+              type="checkbox"
+              checked={exportStatuses.includes(status)}
+              onChange={() => toggleExportStatus(status)}
+            />{" "}
+            {status}
+          </label>
+        ))}
+        <div style={{ marginTop: 10 }}>
+          <button onClick={handleExport} disabled={exporting}>
+            {exporting ? "Preparing export..." : "Export to ZIP (CSV + Resumes)"}
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <p>Loading applicants...</p>

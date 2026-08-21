@@ -238,5 +238,18 @@ namespace MyApp.Application.Services
 
             return true;
         }
+
+        public async Task<List<ApplicantDto>?> GetApplicantsForExportAsync(int jobId, List<string>? statuses)
+        {
+            var allApplicants = await GetApplicantsAsync(jobId);
+            if (allApplicants == null) return null;
+
+            if (statuses == null || statuses.Count == 0)
+                return allApplicants;
+
+            return allApplicants
+                .Where(a => statuses.Any(s => string.Equals(s, a.Status, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
     }
 }

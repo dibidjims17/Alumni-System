@@ -90,3 +90,23 @@ export async function downloadResume(resumeId) {
     const url = window.URL.createObjectURL(blob);
     window.open(url, "_blank");
   }
+
+export async function exportApplicants(jobId, statuses) {
+  const token = localStorage.getItem("adminToken");
+  const query = statuses && statuses.length > 0 ? `?statuses=${statuses.join(",")}` : "";
+  const response = await fetch(`${API_BASE_URL}/Jobs/${jobId}/export${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Failed to export applicants");
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `applicants_export_${jobId}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
