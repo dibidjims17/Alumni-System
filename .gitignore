@@ -1,0 +1,21 @@
+# Node / JS (alumni-admin, alumni-mobile)
+node_modules/
+dist/
+.expo/
+*.log
+
+# .NET (MyApp)
+bin/
+obj/
+*.user
+
+# Env/secrets
+.env
+appsettings.Development.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+MyApp/MyApp.API/appsettings.json
+MyApp/MyApp.API/Uploads/

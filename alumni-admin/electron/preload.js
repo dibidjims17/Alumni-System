@@ -1,0 +1,1 @@
+// Empty for now — secure IPC bridges will go here later
