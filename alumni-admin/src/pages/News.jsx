@@ -9,8 +9,10 @@ export default function News() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState(null); // null = creating new
+  const [editingId, setEditingId] = useState(null);
+
   const [expandedId, setExpandedId] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -19,8 +21,8 @@ export default function News() {
     setLoading(true);
     setError("");
     try {
-        const data = await getNews();
-        setNewsList(data);
+      const data = await getNews();
+      setNewsList(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -32,7 +34,13 @@ export default function News() {
     loadNews();
   }, []);
 
-  function startEdit(item) {
+  function openCreateModal() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowModal(true);
+  }
+
+  function openEditModal(item) {
     setEditingId(item.id);
     setForm({
       title: item.title,
@@ -40,9 +48,11 @@ export default function News() {
       isPublished: item.isPublished,
       imageFile: null,
     });
+    setShowModal(true);
   }
 
-  function cancelEdit() {
+  function closeModal() {
+    setShowModal(false);
     setEditingId(null);
     setForm(emptyForm);
   }
@@ -57,7 +67,7 @@ export default function News() {
       } else {
         await createNews(form);
       }
-      cancelEdit();
+      closeModal();
       loadNews();
     } catch (err) {
       setError(err.message);
@@ -98,7 +108,7 @@ export default function News() {
       await deleteCommentAsAdmin(commentId);
       const detail = await getNewsDetail(newsId);
       setComments(detail.comments || []);
-      loadNews(); // refresh comment counts in the table
+      loadNews();
     } catch (err) {
       setError(err.message);
     }
@@ -106,66 +116,12 @@ export default function News() {
 
   return (
     <div>
-      <h2>News</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>News</h2>
+        <button onClick={openCreateModal}>+ Add News</button>
+      </div>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <form onSubmit={handleSubmit} style={{ marginBottom: 30, maxWidth: 500 }}>
-        <h3>{editingId ? "Edit Post" : "Create New Post"}</h3>
-
-        <div>
-          <label>Title</label><br />
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Content</label><br />
-          <textarea
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-            required
-            rows={5}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={form.isPublished}
-              onChange={(e) => setForm({ ...form, isPublished: e.target.checked })}
-            />{" "}
-            Published
-          </label>
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Image {editingId ? "(leave blank to keep current)" : "(optional)"}</label><br />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setForm({ ...form, imageFile: e.target.files[0] || null })}
-          />
-        </div>
-
-        <div style={{ marginTop: 14 }}>
-          <button type="submit" disabled={saving}>
-            {saving ? "Saving..." : editingId ? "Update Post" : "Create Post"}
-          </button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit} style={{ marginLeft: 8 }}>
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
 
       {loading ? (
         <p>Loading news...</p>
@@ -191,7 +147,7 @@ export default function News() {
                   <td>{item.heartCount}</td>
                   <td>{item.commentCount}</td>
                   <td>
-                    <button onClick={() => startEdit(item)}>Edit</button>{" "}
+                    <button onClick={() => openEditModal(item)}>Edit</button>{" "}
                     <button onClick={() => handleDelete(item.id)}>Delete</button>{" "}
                     <button onClick={() => toggleComments(item.id)}>
                       {expandedId === item.id ? "Hide Comments" : "View Comments"}
@@ -238,6 +194,83 @@ export default function News() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {showModal && (
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.5)", display: "flex",
+            alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}
+          onClick={closeModal}
+        >
+          <div
+            style={{
+              background: "#fff", padding: 24, borderRadius: 8,
+              maxWidth: 500, width: "90%", maxHeight: "85vh", overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>{editingId ? "Edit Post" : "Create New Post"}</h3>
+              <button onClick={closeModal}>✕</button>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
+              <div>
+                <label>Title</label><br />
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Content</label><br />
+                <textarea
+                  value={form.content}
+                  onChange={(e) => setForm({ ...form, content: e.target.value })}
+                  required
+                  rows={5}
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={form.isPublished}
+                    onChange={(e) => setForm({ ...form, isPublished: e.target.checked })}
+                  />{" "}
+                  Published
+                </label>
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Image {editingId ? "(leave blank to keep current)" : "(optional)"}</label><br />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setForm({ ...form, imageFile: e.target.files[0] || null })}
+                />
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <button type="submit" disabled={saving}>
+                  {saving ? "Saving..." : editingId ? "Update Post" : "Create Post"}
+                </button>
+                <button type="button" onClick={closeModal} style={{ marginLeft: 8 }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

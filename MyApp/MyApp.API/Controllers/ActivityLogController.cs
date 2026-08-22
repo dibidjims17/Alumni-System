@@ -7,7 +7,7 @@ namespace MyApp.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "SuperAdmin")]
     public class ActivityLogController : ControllerBase
     {
         private readonly IActivityLogRepository _activityLogRepository;

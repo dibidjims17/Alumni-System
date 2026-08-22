@@ -10,6 +10,7 @@ import { getSession } from "./services/api";
 import Jobs from "./pages/Jobs";
 import JobApplicants from "./pages/JobApplicants";
 import ActivityLog from "./pages/ActivityLog";
+import ManageAdmins from "./pages/ManageAdmins";
 
 function ProtectedRoute({ children }) {
   const session = getSession();
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/news" element={<News />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id/applicants" element={<JobApplicants />} />
+          <Route path="/manage-admins" element={<ManageAdmins />} />
           <Route path="/activity-log" element={<ActivityLog />} />
         </Route>
 

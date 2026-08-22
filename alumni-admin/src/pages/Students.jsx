@@ -10,6 +10,9 @@ export default function Students() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [showImportModal, setShowImportModal] = useState(false);
+
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const fileInputRef = useRef(null);
@@ -38,6 +41,16 @@ export default function Students() {
   useEffect(() => {
     loadStudents();
   }, []);
+
+  function openImportModal() {
+    setImportResult(null);
+    setDocImportResult(null);
+    setShowImportModal(true);
+  }
+
+  function closeImportModal() {
+    setShowImportModal(false);
+  }
 
   function handleFileSelect(e) {
     const file = e.target.files[0];
@@ -101,8 +114,6 @@ export default function Students() {
     }
   }
 
-  // Derive the list of unique programs directly from the fetched students,
-  // so new programs added via CSV import show up automatically.
   const programOptions = useMemo(() => {
     const unique = new Set(students.map((s) => s.program).filter(Boolean));
     return Array.from(unique).sort();
@@ -126,44 +137,9 @@ export default function Students() {
 
   return (
     <div>
-      <h2>Students</h2>
-
-      <div style={{ margin: "16px 0" }}>
-        <label>
-          Import Students (CSV):{" "}
-          <input
-            type="file"
-            accept=".csv"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            disabled={importing}
-          />
-        </label>
-        {importing && <p>Importing...</p>}
-        {importResult && (
-          <p style={{ color: importResult.success ? "green" : "red" }}>
-            {importResult.message}
-          </p>
-        )}
-      </div>
-
-      <div style={{ margin: "16px 0" }}>
-        <label>
-          Import Document Statuses (CSV):{" "}
-          <input
-            type="file"
-            accept=".csv"
-            ref={docFileInputRef}
-            onChange={handleDocFileSelect}
-            disabled={docImporting}
-          />
-        </label>
-        {docImporting && <p>Importing documents...</p>}
-        {docImportResult && (
-          <p style={{ color: docImportResult.success ? "green" : "red" }}>
-            {docImportResult.message}
-          </p>
-        )}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Students</h2>
+        <button onClick={openImportModal}>+ Import CSV</button>
       </div>
 
       <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -239,6 +215,70 @@ export default function Students() {
             </tbody>
           </table>
         </>
+      )}
+
+      {showImportModal && (
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.5)", display: "flex",
+            alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}
+          onClick={closeImportModal}
+        >
+          <div
+            style={{
+              background: "#fff", padding: 24, borderRadius: 8,
+              maxWidth: 500, width: "90%", maxHeight: "85vh", overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>Import CSV</h3>
+              <button onClick={closeImportModal}>✕</button>
+            </div>
+
+            <div style={{ marginTop: 20 }}>
+              <p><strong>Import Students</strong></p>
+              <input
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                disabled={importing}
+              />
+              {importing && <p>Importing...</p>}
+              {importResult && (
+                <p style={{ color: importResult.success ? "green" : "red" }}>
+                  {importResult.message}
+                </p>
+              )}
+            </div>
+
+            <hr style={{ margin: "20px 0" }} />
+
+            <div>
+              <p><strong>Import Document Statuses</strong></p>
+              <input
+                type="file"
+                accept=".csv"
+                ref={docFileInputRef}
+                onChange={handleDocFileSelect}
+                disabled={docImporting}
+              />
+              {docImporting && <p>Importing documents...</p>}
+              {docImportResult && (
+                <p style={{ color: docImportResult.success ? "green" : "red" }}>
+                  {docImportResult.message}
+                </p>
+              )}
+            </div>
+
+            <div style={{ marginTop: 20 }}>
+              <button onClick={closeImportModal}>Close</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

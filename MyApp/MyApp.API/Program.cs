@@ -34,6 +34,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IResumeService, ResumeService>();
 builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
+builder.Services.AddScoped<IAdminManagementService, AdminManagementService>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

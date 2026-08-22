@@ -21,6 +21,7 @@ export default function Jobs() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
 
@@ -41,7 +42,13 @@ export default function Jobs() {
     loadJobs();
   }, []);
 
-  function startEdit(job) {
+  function openCreateModal() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowModal(true);
+  }
+
+  function openEditModal(job) {
     setEditingId(job.id);
     setForm({
       jobTitle: job.jobTitle || "",
@@ -55,9 +62,11 @@ export default function Jobs() {
       deadline: job.deadline ? job.deadline.slice(0, 10) : "",
       isActive: job.isActive,
     });
+    setShowModal(true);
   }
 
-  function cancelEdit() {
+  function closeModal() {
+    setShowModal(false);
     setEditingId(null);
     setForm(emptyForm);
   }
@@ -79,7 +88,7 @@ export default function Jobs() {
       } else {
         await createJob(payload);
       }
-      cancelEdit();
+      closeModal();
       loadJobs();
     } catch (err) {
       setError(err.message);
@@ -99,131 +108,12 @@ export default function Jobs() {
 
   return (
     <div>
-      <h2>Jobs</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Jobs</h2>
+        <button onClick={openCreateModal}>+ Add New Job</button>
+      </div>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <form onSubmit={handleSubmit} style={{ marginBottom: 30, maxWidth: 500 }}>
-        <h3>{editingId ? "Edit Job" : "Post New Job"}</h3>
-
-        <div>
-          <label>Job Title</label><br />
-          <input
-            type="text"
-            value={form.jobTitle}
-            onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
-            required
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Company</label><br />
-          <input
-            type="text"
-            value={form.company}
-            onChange={(e) => setForm({ ...form, company: e.target.value })}
-            required
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Location</label><br />
-          <input
-            type="text"
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Industry</label><br />
-          <input
-            type="text"
-            value={form.industry}
-            onChange={(e) => setForm({ ...form, industry: e.target.value })}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Employment Type</label><br />
-          <select
-            value={form.employmentType}
-            onChange={(e) => setForm({ ...form, employmentType: e.target.value })}
-            style={{ width: "100%" }}
-          >
-            <option value="">Select...</option>
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Contract">Contract</option>
-          </select>
-        </div>
-
-        <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
-          <div style={{ flex: 1 }}>
-            <label>Salary Min</label><br />
-            <input
-              type="number"
-              value={form.salaryMin}
-              onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
-              style={{ width: "100%" }}
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label>Salary Max</label><br />
-            <input
-              type="number"
-              value={form.salaryMax}
-              onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
-              style={{ width: "100%" }}
-            />
-          </div>
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Description</label><br />
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={5}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>Application Deadline</label><br />
-          <input
-            type="date"
-            value={form.deadline}
-            onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-          />
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={form.isActive}
-              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-            />{" "}
-            Active
-          </label>
-        </div>
-
-        <div style={{ marginTop: 14 }}>
-          <button type="submit" disabled={saving}>
-            {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
-          </button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit} style={{ marginLeft: 8 }}>
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
 
       {loading ? (
         <p>Loading jobs...</p>
@@ -248,7 +138,7 @@ export default function Jobs() {
                 <td>{job.deadline ? new Date(job.deadline).toLocaleDateString() : "—"}</td>
                 <td>{job.isActive ? "Yes" : "No"}</td>
                 <td>
-                  <button onClick={() => startEdit(job)}>Edit</button>{" "}
+                  <button onClick={() => openEditModal(job)}>Edit</button>{" "}
                   <button onClick={() => handleDelete(job.id)}>Delete</button>{" "}
                   <Link to={`/jobs/${job.id}/applicants`}>Applicants</Link>
                 </td>
@@ -256,6 +146,160 @@ export default function Jobs() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={closeModal}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: 24,
+              borderRadius: 8,
+              maxWidth: 500,
+              width: "90%",
+              maxHeight: "85vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>{editingId ? "Edit Job" : "Post New Job"}</h3>
+              <button onClick={closeModal}>✕</button>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
+              <div>
+                <label>Job Title</label><br />
+                <input
+                  type="text"
+                  value={form.jobTitle}
+                  onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Company</label><br />
+                <input
+                  type="text"
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Location</label><br />
+                <input
+                  type="text"
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Industry</label><br />
+                <input
+                  type="text"
+                  value={form.industry}
+                  onChange={(e) => setForm({ ...form, industry: e.target.value })}
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Employment Type</label><br />
+                <select
+                  value={form.employmentType}
+                  onChange={(e) => setForm({ ...form, employmentType: e.target.value })}
+                  style={{ width: "100%" }}
+                >
+                  <option value="">Select...</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Contract">Contract</option>
+                </select>
+              </div>
+
+              <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label>Salary Min</label><br />
+                  <input
+                    type="number"
+                    value={form.salaryMin}
+                    onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label>Salary Max</label><br />
+                  <input
+                    type="number"
+                    value={form.salaryMax}
+                    onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Description</label><br />
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  rows={5}
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Application Deadline</label><br />
+                <input
+                  type="date"
+                  value={form.deadline}
+                  onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                  />{" "}
+                  Active
+                </label>
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <button type="submit" disabled={saving}>
+                  {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
+                </button>
+                <button type="button" onClick={closeModal} style={{ marginLeft: 8 }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

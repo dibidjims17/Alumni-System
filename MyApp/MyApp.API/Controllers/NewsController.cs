@@ -96,6 +96,7 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "News updated successfully." });
         }
 
+        [Authorize(Roles = "SuperAdmin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNews(int id)
         {

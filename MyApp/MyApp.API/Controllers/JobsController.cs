@@ -84,6 +84,7 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "Job updated successfully." });
         }
 
+        [Authorize(Roles = "SuperAdmin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteJob(int id)
         {
@@ -100,6 +101,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "SuperAdmin")]
         [HttpGet("{id}/export")]
         public async Task<IActionResult> ExportApplicants(int id, [FromQuery] string? statuses)
         {

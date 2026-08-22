@@ -1,18 +1,28 @@
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { getSession, clearSession } from "../services/api";
 
-const navItems = [
+const baseNavItems = [
   { path: "/dashboard", label: "Dashboard" },
   { path: "/students", label: "Students" },
+  { path: "/documents", label: "Documents" },
   { path: "/news", label: "News" },
   { path: "/jobs", label: "Jobs" },
+];
+
+const superAdminOnlyNavItems = [
   { path: "/activity-log", label: "Activity Log" },
+  { path: "/manage-admins", label: "Manage Admins" },
 ];
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const session = getSession();
+
+  const navItems =
+    session?.role === "SuperAdmin"
+      ? [...baseNavItems, ...superAdminOnlyNavItems]
+      : baseNavItems;
 
   function handleLogout() {
     clearSession();
