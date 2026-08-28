@@ -86,3 +86,29 @@ export async function deleteCommentAsAdmin(commentId) {
   if (!response.ok) throw new Error("Failed to delete comment");
   return true;
 }
+
+export async function getDeletedNews() {
+  const response = await fetch(`${API_BASE_URL}/News/trash`, {
+    headers: authHeader(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch news trash");
+  return response.json();
+}
+
+export async function restoreNews(id) {
+  const response = await fetch(`${API_BASE_URL}/News/${id}/restore`, {
+    method: "PUT",
+    headers: authHeader(),
+  });
+  if (!response.ok) throw new Error("Failed to restore news");
+  return response.json();
+}
+
+export async function permanentlyDeleteNews(id) {
+  const response = await fetch(`${API_BASE_URL}/News/${id}/permanent`, {
+    method: "DELETE",
+    headers: authHeader(),
+  });
+  if (!response.ok) throw new Error("Failed to permanently delete news");
+  return response.json();
+}

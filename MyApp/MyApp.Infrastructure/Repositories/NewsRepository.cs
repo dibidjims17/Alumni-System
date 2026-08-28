@@ -17,7 +17,7 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<List<News>> GetPublishedAsync(int page, int pageSize)
         {
             return await _context.News
-                .Where(n => n.IsPublished)
+                .Where(n => n.IsPublished && !n.IsDeleted)
                 .Include(n => n.PostedByAdmin)
                 .Include(n => n.Hearts)
                 .Include(n => n.Comments.Where(c => !c.IsDeleted))
@@ -58,12 +58,30 @@ namespace MyApp.Infrastructure.Repositories
                     .ThenInclude(c => c.Replies.Where(r => !r.IsDeleted))
                         .ThenInclude(r => r.Replies.Where(rr => !rr.IsDeleted))
                             .ThenInclude(rr => rr.MentionedStudent)
+                                .FirstOrDefaultAsync(n => n.Id == id && !n.IsDeleted);
+        }
+
+        public async Task<News?> GetByIdIncludingDeletedAsync(int id)
+        {
+            return await _context.News
+                .Include(n => n.PostedByAdmin)
+                .Include(n => n.Hearts)
                 .FirstOrDefaultAsync(n => n.Id == id);
+        }
+
+        public async Task<List<News>> GetDeletedAsync()
+        {
+            return await _context.News
+                .Where(n => n.IsDeleted)
+                .Include(n => n.PostedByAdmin)
+                .Include(n => n.Hearts)
+                .OrderByDescending(n => n.PostedAt)
+                .ToListAsync();
         }
 
         public async Task<int> GetTotalCountAsync()
         {
-            return await _context.News.CountAsync(n => n.IsPublished);
+            return await _context.News.CountAsync(n => n.IsPublished && !n.IsDeleted);
         }
 
         public async Task CreateAsync(News news)

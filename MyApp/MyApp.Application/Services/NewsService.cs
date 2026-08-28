@@ -260,6 +260,51 @@ namespace MyApp.Application.Services
             return true;
         }
 
+        public async Task<bool> SoftDeleteNewsAsync(int id)
+        {
+            var news = await _newsRepository.GetByIdAsync(id);
+            if (news == null) return false;
+
+            news.IsDeleted = true;
+            await _newsRepository.UpdateAsync(news);
+            return true;
+        }
+
+        public async Task<bool> RestoreNewsAsync(int id)
+        {
+            var news = await _newsRepository.GetByIdIncludingDeletedAsync(id);
+            if (news == null || !news.IsDeleted) return false;
+
+            news.IsDeleted = false;
+            await _newsRepository.UpdateAsync(news);
+            return true;
+        }
+
+        public async Task<bool> PermanentlyDeleteNewsAsync(int id)
+        {
+            var news = await _newsRepository.GetByIdIncludingDeletedAsync(id);
+            if (news == null) return false;
+
+            await _newsRepository.DeleteAsync(news);
+            return true;
+        }
+
+        public async Task<List<NewsDto>> GetDeletedNewsAsync()
+        {
+            var newsList = await _newsRepository.GetDeletedAsync();
+            return newsList.Select(n => new NewsDto
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Content = n.Content,
+                ImagePath = n.ImagePath,
+                PostedByAdminName = n.PostedByAdmin.FullName,
+                PostedAt = n.PostedAt,
+                HeartCount = n.Hearts.Count,
+                CommentCount = 0 // not needed in trash view
+            }).ToList();
+        }
+
         public async Task<bool> ToggleCommentLikeAsync(int commentId, int studentId)
         {
             var existing = await _newsRepository.GetCommentLikeAsync(commentId, studentId);

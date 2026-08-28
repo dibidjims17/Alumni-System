@@ -11,6 +11,7 @@ import Jobs from "./pages/Jobs";
 import JobApplicants from "./pages/JobApplicants";
 import ActivityLog from "./pages/ActivityLog";
 import ManageAdmins from "./pages/ManageAdmins";
+import Trash from "./pages/Trash";
 
 function ProtectedRoute({ children }) {
   const session = getSession();
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id/applicants" element={<JobApplicants />} />
           <Route path="/manage-admins" element={<ManageAdmins />} />
+          <Route path="/trash" element={<Trash />} />
           <Route path="/activity-log" element={<ActivityLog />} />
         </Route>
 

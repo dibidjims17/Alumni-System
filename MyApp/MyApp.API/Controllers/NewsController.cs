@@ -100,9 +100,35 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNews(int id)
         {
-            var success = await _newsService.DeleteNewsAsync(id);
+            var success = await _newsService.SoftDeleteNewsAsync(id);
             if (!success) return NotFound();
-            return Ok(new { message = "News deleted successfully." });
+            return Ok(new { message = "News moved to trash." });
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpGet("trash")]
+        public async Task<IActionResult> GetDeletedNews()
+        {
+            var result = await _newsService.GetDeletedNewsAsync();
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPut("{id}/restore")]
+        public async Task<IActionResult> RestoreNews(int id)
+        {
+            var success = await _newsService.RestoreNewsAsync(id);
+            if (!success) return NotFound();
+            return Ok(new { message = "News restored successfully." });
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpDelete("{id}/permanent")]
+        public async Task<IActionResult> PermanentlyDeleteNews(int id)
+        {
+            var success = await _newsService.PermanentlyDeleteNewsAsync(id);
+            if (!success) return NotFound();
+            return Ok(new { message = "News permanently deleted." });
         }
 
         [HttpPost("{newsId}/comments/{commentId}/like")]

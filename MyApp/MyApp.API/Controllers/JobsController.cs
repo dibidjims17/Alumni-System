@@ -88,9 +88,35 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteJob(int id)
         {
-            var success = await _jobService.DeleteJobAsync(id);
+            var success = await _jobService.SoftDeleteJobAsync(id);
             if (!success) return NotFound();
-            return Ok(new { message = "Job deleted successfully." });
+            return Ok(new { message = "Job moved to trash." });
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpGet("trash")]
+        public async Task<IActionResult> GetDeletedJobs()
+        {
+            var result = await _jobService.GetDeletedJobsAsync();
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPut("{id}/restore")]
+        public async Task<IActionResult> RestoreJob(int id)
+        {
+            var success = await _jobService.RestoreJobAsync(id);
+            if (!success) return NotFound();
+            return Ok(new { message = "Job restored successfully." });
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpDelete("{id}/permanent")]
+        public async Task<IActionResult> PermanentlyDeleteJob(int id)
+        {
+            var success = await _jobService.PermanentlyDeleteJobAsync(id);
+            if (!success) return NotFound();
+            return Ok(new { message = "Job permanently deleted." });
         }
 
         [HttpGet("{id}/applicants")]

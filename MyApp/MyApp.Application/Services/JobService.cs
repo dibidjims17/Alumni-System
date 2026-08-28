@@ -142,6 +142,55 @@ namespace MyApp.Application.Services
             return true;
         }
 
+        public async Task<bool> SoftDeleteJobAsync(int id)
+        {
+            var job = await _jobRepository.GetByIdAsync(id);
+            if (job == null) return false;
+
+            job.IsDeleted = true;
+            await _jobRepository.UpdateAsync(job);
+            return true;
+        }
+
+        public async Task<bool> RestoreJobAsync(int id)
+        {
+            var job = await _jobRepository.GetByIdIncludingDeletedAsync(id);
+            if (job == null || !job.IsDeleted) return false;
+
+            job.IsDeleted = false;
+            await _jobRepository.UpdateAsync(job);
+            return true;
+        }
+
+        public async Task<bool> PermanentlyDeleteJobAsync(int id)
+        {
+            var job = await _jobRepository.GetByIdIncludingDeletedAsync(id);
+            if (job == null) return false;
+
+            await _jobRepository.DeleteAsync(job);
+            return true;
+        }
+
+        public async Task<List<JobDto>> GetDeletedJobsAsync()
+        {
+            var jobs = await _jobRepository.GetDeletedAsync();
+            return jobs.Select(j => new JobDto
+            {
+                Id = j.Id,
+                JobTitle = j.JobTitle,
+                Company = j.Company,
+                Location = j.Location,
+                Industry = j.Industry,
+                EmploymentType = j.EmploymentType,
+                SalaryMin = j.SalaryMin,
+                SalaryMax = j.SalaryMax,
+                Description = j.Description,
+                PostedAt = j.PostedAt,
+                Deadline = j.Deadline,
+                IsActive = j.IsActive
+            }).ToList();
+        }
+
         public async Task<(bool Success, string Message)> ApplyToJobAsync(int jobId, int studentId, ApplyJobRequest request, string ipAddress)
         {
             var job = await _jobRepository.GetByIdAsync(jobId);

@@ -23,5 +23,9 @@ namespace MyApp.Application.Interfaces
         Task<NewsCommentLike?> GetCommentLikeAsync(int commentId, int studentId);
         Task AddCommentLikeAsync(NewsCommentLike like);
         Task RemoveCommentLikeAsync(NewsCommentLike like);
+
+        // Delete
+        Task<News?> GetByIdIncludingDeletedAsync(int id);
+        Task<List<News>> GetDeletedAsync();
     }
 }

@@ -19,5 +19,9 @@ namespace MyApp.Application.Interfaces
         Task<List<JobApplication>> GetApplicationsByStudentIdAsync(int studentId);
         Task CreateApplicationAsync(JobApplication application);
         Task UpdateApplicationAsync(JobApplication application);
+
+        // Deleted
+        Task<Job?> GetByIdIncludingDeletedAsync(int id);
+        Task<List<Job>> GetDeletedAsync();
     }
 }

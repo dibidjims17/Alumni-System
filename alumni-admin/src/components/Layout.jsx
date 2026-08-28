@@ -12,6 +12,7 @@ const baseNavItems = [
 const superAdminOnlyNavItems = [
   { path: "/activity-log", label: "Activity Log" },
   { path: "/manage-admins", label: "Manage Admins" },
+  { path: "/trash", label: "Trash" },
 ];
 
 export default function Layout() {

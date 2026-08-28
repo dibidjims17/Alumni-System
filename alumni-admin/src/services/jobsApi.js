@@ -110,3 +110,29 @@ export async function exportApplicants(jobId, statuses) {
   a.remove();
   window.URL.revokeObjectURL(url);
 }
+
+export async function getDeletedJobs() {
+  const response = await fetch(`${API_BASE_URL}/Jobs/trash`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch job trash");
+  return response.json();
+}
+
+export async function restoreJob(id) {
+  const response = await fetch(`${API_BASE_URL}/Jobs/${id}/restore`, {
+    method: "PUT",
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to restore job");
+  return response.json();
+}
+
+export async function permanentlyDeleteJob(id) {
+  const response = await fetch(`${API_BASE_URL}/Jobs/${id}/permanent`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to permanently delete job");
+  return response.json();
+}

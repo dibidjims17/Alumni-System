@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const emptyForm = {
   jobTitle: "",
@@ -24,6 +25,8 @@ export default function Jobs() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   async function loadJobs() {
     setLoading(true);
@@ -97,12 +100,14 @@ export default function Jobs() {
     }
   }
 
-  async function handleDelete(id) {
+  async function confirmDelete() {
     try {
-      await deleteJob(id);
+      await deleteJob(confirmDeleteId);
       loadJobs();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setConfirmDeleteId(null);
     }
   }
 
@@ -139,7 +144,7 @@ export default function Jobs() {
                 <td>{job.isActive ? "Yes" : "No"}</td>
                 <td>
                   <button onClick={() => openEditModal(job)}>Edit</button>{" "}
-                  <button onClick={() => handleDelete(job.id)}>Delete</button>{" "}
+                  <button onClick={() => setConfirmDeleteId(job.id)}>Delete</button>{" "}
                   <Link to={`/jobs/${job.id}/applicants`}>Applicants</Link>
                 </td>
               </tr>
@@ -301,6 +306,12 @@ export default function Jobs() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        message={confirmDeleteId ? "Move this job to trash?" : null}
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }

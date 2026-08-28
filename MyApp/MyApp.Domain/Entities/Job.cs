@@ -15,6 +15,7 @@ namespace MyApp.Domain.Entities
         public DateTime PostedAt { get; set; } = DateTime.UtcNow;
         public DateTime? Deadline { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool IsDeleted { get; set; } = false;
 
         public Admin PostedByAdmin { get; set; } = null!;
         public ICollection<JobApplication> Applications { get; set; } = new List<JobApplication>();

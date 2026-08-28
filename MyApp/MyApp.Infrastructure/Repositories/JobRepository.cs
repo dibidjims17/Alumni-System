@@ -17,7 +17,7 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<List<Job>> GetActiveAsync(int page, int pageSize)
         {
             return await _context.Jobs
-                .Where(j => j.IsActive)
+                .Where(j => j.IsActive && !j.IsDeleted)
                 .Include(j => j.Applications)
                 .OrderByDescending(j => j.PostedAt)
                 .Skip((page - 1) * pageSize)
@@ -33,9 +33,27 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<Job?> GetByIdAsync(int id)
         {
             return await _context.Jobs
+                .Where(j => !j.IsDeleted)
                 .Include(j => j.Applications)
                 .Include(j => j.PostedByAdmin)
                 .FirstOrDefaultAsync(j => j.Id == id);
+        }
+
+        public async Task<Job?> GetByIdIncludingDeletedAsync(int id)
+        {
+            return await _context.Jobs
+                .Include(j => j.Applications)
+                .Include(j => j.PostedByAdmin)
+                .FirstOrDefaultAsync(j => j.Id == id);
+        }
+
+        public async Task<List<Job>> GetDeletedAsync()
+        {
+            return await _context.Jobs
+                .Where(j => j.IsDeleted)
+                .Include(j => j.Applications)
+                .OrderByDescending(j => j.PostedAt)
+                .ToListAsync();
         }
 
         public async Task CreateAsync(Job job)

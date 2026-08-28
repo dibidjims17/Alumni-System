@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getNews, createNews, updateNews, deleteNews, getNewsDetail, deleteCommentAsAdmin } from "../services/newsApi";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const emptyForm = { title: "", content: "", isPublished: true, imageFile: null };
 
@@ -16,6 +17,8 @@ export default function News() {
   const [expandedId, setExpandedId] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   async function loadNews() {
     setLoading(true);
@@ -76,12 +79,14 @@ export default function News() {
     }
   }
 
-  async function handleDelete(id) {
+  async function confirmDelete() {
     try {
-      await deleteNews(id);
+      await deleteNews(confirmDeleteId);
       loadNews();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setConfirmDeleteId(null);
     }
   }
 
@@ -148,7 +153,7 @@ export default function News() {
                   <td>{item.commentCount}</td>
                   <td>
                     <button onClick={() => openEditModal(item)}>Edit</button>{" "}
-                    <button onClick={() => handleDelete(item.id)}>Delete</button>{" "}
+                    <button onClick={() => setConfirmDeleteId(item.id)}>Delete</button>{" "}
                     <button onClick={() => toggleComments(item.id)}>
                       {expandedId === item.id ? "Hide Comments" : "View Comments"}
                     </button>
@@ -272,6 +277,12 @@ export default function News() {
           </div>
         </div>
       )}
+      
+        <ConfirmDialog
+          message={confirmDeleteId ? "Move this news post to trash?" : null}
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
     </div>
   );
 }
