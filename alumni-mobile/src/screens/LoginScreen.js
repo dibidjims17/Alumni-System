@@ -14,20 +14,20 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen() {
-  const [studentNumber, setStudentNumber] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
 
   async function handleLogin() {
-    if (!studentNumber.trim() || !password) {
+    if (!identifier.trim() || !password) {
       Alert.alert('Missing info', 'Please enter your student number and password.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await login(studentNumber.trim(), password);
+      await login(identifier.trim(), password);
     } catch (err) {
       const message =
         err.response?.data?.message ||
@@ -48,9 +48,9 @@ export default function LoginScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Student Number"
-        value={studentNumber}
-        onChangeText={setStudentNumber}
+        placeholder="Student Number or Email"
+        value={identifier}
+        onChangeText={setIdentifier}
         autoCapitalize="none"
         autoCorrect={false}
       />

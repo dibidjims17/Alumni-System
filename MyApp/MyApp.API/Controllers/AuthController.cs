@@ -45,21 +45,21 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "Password changed successfully." });
         }
 
-        // ⚠️ TEMPORARY — FOR LOCAL TESTING ONLY. Remove before any deployment/demo.
-        [HttpPost("debug-reset-password")]
-        public async Task<IActionResult> DebugResetPassword([FromQuery] string studentNumber)
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            var student = await _authService.DebugResetPasswordAsync(studentNumber);
-            if (student == null)
-                return NotFound(new { message = "Student not found." });
+            await _authService.ForgotPasswordAsync(request);
+            return Ok(new { message = "If that email is registered, a reset code has been sent." });
+        }
 
-            return Ok(new
-            {
-                message = $"Password reset for {studentNumber}.",
-                studentNumber = student.StudentNumber,
-                newPassword = studentNumber, // password = student number, matches your default-password rule
-                mustChangePassword = true
-            });
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var success = await _authService.ResetPasswordAsync(request);
+            if (!success)
+                return BadRequest(new { message = "Invalid or expired reset code." });
+
+            return Ok(new { message = "Password reset successfully." });
         }
     }
 }

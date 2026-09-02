@@ -9,5 +9,6 @@ namespace MyApp.Application.Interfaces
         Task<List<Student>> GetAllAsync();
         Task UpdateAsync(Student student);
         Task CreateAsync(Student student);
+        Task<Student?> GetByEmailAsync(string email);
     }
 }

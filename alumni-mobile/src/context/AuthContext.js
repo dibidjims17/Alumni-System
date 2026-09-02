@@ -28,10 +28,10 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function login(studentNumber, password) {
-    console.log('LOGIN ATTEMPT:', JSON.stringify({ studentNumber, password }));
+  async function login(identifier, password) {
+    console.log('LOGIN ATTEMPT:', JSON.stringify({ identifier, password }));
     const response = await apiClient.post('/Auth/login', {
-      studentNumber,
+      identifier,
       password,
     });
 

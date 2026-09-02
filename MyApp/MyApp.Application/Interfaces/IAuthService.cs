@@ -8,5 +8,7 @@ namespace MyApp.Application.Interfaces
         Task<LoginResponse?> LoginAsync(LoginRequest request, string ipAddress);
         Task<bool> ChangePasswordAsync(int studentId, ChangePasswordRequest request, string ipAddress);
         Task<Student?> DebugResetPasswordAsync(string studentNumber);
+        Task ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

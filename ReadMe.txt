@@ -31,15 +31,35 @@ cd D:\CAPSTONE_SYSTEM\alumni-mobile
 cls
 npx expo start
 
-Note: 10.0.2.2 is the Android emulator's address for localhost on your PC. 
-When testing on a real device connected to the same WiFi, replace it with 
-your PC's local IP address (e.g. 192.168.1.x).
-MyApp.Mobile/Services/ApiService.cs
+"incase EXPO won't work in administrator powershell
 
-Desktop 
+New-NetFirewallRule -DisplayName "Metro Bundler - Port 8081" -Direction Inbound -LocalPort 8081 -Protocol TCP -Action Allow
 
-dotnet run --project MyApp.Desktop
+Get-NetConnectionProfile"
 
-Mobile
 
-dotnet build MyApp.Mobile/MyApp.Mobile.csproj -f net9.0-android -t:Run
+"change config.js for both mobile and admin when changing WiFi connection
+
+check ip in win+r type "ipconfig" check IPv4 address"
+
+========================================================================
+
+Everything about Git
+
+go to the folder you'll upload
+EX.
+D:
+cd D:\CAPSTONE_SYSTEM
+cls
+
+to see what changed
+git status
+
+to add what changed
+git add .
+
+to upload or commit
+git commit -m "leave a message on what changed"
+
+if you want to push it in the main
+git push origin main
