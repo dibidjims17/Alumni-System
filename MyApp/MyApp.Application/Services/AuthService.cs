@@ -68,6 +68,7 @@ namespace MyApp.Application.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, student.Id.ToString()),
                 new Claim(ClaimTypes.Name, student.StudentNumber),
+                new Claim(ClaimTypes.Role, "Student"),
                 new Claim("SchoolYear", student.SchoolYear)
             };
 

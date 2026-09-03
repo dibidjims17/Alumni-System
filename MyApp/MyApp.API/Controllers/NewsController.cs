@@ -21,6 +21,38 @@ namespace MyApp.API.Controllers
         private int GetUserId() =>
             int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        // Validates and saves a news image. Returns (true, path, null) on success,
+        // (false, null, errorMessage) when the image fails validation.
+        private async Task<(bool Success, string? ImagePath, string? Error)> SaveNewsImageAsync(IFormFile? image)
+        {
+            if (image == null || image.Length == 0)
+                return (true, null, null);
+
+            // Max 5MB
+            if (image.Length > 5 * 1024 * 1024)
+                return (false, null, "Image size must not exceed 5MB.");
+
+            // Only allow image extensions
+            var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
+            if (!allowedExtensions.Contains(ext))
+                return (false, null, "Only JPG, PNG, GIF, WEBP and BMP images are allowed.");
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "News");
+            Directory.CreateDirectory(uploadsFolder);
+
+            // Server-side name is generated (never trust the client filename for the path)
+            var storedFileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsFolder, storedFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            return (true, filePath, null);
+        }
+
         // ─── Alumni endpoints ───────────────────────────────────────
 
         [HttpGet]
@@ -55,41 +87,23 @@ namespace MyApp.API.Controllers
 
         // ─── Admin endpoints ────────────────────────────────────────
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPost]
         public async Task<IActionResult> CreateNews([FromForm] CreateNewsRequest request, IFormFile? image)
         {
-            string? imagePath = null;
-
-            if (image != null && image.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "News");
-                Directory.CreateDirectory(uploadsFolder);
-                var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{image.FileName}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await image.CopyToAsync(stream);
-                imagePath = filePath;
-            }
+            var (ok, imagePath, error) = await SaveNewsImageAsync(image);
+            if (!ok) return BadRequest(new { message = error });
 
             var result = await _newsService.CreateNewsAsync(request, GetUserId(), imagePath);
             return Ok(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateNews(int id, [FromForm] CreateNewsRequest request, IFormFile? image)
         {
-            string? imagePath = null;
-
-            if (image != null && image.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "News");
-                Directory.CreateDirectory(uploadsFolder);
-                var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{image.FileName}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await image.CopyToAsync(stream);
-                imagePath = filePath;
-            }
+            var (ok, imagePath, error) = await SaveNewsImageAsync(image);
+            if (!ok) return BadRequest(new { message = error });
 
             var success = await _newsService.UpdateNewsAsync(id, request, imagePath);
             if (!success) return NotFound();
@@ -154,6 +168,7 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "Comment deleted." });
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpDelete("comments/{commentId}/admin")]
         public async Task<IActionResult> DeleteCommentAsAdmin(int commentId)
         {

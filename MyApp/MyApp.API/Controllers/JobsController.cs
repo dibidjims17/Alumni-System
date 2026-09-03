@@ -69,6 +69,7 @@ namespace MyApp.API.Controllers
 
         // ─── Admin endpoints ────────────────────────────────
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPost]
         public async Task<IActionResult> CreateJob([FromBody] CreateJobRequest request)
         {
@@ -76,6 +77,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateJob(int id, [FromBody] CreateJobRequest request)
         {
@@ -119,6 +121,7 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "Job permanently deleted." });
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("{id}/applicants")]
         public async Task<IActionResult> GetApplicants(int id)
         {
@@ -200,6 +203,7 @@ namespace MyApp.API.Controllers
             return field;
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPut("applications/{applicationId}/status")]
         public async Task<IActionResult> UpdateApplicationStatus(int applicationId, [FromBody] UpdateApplicationStatusRequest request)
         {

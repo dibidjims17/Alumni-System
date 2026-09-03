@@ -30,6 +30,7 @@ namespace MyApp.API.Controllers
         }
 
         // Admin views a specific student's documents
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("student/{studentId}")]
         public async Task<IActionResult> GetStudentDocuments(int studentId)
         {
@@ -38,6 +39,7 @@ namespace MyApp.API.Controllers
         }
 
         // Admin initializes the standard document checklist for a student
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPost("student/{studentId}/initialize")]
         public async Task<IActionResult> InitializeDocuments(int studentId)
         {
@@ -46,6 +48,7 @@ namespace MyApp.API.Controllers
         }
 
         // Admin updates document status
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPut("{documentId}/status")]
         public async Task<IActionResult> UpdateStatus(int documentId, [FromBody] UpdateDocumentStatusRequest request)
         {
@@ -55,6 +58,7 @@ namespace MyApp.API.Controllers
         }
 
         // Admin adds custom document
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPost("student/{studentId}/custom")]
         public async Task<IActionResult> AddCustomDocument(int studentId, [FromBody] CreateDocumentRequest request)
         {
@@ -63,6 +67,7 @@ namespace MyApp.API.Controllers
         }
 
         // Admin deletes a document
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpDelete("{documentId}")]
         public async Task<IActionResult> DeleteDocument(int documentId)
         {
@@ -71,6 +76,7 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "Document deleted." });
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPost("import")]
         public async Task<IActionResult> ImportDocumentStatuses([FromBody] List<ImportDocumentDto> documents)
         {

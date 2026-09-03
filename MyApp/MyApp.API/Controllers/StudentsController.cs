@@ -21,6 +21,7 @@ namespace MyApp.API.Controllers
         private int GetUserId() =>
             int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -28,6 +29,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromBody] List<ImportStudentDto> students)
         {
@@ -35,6 +37,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPut("{id}/toggle-status")]
         public async Task<IActionResult> ToggleStatus(int id)
         {
@@ -43,6 +46,7 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "Student status updated." });
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {

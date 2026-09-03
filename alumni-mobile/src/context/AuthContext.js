@@ -29,7 +29,6 @@ export function AuthProvider({ children }) {
   }
 
   async function login(identifier, password) {
-    console.log('LOGIN ATTEMPT:', JSON.stringify({ identifier, password }));
     const response = await apiClient.post('/Auth/login', {
       identifier,
       password,

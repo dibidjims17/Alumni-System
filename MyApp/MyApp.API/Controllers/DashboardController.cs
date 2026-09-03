@@ -23,6 +23,7 @@ namespace MyApp.API.Controllers
             _jobRepository = jobRepository;
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {
