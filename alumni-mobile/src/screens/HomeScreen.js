@@ -7,7 +7,6 @@ import {
   CalendarDays,
   Users,
   User,
-  LogOut,
   Bell,
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -25,7 +24,7 @@ const TILES = [
 ];
 
 export default function HomeScreen({ navigation }) {
-  const { student, logout } = useAuth();
+  const { student } = useAuth();
   const { theme } = useTheme();
   const c = theme.colors;
   const [unreadCount, setUnreadCount] = useState(0);
@@ -83,15 +82,6 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         ))}
       </View>
-
-      <TouchableOpacity
-        style={[styles.logoutButton, { borderColor: c.border }]}
-        onPress={logout}
-        activeOpacity={0.85}
-      >
-        <LogOut size={16} color={c.danger} />
-        <Text style={[styles.logoutText, { color: c.danger }]}>Log Out</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -156,19 +146,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginTop: 10,
-  },
-  logoutButton: {
-    marginTop: 'auto',
-    padding: 13,
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
   },
 });

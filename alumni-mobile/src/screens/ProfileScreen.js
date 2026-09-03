@@ -6,13 +6,10 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  Switch,
-  Modal,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Menu, X, Moon, Sun, KeyRound, LogOut } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
@@ -21,20 +18,20 @@ import { API_BASE_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import ProfileCompleteness from '../components/ProfileCompleteness';
+import AppHeader from '../components/AppHeader';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
 const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
 
 export default function ProfileScreen({ navigation }) {
-  const { theme, isDark, toggleDarkMode } = useTheme();
-  const { student, logout } = useAuth();
+  const { theme } = useTheme();
+  const { student } = useAuth();
   const c = theme.colors;
 
   const [profile, setProfile] = useState(null);
   const [jobPreferences, setJobPreferences] = useState(null);
   const [hasResume, setHasResume] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   async function fetchProfile() {
     try {
@@ -119,23 +116,6 @@ export default function ProfileScreen({ navigation }) {
     }
   }
 
-  function confirmSignOut() {
-    setMenuOpen(false);
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: logout },
-    ]);
-  }
-
-  function menuRow({ icon, label, color, onPress }) {
-    return (
-      <TouchableOpacity style={styles.menuRow} onPress={onPress} activeOpacity={0.7}>
-        {icon}
-        <Text style={[styles.menuLabel, { color: color || c.text }]}>{label}</Text>
-      </TouchableOpacity>
-    );
-  }
-
   if (isLoading || !profile) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top']}>
@@ -148,17 +128,7 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
-      <View style={[styles.header, { borderBottomColor: c.border }]}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => setMenuOpen(true)}
-          accessibilityLabel="Menu"
-        >
-          <Menu size={24} color={c.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: c.text }]}>Profile</Text>
-        <View style={styles.iconButton} />
-      </View>
+      <AppHeader title="Profile" navigation={navigation} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <TouchableOpacity onPress={handleChangePicture} accessibilityLabel="Change profile picture">
@@ -225,47 +195,6 @@ export default function ProfileScreen({ navigation }) {
           <Text style={[styles.fieldValue, { color: c.text }]}>{profile.phone || 'Not set'}</Text>
         </View>
       </ScrollView>
-
-      <Modal visible={menuOpen} transparent animationType="slide" onRequestClose={() => setMenuOpen(false)}>
-        <View style={[styles.modalBackdrop, { backgroundColor: c.overlay }]}>
-          <TouchableOpacity style={styles.modalBackdropTouch} onPress={() => setMenuOpen(false)} />
-          <View style={[styles.menuSheet, { backgroundColor: c.surface }]}>
-            <View style={styles.menuHeader}>
-              <Text style={[styles.menuTitle, { color: c.text }]}>Menu</Text>
-              <TouchableOpacity onPress={() => setMenuOpen(false)} accessibilityLabel="Close menu">
-                <X size={20} color={c.textMuted} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={[styles.menuRow, { borderBottomColor: c.border }]}>
-              {isDark ? <Moon size={20} color={c.primary} /> : <Sun size={20} color={c.primary} />}
-              <Text style={[styles.menuLabel, { color: c.text }]}>Dark Mode</Text>
-              <Switch
-                value={isDark}
-                onValueChange={toggleDarkMode}
-                trackColor={{ true: c.primary }}
-                thumbColor="#fff"
-              />
-            </View>
-
-            {menuRow({
-              icon: <KeyRound size={20} color={c.textMuted} />,
-              label: 'Change Password',
-              onPress: () => {
-                setMenuOpen(false);
-                navigation.navigate('ChangePassword');
-              },
-            })}
-
-            {menuRow({
-              icon: <LogOut size={20} color={c.danger} />,
-              label: 'Sign Out',
-              color: c.danger,
-              onPress: confirmSignOut,
-            })}
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -273,16 +202,6 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  iconButton: { padding: 6, minWidth: 36 },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
   content: { padding: 20, paddingBottom: 40 },
   avatar: {
     width: 104,
@@ -306,27 +225,4 @@ const styles = StyleSheet.create({
   sectionHeader: { fontSize: 15, fontWeight: '600', marginBottom: 8 },
   fieldLabel: { fontSize: 11, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.4 },
   fieldValue: { fontSize: 14, marginTop: 2 },
-  modalBackdrop: { flex: 1, justifyContent: 'flex-end' },
-  modalBackdropTouch: { flex: 1 },
-  menuSheet: {
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    paddingBottom: 28,
-  },
-  menuHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 8,
-  },
-  menuTitle: { fontSize: 16, fontWeight: '700' },
-  menuRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  menuLabel: { flex: 1, marginLeft: 14, fontSize: 15 },
 });

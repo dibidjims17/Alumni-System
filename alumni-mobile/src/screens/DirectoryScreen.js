@@ -17,6 +17,7 @@ import apiClient from '../api/client';
 import { API_BASE_URL } from '../config';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
+import AppHeader from '../components/AppHeader';
 import { useTheme } from '../theme/ThemeContext';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
@@ -131,6 +132,7 @@ export default function DirectoryScreen({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
+      <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={COMMUNITY_TABS} active="Directory" navigation={navigation} />
       <View style={styles.content}>
       <SearchBar

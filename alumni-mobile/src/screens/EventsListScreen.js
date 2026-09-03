@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
+import AppHeader from '../components/AppHeader';
 import { useTheme } from '../theme/ThemeContext';
 
 const COMMUNITY_TABS = [
@@ -116,7 +117,8 @@ export default function EventsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={COMMUNITY_TABS} active="EventsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <SearchBar

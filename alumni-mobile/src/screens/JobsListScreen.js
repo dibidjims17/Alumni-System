@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
+import AppHeader from '../components/AppHeader';
 
 const CAREER_TABS = [
   { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
@@ -96,6 +97,7 @@ export default function JobsListScreen({ navigation }) {
         style={[styles.container, { backgroundColor: c.background }]}
         edges={['top', 'left', 'right']}
       >
+        <AppHeader title="Career" navigation={navigation} />
         <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
         <View style={styles.centered}>
           <Text style={[styles.infoText, { color: c.text }]}>
@@ -111,6 +113,7 @@ export default function JobsListScreen({ navigation }) {
       style={[styles.container, { backgroundColor: c.background }]}
       edges={['top', 'left', 'right']}
     >
+      <AppHeader title="Career" navigation={navigation} />
       <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <SearchBar

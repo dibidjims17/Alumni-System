@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
+    borderRadius: 10,
   },
   unreadCard: {
     borderWidth: 2,
