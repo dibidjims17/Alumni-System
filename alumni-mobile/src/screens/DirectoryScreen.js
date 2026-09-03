@@ -7,13 +7,17 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
+  Image,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { API_BASE_URL } from '../config';
 import TopBar from '../components/TopBar';
+
+const SERVER_ROOT = API_BASE_URL.replace('/api', '');
 
 function buildQuery(search, program, page) {
   const params = new URLSearchParams();
@@ -97,8 +101,20 @@ export default function DirectoryScreen({ navigation }) {
   function renderItem({ item }) {
     return (
       <View style={styles.card}>
-        <Text style={styles.name}>{item.fullName}</Text>
-        <Text style={styles.meta}>{item.program}</Text>
+        <View style={styles.cardRow}>
+          <Image
+            source={
+              item.profilePictureUrl
+                ? { uri: `${SERVER_ROOT}/${item.profilePictureUrl}` }
+                : require('../../assets/defaultPFP.png')
+            }
+            style={styles.avatar}
+          />
+          <View style={styles.cardText}>
+            <Text style={styles.name}>{item.fullName}</Text>
+            <Text style={styles.meta}>{item.program}</Text>
+          </View>
+        </View>
         {item.headline ? <Text style={styles.headline}>{item.headline}</Text> : null}
         {item.location ? <Text style={styles.meta}>{item.location}</Text> : null}
       </View>
@@ -228,6 +244,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
   },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  cardText: { flex: 1 },
   name: { fontSize: 15, fontWeight: '600' },
   meta: { fontSize: 12, color: '#555', marginTop: 2 },
   headline: { fontSize: 13, marginTop: 6 },

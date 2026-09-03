@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -10,9 +11,14 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
 import apiClient from '../api/client';
+import { API_BASE_URL } from '../config';
 import ProfileCompleteness from '../components/ProfileCompleteness';
 import TopBar from '../components/TopBar';
+
+const SERVER_ROOT = API_BASE_URL.replace('/api', '');
+const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
 
 export default function ProfileScreen({ navigation }) {
     const [profile, setProfile] = useState(null);
@@ -50,6 +56,32 @@ export default function ProfileScreen({ navigation }) {
         setHasResume(false);
       }
     }
+
+    async function handleChangePicture() {
+      try {
+        const result = await DocumentPicker.getDocumentAsync({
+          type: 'image/*',
+          copyToCacheDirectory: true,
+        });
+        if (result.canceled) return;
+
+        const file = result.assets[0];
+        if (!file.mimeType || !file.mimeType.startsWith('image/')) {
+          Alert.alert('Invalid file', 'Please choose an image file.');
+          return;
+        }
+        if (file.size && file.size > MAX_PICTURE_BYTES) {
+          Alert.alert('File too large', 'Profile picture must be 5MB or smaller.');
+          return;
+        }
+
+        await apiClient.uploadFile('/Profile/picture', file.uri, file.name, file.mimeType);
+        await fetchProfile();
+      } catch (err) {
+        const message = err.response?.data?.message || 'Could not upload profile picture.';
+        Alert.alert('Error', message);
+      }
+    }
   
   useFocusEffect(
     useCallback(() => {
@@ -67,6 +99,16 @@ export default function ProfileScreen({ navigation }) {
         </View>
       ) : (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+      <TouchableOpacity onPress={handleChangePicture} accessibilityLabel="Change profile picture">
+        <Image
+          source={
+            profile.profilePictureUrl
+              ? { uri: `${SERVER_ROOT}/${profile.profilePictureUrl}` }
+              : require('../../assets/defaultPFP.png')
+          }
+          style={styles.avatar}
+        />
+      </TouchableOpacity>
       <Text style={styles.name}>{profile.fullName}</Text>
       <Text style={styles.subtext}>{profile.studentNumber} - {profile.program}</Text>
       {profile.headline ? <Text style={styles.headline}>{profile.headline}</Text> : null}
@@ -221,6 +263,13 @@ const styles = StyleSheet.create({
   outer: { flex: 1 },
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  avatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
   name: { fontSize: 20 },
   subtext: { fontSize: 13, marginTop: 2 },
   headline: { fontSize: 14, marginTop: 6 },

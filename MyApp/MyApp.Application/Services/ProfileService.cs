@@ -56,6 +56,7 @@ namespace MyApp.Application.Services
                 DateOfBirth = profile?.DateOfBirth,
                 Address = profile?.Address ?? string.Empty,
                 ShowInDirectory = student.ShowInDirectory,
+                ProfilePictureUrl = profile?.ProfilePicturePath,
                 WorkExperiences = workExperiences.Select(w => new WorkExperienceDto
                 {
                     Id = w.Id,
@@ -120,6 +121,53 @@ namespace MyApp.Application.Services
 
             await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_PROFILE", "Student updated their profile", ipAddress);
             return true;
+        }
+
+        public async Task<string> UploadProfilePictureAsync(int studentId, string relativePath, string ipAddress)
+        {
+            var profile = await _profileRepository.GetByStudentIdAsync(studentId);
+
+            if (profile == null)
+            {
+                await _profileRepository.CreateAsync(new AlumniProfile
+                {
+                    StudentId = studentId,
+                    ProfilePicturePath = relativePath,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                DeleteProfilePictureFile(profile.ProfilePicturePath);
+                profile.ProfilePicturePath = relativePath;
+                profile.UpdatedAt = DateTime.UtcNow;
+                await _profileRepository.UpdateAsync(profile);
+            }
+
+            await _activityLogRepository.LogStudentAsync(studentId, "UPLOAD_PROFILE_PICTURE",
+                "Student updated their profile picture", ipAddress);
+            return relativePath;
+        }
+
+        private static void DeleteProfilePictureFile(string? oldPath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(oldPath)) return;
+
+                var normalized = oldPath.Replace('/', Path.DirectorySeparatorChar);
+                var prefix = $"Uploads{Path.DirectorySeparatorChar}ProfilePictures{Path.DirectorySeparatorChar}";
+                if (!normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return;
+
+                var fullPath = Path.Combine(Directory.GetCurrentDirectory(), normalized);
+                if (System.IO.File.Exists(fullPath))
+                    System.IO.File.Delete(fullPath);
+            }
+            catch
+            {
+                // Old-file cleanup must never fail the upload.
+            }
         }
 
         public async Task<JobPreferenceDto?> GetJobPreferencesAsync(int studentId)

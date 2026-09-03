@@ -121,5 +121,41 @@ namespace MyApp.API.Controllers
             await _profileService.UpdateSkillsAsync(GetStudentId(), skills);
             return Ok(new { message = "Skills updated successfully." });
         }
+
+        [HttpPost("picture")]
+        public async Task<IActionResult> UploadProfilePicture(IFormFile file)
+        {
+            if (!IsGraduate()) return Forbid();
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file provided." });
+
+            // Max 5MB
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "Image size must not exceed 5MB." });
+
+            // Only allow image extensions
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
+            if (!allowedExtensions.Contains(ext))
+                return BadRequest(new { message = "Only JPG, PNG, GIF, WEBP and BMP images are allowed." });
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "ProfilePictures");
+            Directory.CreateDirectory(uploadsFolder);
+
+            // Server-side name is generated (never trust the client filename for the path)
+            var storedFileName = $"{GetStudentId()}_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsFolder, storedFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"Uploads/ProfilePictures/{storedFileName}";
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var url = await _profileService.UploadProfilePictureAsync(GetStudentId(), relativePath, ipAddress);
+
+            return Ok(new { profilePictureUrl = url });
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using MyApp.Application.Interfaces;
 using MyApp.Application.Services;
@@ -138,6 +139,14 @@ var app = builder.Build();
 // Convert unhandled exceptions into consistent JSON problem details instead of
 // leaking stack traces or returning an empty 500.
 app.UseExceptionHandler();
+
+// Serve uploaded files (profile pictures, etc.) under /Uploads.
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+    RequestPath = "/Uploads"
+});
 
 if (app.Environment.IsDevelopment())
 {

@@ -34,7 +34,8 @@ namespace MyApp.Application.Services
                     Program = s.Program,
                     SchoolYear = s.SchoolYear,
                     Headline = profile?.Headline ?? string.Empty,
-                    Location = profile?.Location ?? string.Empty
+                    Location = profile?.Location ?? string.Empty,
+                    ProfilePictureUrl = profile?.ProfilePicturePath
                 };
             }).ToList();
 

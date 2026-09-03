@@ -9,5 +9,6 @@ namespace MyApp.Shared.DTOs
         public string SchoolYear { get; set; } = string.Empty;
         public string Headline { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
+        public string? ProfilePictureUrl { get; set; }
     }
 }

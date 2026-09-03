@@ -6,6 +6,7 @@ namespace MyApp.Application.Interfaces
     {
         Task<AlumniProfileDto?> GetProfileAsync(int studentId);
         Task<bool> UpdateProfileAsync(int studentId, UpdateProfileRequest request, string ipAddress);
+        Task<string> UploadProfilePictureAsync(int studentId, string relativePath, string ipAddress);
         Task<JobPreferenceDto?> GetJobPreferencesAsync(int studentId);
         Task<bool> UpdateJobPreferencesAsync(int studentId, JobPreferenceDto request, string ipAddress);
         Task AddWorkExperienceAsync(int studentId, WorkExperienceDto request, string ipAddress);

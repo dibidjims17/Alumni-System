@@ -14,6 +14,7 @@ namespace MyApp.Shared.DTOs
         public DateTime? DateOfBirth { get; set; }
         public string Address { get; set; } = string.Empty;
         public bool ShowInDirectory { get; set; } = true;
+        public string? ProfilePictureUrl { get; set; }
         public List<WorkExperienceDto> WorkExperiences { get; set; } = new();
         public List<EducationDto> Educations { get; set; } = new();
         public List<string> Skills { get; set; } = new();
