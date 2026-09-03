@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { alert as appAlert } from '../components/AppAlert';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
@@ -32,7 +32,7 @@ export default function EditSkillsScreen({ route, navigation }) {
     if (!trimmed) return;
     // Avoid case-sensitive duplicates
     if (skills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-      Alert.alert('Already added', `"${trimmed}" is already in your skills list.`);
+      appAlert('Already added', `"${trimmed}" is already in your skills list.`);
       return;
     }
     setSkills([...skills, trimmed]);
@@ -50,7 +50,7 @@ export default function EditSkillsScreen({ route, navigation }) {
       markSaved();
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Error', 'Could not save skills.');
+      appAlert('Error', 'Could not save skills.');
     } finally {
       setIsSubmitting(false);
     }

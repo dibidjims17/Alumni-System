@@ -9,11 +9,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { alert as appAlert } from '../components/AppAlert';
 import apiClient from '../api/client';
 import { API_BASE_URL } from '../config';
 import SearchBar from '../components/SearchBar';
@@ -82,7 +82,7 @@ export default function DirectoryScreen({ navigation }) {
       pageRef.current = targetPage;
     } catch (err) {
       const message = err.response?.data?.message || 'Could not load directory.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);

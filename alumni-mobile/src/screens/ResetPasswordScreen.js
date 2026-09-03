@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -13,6 +12,7 @@ import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import PasswordField from '../components/ui/PasswordField';
+import { alert as appAlert } from '../components/AppAlert';
 
 export default function ResetPasswordScreen({ route, navigation }) {
   const { identifier } = route.params;
@@ -57,15 +57,15 @@ export default function ResetPasswordScreen({ route, navigation }) {
   async function handleSubmit() {
     const code = digits.join('');
     if (code.length !== 6 || !newPassword || !confirmPassword) {
-      Alert.alert('Missing info', 'Please enter the full 6-digit code and fill in all fields.');
+      appAlert('Missing info', 'Please enter the full 6-digit code and fill in all fields.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Mismatch', 'New password and confirmation do not match.');
+      appAlert('Mismatch', 'New password and confirmation do not match.');
       return;
     }
     if (newPassword.length < 6) {
-      Alert.alert('Too short', 'New password should be at least 6 characters.');
+      appAlert('Too short', 'New password should be at least 6 characters.');
       return;
     }
 
@@ -76,14 +76,14 @@ export default function ResetPasswordScreen({ route, navigation }) {
         code,
         newPassword,
       });
-      Alert.alert('Success', 'Your password has been reset. Please log in.', [
+      appAlert('Success', 'Your password has been reset. Please log in.', [
         { text: 'OK', onPress: () => navigation.navigate('Login') },
       ]);
     } catch (err) {
       const message =
         err.response?.data?.message ||
         'Invalid or expired code. Please try again.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsSubmitting(false);
     }

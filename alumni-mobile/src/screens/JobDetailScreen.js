@@ -7,11 +7,11 @@ import {
   Switch,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { alert as appAlert } from '../components/AppAlert';
 import { formatSalary, deadlineInfo } from '../utils/jobs';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
@@ -52,7 +52,7 @@ export default function JobDetailScreen({ route, navigation }) {
       if (err.response?.status === 404) {
         setNotFound(true);
       } else {
-        Alert.alert('Error', 'Could not load job details.');
+        appAlert('Error', 'Could not load job details.');
       }
     }
   }
@@ -69,7 +69,7 @@ export default function JobDetailScreen({ route, navigation }) {
       ? 'Your resume will be attached to this application.'
       : 'You are applying WITHOUT your resume attached.';
 
-    Alert.alert(
+    appAlert(
       'Confirm Application',
       `Apply to ${job.jobTitle} at ${job.company}?\n\n${resumeNote}`,
       [
@@ -84,10 +84,10 @@ export default function JobDetailScreen({ route, navigation }) {
     try {
       await apiClient.post(`/Jobs/${jobId}/apply`, { attachResume });
       await fetchJob();
-      Alert.alert('Applied', 'Your application has been submitted.');
+      appAlert('Applied', 'Your application has been submitted.');
     } catch (err) {
       const message = err.response?.data?.message || 'Could not submit application.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsApplying(false);
     }

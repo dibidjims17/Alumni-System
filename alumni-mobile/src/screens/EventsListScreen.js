@@ -1,9 +1,10 @@
 // src/screens/EventsListScreen.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
+import { alert as appAlert } from '../components/AppAlert';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
@@ -34,7 +35,7 @@ export default function EventsListScreen({ navigation }) {
       setEvents(res.data.items || []);
     } catch (err) {
       const message = err.response?.data?.message || 'Could not load events.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setLoading(false);
     }
@@ -66,7 +67,7 @@ export default function EventsListScreen({ navigation }) {
       );
     } catch (err) {
       const message = err.response?.data?.message || 'Could not update RSVP.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setTogglingId(null);
     }

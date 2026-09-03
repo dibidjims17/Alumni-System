@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Keyboard,
   Platform,
@@ -24,6 +23,7 @@ import { assetUrl } from '../utils/media';
 import Skeleton from '../components/ui/Skeleton';
 import ImageViewer from '../components/ImageViewer';
 import { useTheme } from '../theme/ThemeContext';
+import { alert as appAlert } from '../components/AppAlert';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
   const { theme } = useTheme();
@@ -124,7 +124,7 @@ export default function NewsDetailScreen({ route, navigation }) {
       if (err.response?.status === 404) {
         setNotFound(true);
       } else {
-        Alert.alert('Error', 'Could not load this post.');
+        appAlert('Error', 'Could not load this post.');
       }
     }
   }
@@ -141,7 +141,7 @@ export default function NewsDetailScreen({ route, navigation }) {
       await apiClient.post(`/News/${newsId}/heart`);
       fetchDetail();
     } catch (err) {
-      Alert.alert('Error', 'Could not update heart.');
+      appAlert('Error', 'Could not update heart.');
     }
   }
 
@@ -150,7 +150,7 @@ export default function NewsDetailScreen({ route, navigation }) {
       await apiClient.post(`/News/${newsId}/comments/${commentId}/like`);
       fetchDetail();
     } catch (err) {
-      Alert.alert('Error', 'Could not update like.');
+      appAlert('Error', 'Could not update like.');
     }
   }
 
@@ -183,7 +183,7 @@ export default function NewsDetailScreen({ route, navigation }) {
   }
 
   async function handleDelete(commentId) {
-    Alert.alert('Delete comment', 'Are you sure you want to delete this comment?', [
+    appAlert('Delete comment', 'Are you sure you want to delete this comment?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -193,7 +193,7 @@ export default function NewsDetailScreen({ route, navigation }) {
             await apiClient.delete(`/News/comments/${commentId}`);
             fetchDetail();
           } catch (err) {
-            Alert.alert('Error', 'Could not delete comment.');
+            appAlert('Error', 'Could not delete comment.');
           }
         },
       },
@@ -218,7 +218,7 @@ export default function NewsDetailScreen({ route, navigation }) {
       cancelComposer();
       fetchDetail();
     } catch (err) {
-      Alert.alert('Error', 'Could not post comment.');
+      appAlert('Error', 'Could not post comment.');
     } finally {
       setIsSubmitting(false);
     }

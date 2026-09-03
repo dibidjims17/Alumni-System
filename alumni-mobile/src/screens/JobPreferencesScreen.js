@@ -7,10 +7,10 @@ import {
   Switch,
   ScrollView,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { alert as appAlert } from '../components/AppAlert';
 import Skeleton from '../components/ui/Skeleton';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
@@ -53,7 +53,7 @@ export default function JobPreferencesScreen({ navigation }) {
         setHasSetPreferencesBefore(false);
         resetDirty();
       } else {
-        Alert.alert('Error', 'Could not load job preferences.');
+        appAlert('Error', 'Could not load job preferences.');
       }
     }
   }
@@ -76,9 +76,9 @@ export default function JobPreferencesScreen({ navigation }) {
       });
       markSaved();
       setHasSetPreferencesBefore(true);
-      Alert.alert('Saved', 'Job preferences updated.');
+      appAlert('Saved', 'Job preferences updated.');
     } catch (err) {
-      Alert.alert('Error', 'Could not save job preferences.');
+      appAlert('Error', 'Could not save job preferences.');
     } finally {
       setIsSubmitting(false);
     }

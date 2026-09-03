@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Image,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { alert as appAlert } from '../components/AppAlert';
 import { useTheme } from '../theme/ThemeContext';
 import PasswordField from '../components/ui/PasswordField';
 
@@ -26,7 +26,7 @@ export default function LoginScreen({ navigation }) {
 
   async function handleLogin() {
     if (!identifier.trim() || !password) {
-      Alert.alert('Missing info', 'Please enter your student number and password.');
+      appAlert('Missing info', 'Please enter your student number and password.');
       return;
     }
 
@@ -38,7 +38,7 @@ export default function LoginScreen({ navigation }) {
         err.response?.data?.message ||
         err.response?.data ||
         'Invalid student number or password.';
-      Alert.alert('Login failed', typeof message === 'string' ? message : 'Please try again.');
+      appAlert('Login failed', typeof message === 'string' ? message : 'Please try again.');
     } finally {
       setIsSubmitting(false);
     }

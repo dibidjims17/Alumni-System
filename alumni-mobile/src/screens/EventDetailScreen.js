@@ -8,10 +8,10 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { alert as appAlert } from '../components/AppAlert';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -34,7 +34,7 @@ export default function EventDetailScreen({ route, navigation }) {
       if (err.response?.status === 404) {
         setNotFound(true);
       } else {
-        Alert.alert('Error', 'Could not load this event.');
+        appAlert('Error', 'Could not load this event.');
       }
     }
   }
@@ -63,7 +63,7 @@ export default function EventDetailScreen({ route, navigation }) {
       );
     } catch (err) {
       const message = err.response?.data?.message || 'Could not update RSVP.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsToggling(false);
     }

@@ -5,11 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import apiClient from '../api/client';
+import { alert as appAlert } from '../components/AppAlert';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 
@@ -22,7 +22,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   async function handleSubmit() {
     if (!identifier.trim()) {
-      Alert.alert('Missing info', 'Please enter your student number or email.');
+      appAlert('Missing info', 'Please enter your student number or email.');
       return;
     }
 
@@ -38,7 +38,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       const message =
         err.response?.data?.message ||
         'Something went wrong. Please try again.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsSubmitting(false);
     }

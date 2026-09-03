@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Dimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -19,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import { API_BASE_URL } from '../config';
+import { alert as appAlert } from '../components/AppAlert';
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB, matches backend rule
 
@@ -90,7 +90,7 @@ export default function ResumeScreen() {
     const file = result.assets[0];
 
     if (file.size && file.size > MAX_SIZE_BYTES) {
-      Alert.alert('File too large', 'Resume must be 5MB or smaller.');
+      appAlert('File too large', 'Resume must be 5MB or smaller.');
       return;
     }
 
@@ -98,10 +98,10 @@ export default function ResumeScreen() {
     try {
       await apiClient.uploadFile('/Resume/upload', file.uri, file.name, 'application/pdf');
       await fetchActiveResume();
-      Alert.alert('Uploaded', 'Your resume has been uploaded successfully.');
+      appAlert('Uploaded', 'Your resume has been uploaded successfully.');
     } catch (err) {
       const message = err.response?.data?.message || 'Could not upload resume.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsUploading(false);
     }

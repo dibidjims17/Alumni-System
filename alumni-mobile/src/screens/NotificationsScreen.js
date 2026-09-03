@@ -8,12 +8,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import Skeleton from '../components/ui/Skeleton';
+import { alert as appAlert } from '../components/AppAlert';
 
 export default function NotificationsScreen({ navigation }) {
   const { theme } = useTheme();
@@ -52,7 +52,7 @@ export default function NotificationsScreen({ navigation }) {
       await apiClient.put('/Notification/read-all');
       await fetchNotifications();
     } catch (err) {
-      Alert.alert('Error', 'Could not mark notifications as read.');
+      appAlert('Error', 'Could not mark notifications as read.');
     } finally {
       setIsMarkingAllRead(false);
     }

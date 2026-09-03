@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { alert as appAlert } from '../components/AppAlert';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
@@ -43,7 +43,7 @@ export default function EditEducationScreen({ route, navigation }) {
 
   async function handleSave() {
     if (!degree.trim() || !school.trim() || !startYear.trim()) {
-      Alert.alert('Missing info', 'Degree, school, and start year are required.');
+      appAlert('Missing info', 'Degree, school, and start year are required.');
       return;
     }
 
@@ -66,14 +66,14 @@ export default function EditEducationScreen({ route, navigation }) {
       markSaved();
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Error', 'Could not save education.');
+      appAlert('Error', 'Could not save education.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   async function handleDelete() {
-    Alert.alert('Delete', 'Remove this education entry?', [
+    appAlert('Delete', 'Remove this education entry?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -84,7 +84,7 @@ export default function EditEducationScreen({ route, navigation }) {
                 markSaved();
                 navigation.goBack();
           } catch (err) {
-            Alert.alert('Error', 'Could not delete education.');
+            appAlert('Error', 'Could not delete education.');
           }
         },
       },

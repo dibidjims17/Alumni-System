@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Switch,
 } from 'react-native';
+import { alert as appAlert } from '../components/AppAlert';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
@@ -58,7 +58,7 @@ export default function EditProfileScreen({ route, navigation }) {
       navigation.goBack();
     } catch (err) {
       const message = err.response?.data?.message || 'Could not save profile.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsSubmitting(false);
     }

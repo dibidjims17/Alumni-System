@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +19,7 @@ import { useTheme } from '../theme/ThemeContext';
 import ProfileCompleteness from '../components/ProfileCompleteness';
 import AppHeader from '../components/AppHeader';
 import Skeleton from '../components/ui/Skeleton';
+import { alert as appAlert } from '../components/AppAlert';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
 const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
@@ -40,7 +40,7 @@ export default function ProfileScreen({ navigation }) {
       const res = await apiClient.get('/Profile');
       setProfile(res.data);
     } catch (err) {
-      Alert.alert('Error', 'Could not load profile.');
+      appAlert('Error', 'Could not load profile.');
     }
   }
 
@@ -91,11 +91,11 @@ export default function ProfileScreen({ navigation }) {
 
       const file = result.assets[0];
       if (!file.mimeType || !file.mimeType.startsWith('image/')) {
-        Alert.alert('Invalid file', 'Please choose an image file.');
+        appAlert('Invalid file', 'Please choose an image file.');
         return;
       }
       if (file.size && file.size > MAX_PICTURE_BYTES) {
-        Alert.alert('File too large', 'Profile picture must be 5MB or smaller.');
+        appAlert('File too large', 'Profile picture must be 5MB or smaller.');
         return;
       }
 
@@ -103,12 +103,12 @@ export default function ProfileScreen({ navigation }) {
       await fetchProfile();
     } catch (err) {
       const message = err.response?.data?.message || 'Could not upload profile picture.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     }
   }
 
   function confirmRemovePicture() {
-    Alert.alert('Remove photo', 'Remove your profile picture and go back to the default?', [
+    appAlert('Remove photo', 'Remove your profile picture and go back to the default?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: handleRemovePicture },
     ]);
@@ -120,7 +120,7 @@ export default function ProfileScreen({ navigation }) {
       await fetchProfile();
     } catch (err) {
       const message = err.response?.data?.message || 'Could not remove profile picture.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     }
   }
 

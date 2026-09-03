@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import {
   Text,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { alert as appAlert } from '../components/AppAlert';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
@@ -23,15 +23,15 @@ export default function ChangePasswordScreen({ navigation }) {
 
   async function handleSubmit() {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Missing info', 'Please fill in all fields.');
+      appAlert('Missing info', 'Please fill in all fields.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Mismatch', 'New password and confirmation do not match.');
+      appAlert('Mismatch', 'New password and confirmation do not match.');
       return;
     }
     if (newPassword.length < 6) {
-      Alert.alert('Too short', 'New password should be at least 6 characters.');
+      appAlert('Too short', 'New password should be at least 6 characters.');
       return;
     }
 
@@ -41,7 +41,7 @@ export default function ChangePasswordScreen({ navigation }) {
       // Forced flow (first login) auto-redirects once mustChangePassword flips.
       // Voluntary flow from Profile: confirm and go back.
       if (!student.mustChangePassword) {
-        Alert.alert('Success', 'Your password has been changed.', [
+        appAlert('Success', 'Your password has been changed.', [
           { text: 'OK', onPress: () => navigation.goBack() },
         ]);
       }
@@ -49,7 +49,7 @@ export default function ChangePasswordScreen({ navigation }) {
       const message =
         err.response?.data?.message ||
         'Could not change password. Please check your current password and try again.';
-      Alert.alert('Error', message);
+      appAlert('Error', message);
     } finally {
       setIsSubmitting(false);
     }

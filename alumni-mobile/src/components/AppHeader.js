@@ -7,12 +7,12 @@ import {
   Switch,
   Modal,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Menu, X, Moon, Sun, KeyRound, LogOut } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import { alert as appAlert } from './AppAlert';
 
 // Shared themed header bar with a hamburger menu (dark mode, change
 // password, sign out). Used by every tab root so headers blend in.
@@ -24,7 +24,7 @@ export default function AppHeader({ title, navigation }) {
 
   function confirmSignOut() {
     setMenuOpen(false);
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+    appAlert('Sign out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: logout },
     ]);

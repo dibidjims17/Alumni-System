@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { alert as appAlert } from '../components/AppAlert';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
@@ -43,7 +43,7 @@ export default function EditWorkExperienceScreen({ route, navigation }) {
 
   async function handleSave() {
     if (!jobTitle.trim() || !company.trim() || !startDate.trim()) {
-      Alert.alert('Missing info', 'Job title, company, and start date are required.');
+      appAlert('Missing info', 'Job title, company, and start date are required.');
       return;
     }
 
@@ -67,14 +67,14 @@ export default function EditWorkExperienceScreen({ route, navigation }) {
       markSaved();
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Error', 'Could not save work experience.');
+      appAlert('Error', 'Could not save work experience.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   async function handleDelete() {
-    Alert.alert('Delete', 'Remove this work experience?', [
+    appAlert('Delete', 'Remove this work experience?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -85,7 +85,7 @@ export default function EditWorkExperienceScreen({ route, navigation }) {
             markSaved();
             navigation.goBack();
           } catch (err) {
-            Alert.alert('Error', 'Could not delete work experience.');
+            appAlert('Error', 'Could not delete work experience.');
           }
         },
       },
