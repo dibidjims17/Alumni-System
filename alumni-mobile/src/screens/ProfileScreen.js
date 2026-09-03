@@ -11,10 +11,12 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import ProfileCompleteness from '../components/ProfileCompleteness';
 
 export default function ProfileScreen({ navigation }) {
     const [profile, setProfile] = useState(null);
     const [jobPreferences, setJobPreferences] = useState(null);
+    const [hasResume, setHasResume] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
   
     async function fetchProfile() {
@@ -38,13 +40,22 @@ export default function ProfileScreen({ navigation }) {
         // Silently ignore — job preferences are optional, don't block profile loading
       }
     }
+
+    async function fetchResumeStatus() {
+      try {
+        await apiClient.get('/Resume/active');
+        setHasResume(true);
+      } catch (err) {
+        setHasResume(false);
+      }
+    }
   
-    useFocusEffect(
-      useCallback(() => {
-        setIsLoading(true);
-        Promise.all([fetchProfile(), fetchJobPreferences()]).finally(() => setIsLoading(false));
-      }, [])
-    );
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      Promise.all([fetchProfile(), fetchJobPreferences(), fetchResumeStatus()]).finally(() => setIsLoading(false));
+    }, [])
+  );
 
   if (isLoading || !profile) {
     return (
@@ -59,6 +70,13 @@ export default function ProfileScreen({ navigation }) {
       <Text style={styles.name}>{profile.fullName}</Text>
       <Text style={styles.subtext}>{profile.studentNumber} - {profile.program}</Text>
       {profile.headline ? <Text style={styles.headline}>{profile.headline}</Text> : null}
+
+      <ProfileCompleteness
+        profile={profile}
+        jobPreferences={jobPreferences}
+        hasResume={hasResume}
+        navigation={navigation}
+      />
 
       <TouchableOpacity
         style={styles.editButton}
