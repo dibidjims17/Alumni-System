@@ -1,8 +1,12 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
-import { getStudents, importStudents, toggleStudentStatus } from "../services/studentsApi";
+import { API_BASE_URL } from "../config";
+import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
+import ConfirmDialog from "../components/ConfirmDialog";
+
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
 
 const YEAR_OPTIONS = ["1", "2", "3", "4", "Graduate"];
 
@@ -24,6 +28,16 @@ export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [programFilter, setProgramFilter] = useState("");
+
+  const [viewingProfile, setViewingProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [editForm, setEditForm] = useState({ fullName: "", email: "", program: "", schoolYear: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const [confirmResetId, setConfirmResetId] = useState(null);
+  const [resetResult, setResetResult] = useState(null);
 
   async function loadStudents() {
     setLoading(true);
@@ -111,6 +125,60 @@ export default function Students() {
       loadStudents();
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function openViewProfile(student) {
+    setViewingProfile(null);
+    setLoadingProfile(true);
+    try {
+      const data = await getStudentProfile(student.id);
+      setViewingProfile({ student, ...data });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }
+
+  function openEditModal(student) {
+    setEditingStudent(student);
+    setEditForm({
+      fullName: student.fullName || "",
+      email: student.email || "",
+      program: student.program || "",
+      schoolYear: student.schoolYear || "",
+    });
+  }
+
+  function closeEditModal() {
+    setEditingStudent(null);
+  }
+
+  async function handleEditSave(e) {
+    e.preventDefault();
+    setSavingEdit(true);
+    setError("");
+    try {
+      await updateStudent(editingStudent.id, editForm);
+      closeEditModal();
+      loadStudents();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  async function confirmResetPassword() {
+    try {
+      const result = await resetStudentPassword(confirmResetId);
+      const student = students.find((s) => s.id === confirmResetId);
+      setResetResult({ student, temporaryPassword: result.temporaryPassword });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setConfirmResetId(null);
     }
   }
 
@@ -204,8 +272,10 @@ export default function Students() {
                   <td>{s.schoolYear}</td>
                   <td>{s.isActive ? "Active" : "Inactive"}</td>
                   <td>
-                    <Link to={`/students/${s.id}/documents`}>Documents</Link>
-                    {" | "}
+                    <button onClick={() => openViewProfile(s)}>View</button>{" "}
+                    <button onClick={() => openEditModal(s)}>Edit</button>{" "}
+                    <button onClick={() => setConfirmResetId(s.id)}>Reset PW</button>{" "}
+                    <Link to={`/students/${s.id}/documents`}>Documents</Link>{" "}
                     <button onClick={() => handleToggleStatus(s.id)}>
                       {s.isActive ? "Deactivate" : "Activate"}
                     </button>
@@ -280,6 +350,227 @@ export default function Students() {
           </div>
         </div>
       )}
+
+      {(loadingProfile || viewingProfile) && (
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.5)", display: "flex",
+            alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}
+          onClick={() => { if (!loadingProfile) setViewingProfile(null); }}
+        >
+          <div
+            style={{
+              background: "#fff", padding: 24, borderRadius: 8,
+              maxWidth: 640, width: "92%", maxHeight: "85vh", overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>Alumni Profile</h3>
+              <button onClick={() => setViewingProfile(null)} disabled={loadingProfile}>✕</button>
+            </div>
+
+            {loadingProfile && <p>Loading profile...</p>}
+
+            {viewingProfile && (() => {
+              const { student, profile, jobPreferences } = viewingProfile;
+              return (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                    {profile.profilePictureUrl ? (
+                      <img
+                        src={`${FILE_ROOT}/${profile.profilePictureUrl}`}
+                        alt="Profile"
+                        width={96}
+                        height={96}
+                        style={{ borderRadius: "50%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: 96, height: 96, borderRadius: "50%",
+                        background: "#ddd", display: "flex",
+                        alignItems: "center", justifyContent: "center",
+                        fontSize: 32, fontWeight: "bold", color: "#555",
+                      }}>
+                        {(student.fullName || "?").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h4 style={{ margin: "0 0 4px" }}>{student.fullName}</h4>
+                      <p style={{ margin: 0, fontSize: 13, color: "#555" }}>
+                        {student.studentNumber} • {student.program} • {student.schoolYear}
+                      </p>
+                      <p style={{ margin: "4px 0 0", fontSize: 13, color: "#555" }}>
+                        {student.email} • {student.isActive ? "Active" : "Inactive"}
+                      </p>
+                      {profile.headline && <p><em>{profile.headline}</em></p>}
+                    </div>
+                  </div>
+
+                  <hr style={{ margin: "16px 0" }} />
+
+                  <p><strong>Bio:</strong> {profile.bio || "—"}</p>
+                  <p><strong>Location:</strong> {profile.location || "—"}</p>
+                  <p><strong>Phone:</strong> {profile.phone || "—"}</p>
+                  <p><strong>LinkedIn:</strong> {profile.linkedInUrl || "—"}</p>
+                  <p><strong>Address:</strong> {profile.address || "—"}</p>
+                  <p><strong>Date of Birth:</strong> {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : "—"}</p>
+                  <p><strong>Visible in directory:</strong> {profile.showInDirectory ? "Yes" : "No"}</p>
+
+                  <p><strong>Skills:</strong> {(profile.skills || []).join(", ") || "—"}</p>
+
+                  <p><strong>Work Experience:</strong></p>
+                  {(profile.workExperiences || []).length === 0 && <p>—</p>}
+                  <ul>
+                    {(profile.workExperiences || []).map((w) => (
+                      <li key={w.id}>{w.jobTitle} — {w.company} ({w.location || "—"})</li>
+                    ))}
+                  </ul>
+
+                  <p><strong>Education:</strong></p>
+                  {(profile.educations || []).length === 0 && <p>—</p>}
+                  <ul>
+                    {(profile.educations || []).map((e) => (
+                      <li key={e.id}>{e.degree} in {e.fieldOfStudy} — {e.school} ({e.startYear || "?"}–{e.endYear || "present"})</li>
+                    ))}
+                  </ul>
+
+                  <p><strong>Job Preferences:</strong> {jobPreferences
+                    ? `${jobPreferences.preferredJobTitle || "—"} / ${jobPreferences.preferredIndustry || "—"} / ${jobPreferences.preferredLocation || "—"} (Open to work: ${jobPreferences.isOpenToWork ? "Yes" : "No"})`
+                    : "Not set"}</p>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {editingStudent && (
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.5)", display: "flex",
+            alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}
+          onClick={closeEditModal}
+        >
+          <div
+            style={{
+              background: "#fff", padding: 24, borderRadius: 8,
+              maxWidth: 480, width: "90%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>Edit Student — {editingStudent.studentNumber}</h3>
+              <button onClick={closeEditModal}>✕</button>
+            </div>
+
+            <form onSubmit={handleEditSave} style={{ marginTop: 16 }}>
+              <div>
+                <label>Full Name</label><br />
+                <input
+                  type="text"
+                  value={editForm.fullName}
+                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Email</label><br />
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Program</label><br />
+                <input
+                  type="text"
+                  value={editForm.program}
+                  onChange={(e) => setEditForm({ ...editForm, program: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>School Year</label><br />
+                <select
+                  value={editForm.schoolYear}
+                  onChange={(e) => setEditForm({ ...editForm, schoolYear: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                >
+                  <option value="">Select...</option>
+                  {YEAR_OPTIONS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <button type="submit" disabled={savingEdit}>
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </button>
+                <button type="button" onClick={closeEditModal} style={{ marginLeft: 8 }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {resetResult && (
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.5)", display: "flex",
+            alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}
+          onClick={() => setResetResult(null)}
+        >
+          <div
+            style={{
+              background: "#fff", padding: 24, borderRadius: 8,
+              maxWidth: 480, width: "90%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginTop: 0 }}>Temporary Password Issued</h3>
+            <p>
+              For <strong>{resetResult.student?.fullName}</strong> ({resetResult.student?.studentNumber}):
+            </p>
+            <p style={{
+              fontSize: 20, fontFamily: "monospace",
+              background: "#f4f4f4", padding: 12, textAlign: "center",
+              userSelect: "all",
+            }}>
+              {resetResult.temporaryPassword}
+            </p>
+            <p style={{ fontSize: 13, color: "#555" }}>
+              Relay this to the student. It is shown only once — they must
+              change it on next login.
+            </p>
+            <button onClick={() => setResetResult(null)}>Done</button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        message={confirmResetId ? "Issue a new temporary password for this student? Their current password will stop working." : null}
+        onConfirm={confirmResetPassword}
+        onCancel={() => setConfirmResetId(null)}
+      />
     </div>
   );
 }

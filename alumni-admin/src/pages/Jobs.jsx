@@ -28,11 +28,13 @@ export default function Jobs() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  async function loadJobs() {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  async function loadJobs(activeSearch = "") {
     setLoading(true);
     setError("");
     try {
-      const data = await getJobs();
+      const data = await getJobs(activeSearch);
       setJobs(data);
     } catch (err) {
       setError(err.message);
@@ -44,6 +46,16 @@ export default function Jobs() {
   useEffect(() => {
     loadJobs();
   }, []);
+
+  function submitSearch(e) {
+    e.preventDefault();
+    loadJobs(searchTerm);
+  }
+
+  function resetSearch() {
+    setSearchTerm("");
+    loadJobs("");
+  }
 
   function openCreateModal() {
     setEditingId(null);
@@ -92,7 +104,7 @@ export default function Jobs() {
         await createJob(payload);
       }
       closeModal();
-      loadJobs();
+      loadJobs(searchTerm);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -103,7 +115,7 @@ export default function Jobs() {
   async function confirmDelete() {
     try {
       await deleteJob(confirmDeleteId);
-      loadJobs();
+      loadJobs(searchTerm);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -117,6 +129,20 @@ export default function Jobs() {
         <h2>Jobs</h2>
         <button onClick={openCreateModal}>+ Add New Job</button>
       </div>
+
+      <form onSubmit={submitSearch} style={{ margin: "16px 0", display: "flex", gap: 8 }}>
+        <input
+          type="text"
+          placeholder="Search title or company"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ minWidth: 280 }}
+        />
+        <button type="submit">Search</button>
+        {searchTerm.trim() !== "" && (
+          <button type="button" onClick={resetSearch}>Reset</button>
+        )}
+      </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 

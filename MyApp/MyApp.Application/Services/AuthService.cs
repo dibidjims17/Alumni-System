@@ -37,8 +37,17 @@ namespace MyApp.Application.Services
             if (student == null || !student.IsActive)
                 return null;
 
-            // 2. Verify password
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, student.PasswordHash))
+            // 2. Verify password (a corrupt hash must fail closed, not 500)
+            bool passwordOk;
+            try
+            {
+                passwordOk = BCrypt.Net.BCrypt.Verify(request.Password, student.PasswordHash);
+            }
+            catch
+            {
+                return null;
+            }
+            if (!passwordOk)
                 return null;
 
             // 3. Log the activity

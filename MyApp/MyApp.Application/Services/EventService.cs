@@ -28,10 +28,10 @@ namespace MyApp.Application.Services
             return (items, total);
         }
 
-        public async Task<(List<EventDto> Items, int TotalCount)> GetAllEventsAsync(int page, int pageSize)
+        public async Task<(List<EventDto> Items, int TotalCount)> GetAllEventsAsync(int page, int pageSize, string? search = null)
         {
-            var events = await _eventRepository.GetAllAsync(page, pageSize);
-            var total = await _eventRepository.CountAllAsync();
+            var events = await _eventRepository.GetAllAsync(page, pageSize, search);
+            var total = await _eventRepository.CountAllAsync(search);
             var items = events.Select(e => Map(e, null)).ToList();
             return (items, total);
         }

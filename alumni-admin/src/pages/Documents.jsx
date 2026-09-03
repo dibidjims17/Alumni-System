@@ -6,6 +6,7 @@ export default function Documents() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -23,9 +24,31 @@ export default function Documents() {
     load();
   }, []);
 
+  const term = searchTerm.trim().toLowerCase();
+  const filteredStudents = students.filter(
+    (s) =>
+      !term ||
+      s.studentNumber?.toLowerCase().includes(term) ||
+      s.fullName?.toLowerCase().includes(term) ||
+      s.program?.toLowerCase().includes(term)
+  );
+
   return (
     <div>
       <h2>Documents</h2>
+
+      <div style={{ margin: "16px 0", display: "flex", gap: 8 }}>
+        <input
+          type="text"
+          placeholder="Search by Student Number, Name, or Program"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ minWidth: 280 }}
+        />
+        {searchTerm.trim() !== "" && (
+          <button type="button" onClick={() => setSearchTerm("")}>Reset</button>
+        )}
+      </div>
 
       {loading && <p>Loading students...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -42,7 +65,7 @@ export default function Documents() {
             </tr>
           </thead>
           <tbody>
-            {students.map((s) => (
+            {filteredStudents.map((s) => (
               <tr key={s.id}>
                 <td>{s.studentNumber}</td>
                 <td>{s.fullName}</td>

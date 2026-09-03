@@ -28,8 +28,17 @@ namespace MyApp.Application.Services
             if (admin == null || !admin.IsActive)
                 return null;
 
-            // 2. Verify password
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, admin.PasswordHash))
+            // 2. Verify password (a corrupt hash must fail closed, not 500)
+            bool passwordOk;
+            try
+            {
+                passwordOk = BCrypt.Net.BCrypt.Verify(request.Password, admin.PasswordHash);
+            }
+            catch
+            {
+                return null;
+            }
+            if (!passwordOk)
                 return null;
 
             // 3. Update last login

@@ -26,10 +26,40 @@ export async function getStudentStats() {
 
 export async function toggleStudentStatus(id) {
   const response = await fetch(`${API_BASE_URL}/Students/${id}/toggle-status`, {
-    method: "PATCH",
+    method: "PUT",
     headers: authHeaders(),
   });
   if (!response.ok) throw new Error("Failed to toggle student status");
+  return response.json();
+}
+
+export async function getStudentProfile(id) {
+  const response = await fetch(`${API_BASE_URL}/Students/${id}/profile`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch student profile");
+  return response.json();
+}
+
+export async function updateStudent(id, payload) {
+  const response = await fetch(`${API_BASE_URL}/Students/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || "Failed to update student");
+  }
+  return response.json();
+}
+
+export async function resetStudentPassword(id) {
+  const response = await fetch(`${API_BASE_URL}/Students/${id}/reset-password`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to reset password");
   return response.json();
 }
 

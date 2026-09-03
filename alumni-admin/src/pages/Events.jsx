@@ -22,17 +22,19 @@ export default function Events() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [attendeeEvent, setAttendeeEvent] = useState(null);
   const [attendees, setAttendees] = useState([]);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
 
   const isSuperAdmin = getSession()?.role === "SuperAdmin";
 
-  async function loadEvents() {
+  async function loadEvents(activeSearch = "") {
     setLoading(true);
     setError("");
     try {
-      const data = await getAllEvents();
+      const data = await getAllEvents(activeSearch);
       setEvents(data);
     } catch (err) {
       setError(err.message);
@@ -57,6 +59,16 @@ export default function Events() {
       active = false;
     };
   }, []);
+
+  function submitSearch(e) {
+    e.preventDefault();
+    loadEvents(searchTerm);
+  }
+
+  function resetSearch() {
+    setSearchTerm("");
+    loadEvents("");
+  }
 
   function openCreateModal() {
     setEditingId(null);
@@ -105,7 +117,7 @@ export default function Events() {
         await createEvent(payload);
       }
       closeModal();
-      loadEvents();
+      loadEvents(searchTerm);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -116,7 +128,7 @@ export default function Events() {
   async function confirmDelete() {
     try {
       await deleteEvent(confirmDeleteId);
-      loadEvents();
+      loadEvents(searchTerm);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -144,6 +156,20 @@ export default function Events() {
         <h2>Events</h2>
         <button onClick={openCreateModal}>+ Add New Event</button>
       </div>
+
+      <form onSubmit={submitSearch} style={{ margin: "16px 0", display: "flex", gap: 8 }}>
+        <input
+          type="text"
+          placeholder="Search title or location"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ minWidth: 280 }}
+        />
+        <button type="submit">Search</button>
+        {searchTerm.trim() !== "" && (
+          <button type="button" onClick={resetSearch}>Reset</button>
+        )}
+      </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 

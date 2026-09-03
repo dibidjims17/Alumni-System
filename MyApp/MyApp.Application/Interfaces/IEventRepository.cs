@@ -6,8 +6,8 @@ namespace MyApp.Application.Interfaces
     {
         Task<List<Event>> GetUpcomingAsync(int page, int pageSize, string? search = null);
         Task<int> CountUpcomingAsync(string? search = null);
-        Task<List<Event>> GetAllAsync(int page, int pageSize);
-        Task<int> CountAllAsync();
+        Task<List<Event>> GetAllAsync(int page, int pageSize, string? search = null);
+        Task<int> CountAllAsync(string? search = null);
         Task<Event?> GetByIdAsync(int id);
         Task<EventRsvp?> GetRsvpAsync(int eventId, int studentId);
         Task AddRsvpAsync(EventRsvp rsvp);

@@ -53,9 +53,9 @@ namespace MyApp.API.Controllers
 
         [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllEvents([FromQuery] int page = 1)
+        public async Task<IActionResult> GetAllEvents([FromQuery] int page = 1, [FromQuery] string? search = null)
         {
-            var (items, total) = await _eventService.GetAllEventsAsync(page, PageSize);
+            var (items, total) = await _eventService.GetAllEventsAsync(page, PageSize, search);
             return Ok(new { items, total, page, pageSize = PageSize });
         }
 

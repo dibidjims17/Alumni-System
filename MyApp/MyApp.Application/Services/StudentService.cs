@@ -125,5 +125,46 @@ namespace MyApp.Application.Services
 
             return true;
         }
+
+        public async Task<bool> UpdateStudentAsync(int studentId, UpdateStudentRequest request, int adminId)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId);
+            if (student == null) return false;
+
+            student.FullName = request.FullName;
+            student.Email = request.Email;
+            student.Program = request.Program;
+            student.SchoolYear = request.SchoolYear;
+            await _studentRepository.UpdateAsync(student);
+
+            await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_STUDENT",
+                $"Updated student record: {student.StudentNumber}", "system");
+
+            return true;
+        }
+
+        public async Task<string?> ResetStudentPasswordAsync(int studentId, int adminId)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId);
+            if (student == null) return null;
+
+            // Crypto-random temporary password, shown to the admin once.
+            const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+            var chars = new char[10];
+            for (var i = 0; i < chars.Length; i++)
+                chars[i] = alphabet[System.Security.Cryptography.RandomNumberGenerator.GetInt32(alphabet.Length)];
+            var temporaryPassword = new string(chars);
+
+            student.PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword);
+            student.MustChangePassword = true;
+            student.PasswordResetCode = null;
+            student.PasswordResetCodeExpiry = null;
+            await _studentRepository.UpdateAsync(student);
+
+            await _activityLogRepository.LogAdminAsync(adminId, "RESET_STUDENT_PASSWORD",
+                $"Reset password for student: {student.StudentNumber}", "system");
+
+            return temporaryPassword;
+        }
     }
 }

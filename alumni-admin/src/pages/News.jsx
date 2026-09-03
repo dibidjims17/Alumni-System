@@ -20,11 +20,13 @@ export default function News() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  async function loadNews() {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  async function loadNews(activeSearch = "") {
     setLoading(true);
     setError("");
     try {
-      const data = await getNews();
+      const data = await getNews(activeSearch);
       setNewsList(data);
     } catch (err) {
       setError(err.message);
@@ -36,6 +38,16 @@ export default function News() {
   useEffect(() => {
     loadNews();
   }, []);
+
+  function submitSearch(e) {
+    e.preventDefault();
+    loadNews(searchTerm);
+  }
+
+  function resetSearch() {
+    setSearchTerm("");
+    loadNews("");
+  }
 
   function openCreateModal() {
     setEditingId(null);
@@ -71,7 +83,7 @@ export default function News() {
         await createNews(form);
       }
       closeModal();
-      loadNews();
+      loadNews(searchTerm);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -82,7 +94,7 @@ export default function News() {
   async function confirmDelete() {
     try {
       await deleteNews(confirmDeleteId);
-      loadNews();
+      loadNews(searchTerm);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -113,7 +125,7 @@ export default function News() {
       await deleteCommentAsAdmin(commentId);
       const detail = await getNewsDetail(newsId);
       setComments(detail.comments || []);
-      loadNews();
+      loadNews(searchTerm);
     } catch (err) {
       setError(err.message);
     }
@@ -125,6 +137,20 @@ export default function News() {
         <h2>News</h2>
         <button onClick={openCreateModal}>+ Add News</button>
       </div>
+
+      <form onSubmit={submitSearch} style={{ margin: "16px 0", display: "flex", gap: 8 }}>
+        <input
+          type="text"
+          placeholder="Search title or content"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ minWidth: 280 }}
+        />
+        <button type="submit">Search</button>
+        {searchTerm.trim() !== "" && (
+          <button type="button" onClick={resetSearch}>Reset</button>
+        )}
+      </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 

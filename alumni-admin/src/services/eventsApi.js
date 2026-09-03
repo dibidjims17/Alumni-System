@@ -8,8 +8,9 @@ function authHeaders() {
   };
 }
 
-export async function getAllEvents() {
-  const response = await fetch(`${API_BASE_URL}/Events/all`, {
+export async function getAllEvents(search = "") {
+  const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+  const response = await fetch(`${API_BASE_URL}/Events/all${query}`, {
     headers: authHeaders(),
   });
   if (!response.ok) throw new Error("Failed to fetch events");

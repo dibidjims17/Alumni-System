@@ -46,9 +46,17 @@ namespace MyApp.Infrastructure.Repositories
             return await query.CountAsync();
         }
 
-        public async Task<List<Event>> GetAllAsync(int page, int pageSize)
+        public async Task<List<Event>> GetAllAsync(int page, int pageSize, string? search = null)
         {
-            return await _context.Events
+            var query = _context.Events.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(e => e.Title.Contains(term) || e.Location.Contains(term));
+            }
+
+            return await query
                 .Include(e => e.PostedByAdmin)
                 .Include(e => e.Rsvps)
                 .OrderByDescending(e => e.EventDate)
@@ -57,9 +65,17 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> CountAllAsync()
+        public async Task<int> CountAllAsync(string? search = null)
         {
-            return await _context.Events.CountAsync();
+            var query = _context.Events.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(e => e.Title.Contains(term) || e.Location.Contains(term));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<Event?> GetByIdAsync(int id)

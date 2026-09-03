@@ -8,8 +8,9 @@ function authHeaders() {
   };
 }
 
-export async function getJobs() {
-  const response = await fetch(`${API_BASE_URL}/Jobs`, {
+export async function getJobs(search = "") {
+  const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+  const response = await fetch(`${API_BASE_URL}/Jobs${query}`, {
     headers: authHeaders(),
   });
   if (!response.ok) throw new Error("Failed to fetch jobs");

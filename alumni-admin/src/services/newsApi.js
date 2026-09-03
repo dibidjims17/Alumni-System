@@ -5,14 +5,16 @@ function authHeader() {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function getNews() {
-    const response = await fetch(`${API_BASE_URL}/News`, {
-      headers: authHeader(),
-    });
-    if (!response.ok) throw new Error("Failed to fetch news");
-    const data = await response.json();
-    return data.items; // API returns { items, total, page, pageSize }
-  }
+export async function getNews(search = "") {
+  const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+  const response = await fetch(`${API_BASE_URL}/News${query}`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch news");
+  const data = await response.json();
+  // In case this endpoint is also paginated like News (items/total/page)
+  return Array.isArray(data) ? data : data.items || [];
+}
 
 export async function getNewsById(id) {
   const response = await fetch(`${API_BASE_URL}/News/${id}`, {
