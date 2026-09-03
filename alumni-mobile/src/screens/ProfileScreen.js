@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   Alert,
 } from 'react-native';
@@ -20,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import ProfileCompleteness from '../components/ProfileCompleteness';
 import AppHeader from '../components/AppHeader';
+import Skeleton from '../components/ui/Skeleton';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
 const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
@@ -127,9 +127,22 @@ export default function ProfileScreen({ navigation }) {
   if (isLoading || !profile) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top']}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={c.primary} />
-        </View>
+        <AppHeader title="Profile" navigation={navigation} />
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <Skeleton width={104} height={104} borderRadius={52} style={styles.skeletonAvatar} />
+          <Skeleton width="50%" height={21} style={styles.skeletonCenter} />
+          <Skeleton width="35%" height={13} style={[styles.skeletonCenter, { marginTop: 6 }]} />
+          <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+            <Skeleton width="45%" height={14} style={{ marginBottom: 10 }} />
+            <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+            <Skeleton width="80%" height={13} />
+          </View>
+          <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+            <Skeleton width="35%" height={14} style={{ marginBottom: 10 }} />
+            <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+            <Skeleton width="90%" height={13} />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -249,6 +262,14 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  skeletonAvatar: { alignSelf: 'center', marginBottom: 12 },
+  skeletonCenter: { alignSelf: 'center' },
+  skeletonCard: {
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 14,
+    marginTop: 14,
+  },
   content: { padding: 20, paddingBottom: 40 },
   avatar: {
     width: 104,

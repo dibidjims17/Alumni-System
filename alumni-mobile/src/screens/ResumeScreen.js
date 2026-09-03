@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNBlobUtil from 'react-native-blob-util';
 import Pdf from 'react-native-pdf';
 import apiClient from '../api/client';
+import Skeleton from '../components/ui/Skeleton';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
@@ -118,8 +119,13 @@ export default function ResumeScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.container, { backgroundColor: c.background, padding: 16 }]}>
+        <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Skeleton width="70%" height={15} style={{ marginBottom: 8 }} />
+          <Skeleton width="45%" height={12} style={{ marginBottom: 12 }} />
+          <Skeleton width="100%" height={220} borderRadius={8} />
+        </View>
+        <Skeleton width="100%" height={48} borderRadius={10} />
       </View>
     );
   }
@@ -168,6 +174,12 @@ const screenHeight = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
+  skeletonCard: {
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 14,
+    marginBottom: 12,
+  },
   fieldValue: { fontSize: 13 },
   fieldLabel: { fontSize: 11, marginTop: 4, marginBottom: 12 },
   pdfContainer: {

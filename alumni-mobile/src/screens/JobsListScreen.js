@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,6 +17,7 @@ import { useTheme } from '../theme/ThemeContext';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import Skeleton from '../components/ui/Skeleton';
 
 const CAREER_TABS = [
   { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
@@ -159,8 +159,21 @@ export default function JobsListScreen({ navigation }) {
         />
       </View>
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" />
+        <View style={styles.skeletonList}>
+          {[0, 1, 2].map((i) => (
+            <View
+              key={i}
+              style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}
+            >
+              <Skeleton width="65%" height={17} style={{ marginBottom: 8 }} />
+              <Skeleton width="80%" height={13} style={{ marginBottom: 8 }} />
+              <Skeleton width="45%" height={15} style={{ marginBottom: 10 }} />
+              <View style={styles.skeletonTags}>
+                <Skeleton width={80} height={22} borderRadius={999} />
+                <Skeleton width={100} height={22} borderRadius={999} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <FlatList
@@ -186,6 +199,19 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   listContent: { padding: 16, paddingBottom: 24 },
+  skeletonList: {
+    padding: 16,
+  },
+  skeletonCard: {
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+    marginBottom: 10,
+  },
+  skeletonTags: {
+    flexDirection: 'row',
+    gap: 6,
+  },
   searchRow: {
     margin: 16,
     marginBottom: 8,

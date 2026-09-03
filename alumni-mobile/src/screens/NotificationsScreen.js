@@ -13,6 +13,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
+import Skeleton from '../components/ui/Skeleton';
 
 export default function NotificationsScreen({ navigation }) {
   const { theme } = useTheme();
@@ -121,8 +122,17 @@ export default function NotificationsScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.container, { backgroundColor: c.background, padding: 16 }]}>
+        {[0, 1, 2, 3].map((i) => (
+          <View
+            key={i}
+            style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}
+          >
+            <Skeleton width="50%" height={14} style={{ marginBottom: 8 }} />
+            <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+            <Skeleton width="35%" height={11} />
+          </View>
+        ))}
       </View>
     );
   }
@@ -160,6 +170,12 @@ export default function NotificationsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  skeletonCard: {
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+    marginBottom: 12,
+  },
   markAllButton: {
     margin: 16,
     marginBottom: 0,

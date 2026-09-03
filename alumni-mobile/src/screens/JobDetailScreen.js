@@ -7,7 +7,6 @@ import {
   Switch,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -15,6 +14,7 @@ import apiClient from '../api/client';
 import { formatSalary, deadlineInfo } from '../utils/jobs';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import Skeleton from '../components/ui/Skeleton';
 
 export default function JobDetailScreen({ route, navigation }) {
   const { jobId } = route.params;
@@ -87,9 +87,26 @@ export default function JobDetailScreen({ route, navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" color={c.primary} />
-      </View>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={styles.content}
+      >
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Skeleton width="70%" height={19} style={{ marginBottom: 8 }} />
+          <Skeleton width="50%" height={14} style={{ marginBottom: 8 }} />
+          <Skeleton width="60%" height={15} style={{ marginBottom: 10 }} />
+          <View style={styles.skeletonTags}>
+            <Skeleton width={80} height={22} borderRadius={999} />
+            <Skeleton width={70} height={22} borderRadius={999} />
+          </View>
+        </View>
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Skeleton width="40%" height={14} style={{ marginBottom: 8 }} />
+          <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+          <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+          <Skeleton width="80%" height={13} />
+        </View>
+      </ScrollView>
     );
   }
 
@@ -227,6 +244,10 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
     marginBottom: 12,
+  },
+  skeletonTags: {
+    flexDirection: 'row',
+    gap: 6,
   },
   title: { fontSize: 19, fontWeight: '800', lineHeight: 24 },
   company: { fontSize: 14, marginTop: 2 },

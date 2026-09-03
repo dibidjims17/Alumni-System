@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
 const CAREER_TABS = [
@@ -112,8 +113,17 @@ export default function MyApplicationsScreen({ navigation }) {
       <AppHeader title="Career" navigation={navigation} />
       <SectionTabs items={CAREER_TABS} active="MyApplications" navigation={navigation} />
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" />
+        <View style={styles.skeletonList}>
+          {[0, 1, 2].map((i) => (
+            <View
+              key={i}
+              style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}
+            >
+              <Skeleton width="65%" height={15} style={{ marginBottom: 8 }} />
+              <Skeleton width="45%" height={12} style={{ marginBottom: 8 }} />
+              <Skeleton width={90} height={22} borderRadius={999} />
+            </View>
+          ))}
         </View>
       ) : (
         <FlatList
@@ -182,6 +192,15 @@ export default function MyApplicationsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  skeletonList: {
+    padding: 16,
+  },
+  skeletonCard: {
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+    marginBottom: 10,
+  },
   listContent: { padding: 16, paddingBottom: 24 },
   card: {
     borderRadius: 10,

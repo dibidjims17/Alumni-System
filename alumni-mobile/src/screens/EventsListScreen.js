@@ -7,6 +7,7 @@ import apiClient from '../api/client';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
 const COMMUNITY_TABS = [
@@ -136,8 +137,21 @@ export default function EventsListScreen({ navigation }) {
         />
       </View>
       {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={c.primary} />
+        <View style={styles.skeletonList}>
+          {[0, 1, 2].map((i) => (
+            <View
+              key={i}
+              style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}
+            >
+              <Skeleton width="60%" height={17} style={{ marginBottom: 8 }} />
+              <Skeleton width="90%" height={12} style={{ marginBottom: 6 }} />
+              <Skeleton width="70%" height={12} style={{ marginBottom: 10 }} />
+              <View style={styles.skeletonFooter}>
+                <Skeleton width={70} height={12} />
+                <Skeleton width={90} height={28} borderRadius={4} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <FlatList
@@ -166,6 +180,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   list: { flex: 1 },
+  skeletonList: {
+    padding: 16,
+  },
+  skeletonCard: {
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+    marginBottom: 10,
+  },
+  skeletonFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   card: {
     backgroundColor: '#fff',

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
 export default function EventDetailScreen({ route, navigation }) {
@@ -68,9 +69,26 @@ export default function EventDetailScreen({ route, navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" color={c.primary} />
-      </View>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={styles.content}
+      >
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Skeleton width="75%" height={20} style={{ marginBottom: 8 }} />
+          <Skeleton width="55%" height={13} style={{ marginBottom: 6 }} />
+          <Skeleton width="45%" height={13} />
+        </View>
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Skeleton width="40%" height={14} style={{ marginBottom: 8 }} />
+          <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+          <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+          <Skeleton width="70%" height={13} />
+        </View>
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Skeleton width="30%" height={13} style={{ marginBottom: 12 }} />
+          <Skeleton width="100%" height={44} borderRadius={8} />
+        </View>
+      </ScrollView>
     );
   }
 

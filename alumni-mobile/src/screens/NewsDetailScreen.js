@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +17,7 @@ import { Heart, Send, ChevronDown, ChevronUp } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
+import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
@@ -186,9 +186,29 @@ export default function NewsDetailScreen({ route, navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" color={c.primary} />
-      </View>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={[styles.postCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Skeleton width="80%" height={20} style={{ marginBottom: 8 }} />
+          <Skeleton width="40%" height={12} style={{ marginBottom: 12 }} />
+          <Skeleton width="100%" height={180} borderRadius={8} style={{ marginBottom: 12 }} />
+          <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+          <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+          <Skeleton width="60%" height={13} />
+        </View>
+        {[0, 1].map((i) => (
+          <View
+            key={i}
+            style={[styles.threadBlock, { backgroundColor: c.surface, borderColor: c.border }]}
+          >
+            <Skeleton width="45%" height={13} style={{ marginBottom: 8 }} />
+            <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+            <Skeleton width="75%" height={13} />
+          </View>
+        ))}
+      </ScrollView>
     );
   }
 

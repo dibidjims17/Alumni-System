@@ -7,11 +7,11 @@ import {
   Switch,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import Skeleton from '../components/ui/Skeleton';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
@@ -85,9 +85,20 @@ export default function JobPreferencesScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" />
-      </View>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={{ padding: 16 }}
+      >
+        <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={{ marginBottom: 16 }}>
+              <Skeleton width="35%" height={12} style={{ marginBottom: 8 }} />
+              <Skeleton width="100%" height={44} borderRadius={8} />
+            </View>
+          ))}
+          <Skeleton width="100%" height={48} borderRadius={10} />
+        </View>
+      </ScrollView>
     );
   }
 
@@ -149,6 +160,11 @@ export default function JobPreferencesScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  skeletonCard: {
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 14,
+  },
   noticeText: { fontSize: 12, marginBottom: 12 },
   label: { fontSize: 12, marginTop: 12, marginBottom: 4 },
   input: {

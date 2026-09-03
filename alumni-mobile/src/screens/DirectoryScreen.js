@@ -19,6 +19,7 @@ import { API_BASE_URL } from '../config';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
@@ -196,7 +197,20 @@ export default function DirectoryScreen({ navigation }) {
       )}
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 24 }} size="large" color={c.primary} />
+        <View>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View
+              key={i}
+              style={[styles.skeletonRow, { backgroundColor: c.surface, borderColor: c.border }]}
+            >
+              <Skeleton width={48} height={48} borderRadius={24} />
+              <View style={styles.skeletonText}>
+                <Skeleton width="60%" height={15} style={{ marginBottom: 8 }} />
+                <Skeleton width="40%" height={12} />
+              </View>
+            </View>
+          ))}
+        </View>
       ) : (
         <FlatList
           data={items}
@@ -256,6 +270,15 @@ const styles = StyleSheet.create({
   option: { padding: 12 },
   optionText: { fontSize: 14 },
   listContent: { paddingTop: 12, paddingBottom: 24 },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+    marginBottom: 12,
+  },
+  skeletonText: { flex: 1, marginLeft: 12 },
   card: {
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,

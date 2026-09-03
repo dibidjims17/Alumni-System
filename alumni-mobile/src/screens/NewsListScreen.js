@@ -7,7 +7,6 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { Heart, MessageCircle } from 'lucide-react-native';
@@ -18,6 +17,7 @@ import { assetUrl } from '../utils/media';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
 const COMMUNITY_TABS = [
@@ -171,8 +171,23 @@ export default function NewsListScreen({ navigation }) {
         />
       </View>
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={c.primary} />
+        <View style={styles.skeletonList}>
+          {[0, 1, 2].map((i) => (
+            <View
+              key={i}
+              style={[
+                styles.skeletonCard,
+                { backgroundColor: c.surface, borderColor: c.border },
+              ]}
+            >
+              <Skeleton height={150} borderRadius={0} />
+              <View style={styles.skeletonBody}>
+                <Skeleton width="70%" height={16} style={{ marginBottom: 8 }} />
+                <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
+                <Skeleton width="90%" height={13} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <FlatList
@@ -198,8 +213,21 @@ export default function NewsListScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f4f4f6',
   },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  skeletonList: {
+    padding: 16,
+  },
+  skeletonCard: {
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 14,
+    overflow: 'hidden',
+  },
+  skeletonBody: {
+    padding: 14,
+  },
   searchRow: {
     margin: 16,
     marginBottom: 8,
