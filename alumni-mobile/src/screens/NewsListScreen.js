@@ -70,6 +70,12 @@ export default function NewsListScreen({ navigation }) {
     fetchNews(search).finally(() => setIsLoading(false));
   }
 
+  function clearSearch() {
+    setSearch('');
+    setIsLoading(true);
+    fetchNews('').finally(() => setIsLoading(false));
+  }
+
   async function toggleHeart(item) {
     if (heartingId === item.id) return;
     setHeartingId(item.id);
@@ -170,6 +176,7 @@ export default function NewsListScreen({ navigation }) {
           value={search}
           onChangeText={setSearch}
           onSubmit={submitSearch}
+          onClear={clearSearch}
         />
       </View>
       {isLoading ? (

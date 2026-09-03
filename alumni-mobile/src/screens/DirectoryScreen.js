@@ -110,6 +110,13 @@ export default function DirectoryScreen({ navigation }) {
     loadDirectory(true, search, program);
   }
 
+  function clearSearch() {
+    // Clearing the text resets the search only — the program
+    // dropdown is a separate filter and stays as-is.
+    setSearch('');
+    loadDirectory(true, '', program);
+  }
+
   async function handleRefresh() {
     setIsRefreshing(true);
     await loadFilters();
@@ -150,6 +157,7 @@ export default function DirectoryScreen({ navigation }) {
         value={search}
         onChangeText={setSearch}
         onSubmit={submitSearch}
+        onClear={clearSearch}
       />
 
       <Text style={[styles.filterLabel, { color: c.textMuted }]}>Program</Text>

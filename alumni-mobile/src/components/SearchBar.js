@@ -4,9 +4,20 @@ import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Search, X } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function SearchBar({ placeholder, value, onChangeText, onSubmit }) {
+export default function SearchBar({ placeholder, value, onChangeText, onSubmit, onClear }) {
   const { theme } = useTheme();
   const c = theme.colors;
+
+  function handleClear() {
+    // Clear first, then let the owner reload with a known-empty term.
+    // (Calling onSubmit here would reuse the stale pre-clear value.)
+    if (onClear) {
+      onClear();
+    } else {
+      onChangeText('');
+      onSubmit();
+    }
+  }
 
   return (
     <View
@@ -35,10 +46,7 @@ export default function SearchBar({ placeholder, value, onChangeText, onSubmit }
       {value.length > 0 && (
         <TouchableOpacity
           style={styles.iconButton}
-          onPress={() => {
-            onChangeText('');
-            onSubmit();
-          }}
+          onPress={handleClear}
           accessibilityLabel="Clear search"
         >
           <X size={18} color={c.textMuted} />

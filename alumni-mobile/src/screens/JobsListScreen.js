@@ -70,6 +70,12 @@ export default function JobsListScreen({ navigation }) {
     fetchJobs(search).finally(() => setIsLoading(false));
   }
 
+  function clearSearch() {
+    setSearch('');
+    setIsLoading(true);
+    fetchJobs('').finally(() => setIsLoading(false));
+  }
+
   function renderItem({ item }) {
     const salary = formatSalary(item.salaryMin, item.salaryMax);
     const deadline = deadlineInfo(item.deadline);
@@ -156,6 +162,7 @@ export default function JobsListScreen({ navigation }) {
           value={search}
           onChangeText={setSearch}
           onSubmit={submitSearch}
+          onClear={clearSearch}
         />
       </View>
       {isLoading ? (

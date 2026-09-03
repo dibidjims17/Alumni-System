@@ -78,6 +78,12 @@ export default function EventsListScreen({ navigation }) {
     loadEvents(search);
   }
 
+  function clearSearch() {
+    setSearch('');
+    setLoading(true);
+    loadEvents('');
+  }
+
   async function handleRefresh() {
     setIsRefreshing(true);
     await loadEvents(search);
@@ -135,6 +141,7 @@ export default function EventsListScreen({ navigation }) {
           value={search}
           onChangeText={setSearch}
           onSubmit={submitSearch}
+          onClear={clearSearch}
         />
       </View>
       {loading ? (
