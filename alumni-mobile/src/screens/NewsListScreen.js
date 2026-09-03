@@ -158,7 +158,7 @@ export default function NewsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
       <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={COMMUNITY_TABS} active="NewsList" navigation={navigation} />
       {error && <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>}
@@ -213,7 +213,6 @@ export default function NewsListScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f4f6',
   },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   skeletonList: {

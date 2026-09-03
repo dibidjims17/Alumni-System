@@ -227,7 +227,7 @@ export default function JobDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  container: { flex: 1 },
   content: { padding: 16, paddingBottom: 24 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   notFoundTitle: { fontSize: 17, fontWeight: '700', marginBottom: 8 },

@@ -197,10 +197,8 @@ const styles = StyleSheet.create({
   },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     marginHorizontal: 16,
     marginBottom: 10,
     padding: 12,
