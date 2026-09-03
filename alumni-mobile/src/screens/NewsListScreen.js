@@ -3,7 +3,6 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -12,7 +11,14 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
-import TopBar from '../components/TopBar';
+import SearchBar from '../components/SearchBar';
+import SectionTabs from '../components/SectionTabs';
+
+const COMMUNITY_TABS = [
+  { key: 'News', label: 'News', screen: 'NewsList' },
+  { key: 'Events', label: 'Events', screen: 'EventsList' },
+  { key: 'Alumni', label: 'Alumni', screen: 'Directory' },
+];
 
 export default function NewsListScreen({ navigation }) {
   const [items, setItems] = useState([]);
@@ -53,12 +59,6 @@ export default function NewsListScreen({ navigation }) {
     fetchNews(search).finally(() => setIsLoading(false));
   }
 
-  function resetSearch() {
-    setSearch('');
-    setIsLoading(true);
-    fetchNews('').finally(() => setIsLoading(false));
-  }
-
   function renderItem({ item }) {
     return (
       <TouchableOpacity
@@ -81,22 +81,15 @@ export default function NewsListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TopBar active="NewsList" navigation={navigation} />
+      <SectionTabs items={COMMUNITY_TABS} active="NewsList" navigation={navigation} />
       {error && <Text style={styles.errorText}>{error}</Text>}
       <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search title or content"
+        <SearchBar
+          placeholder="Search news"
           value={search}
           onChangeText={setSearch}
-          onSubmitEditing={submitSearch}
-          returnKeyType="search"
+          onSubmit={submitSearch}
         />
-        {search.trim() !== '' && (
-          <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
-            <Text style={styles.resetText}>Reset</Text>
-          </TouchableOpacity>
-        )}
       </View>
       {isLoading ? (
         <View style={styles.centered}>
@@ -126,21 +119,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     margin: 16,
     marginBottom: 0,
-    gap: 8,
   },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    padding: 10,
-  },
-  resetButton: {
-    padding: 10,
-  },
-  resetText: { fontSize: 13, color: '#1a4fd8' },
   listContent: { padding: 16 },
   card: {
     padding: 12,

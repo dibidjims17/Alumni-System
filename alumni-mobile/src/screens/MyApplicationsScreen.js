@@ -11,7 +11,12 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
-import TopBar from '../components/TopBar';
+import SectionTabs from '../components/SectionTabs';
+
+const CAREER_TABS = [
+  { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
+  { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
+];
 
 export default function MyApplicationsScreen({ navigation }) {
   const [items, setItems] = useState([]);
@@ -69,8 +74,8 @@ export default function MyApplicationsScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.outer}>
-      <TopBar active="MyApplications" navigation={navigation} />
+    <View style={styles.container}>
+      <SectionTabs items={CAREER_TABS} active="MyApplications" navigation={navigation} />
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />

@@ -1,9 +1,16 @@
 // src/screens/EventsListScreen.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
-import TopBar from '../components/TopBar';
+import SearchBar from '../components/SearchBar';
+import SectionTabs from '../components/SectionTabs';
+
+const COMMUNITY_TABS = [
+  { key: 'News', label: 'News', screen: 'NewsList' },
+  { key: 'Events', label: 'Events', screen: 'EventsList' },
+  { key: 'Alumni', label: 'Alumni', screen: 'Directory' },
+];
 
 export default function EventsListScreen({ navigation }) {
   const [events, setEvents] = useState([]);
@@ -63,12 +70,6 @@ export default function EventsListScreen({ navigation }) {
     loadEvents(search);
   }
 
-  function resetSearch() {
-    setSearch('');
-    setLoading(true);
-    loadEvents('');
-  }
-
   function renderItem({ item }) {
     const dateText = item.eventDate
       ? new Date(item.eventDate).toLocaleString()
@@ -101,21 +102,14 @@ export default function EventsListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TopBar active="EventsList" navigation={navigation} />
+      <SectionTabs items={COMMUNITY_TABS} active="EventsList" navigation={navigation} />
       <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search title or location"
+        <SearchBar
+          placeholder="Search events or locations"
           value={search}
           onChangeText={setSearch}
-          onSubmitEditing={submitSearch}
-          returnKeyType="search"
+          onSubmit={submitSearch}
         />
-        {search.trim() !== '' && (
-          <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
-            <Text style={styles.resetText}>Reset</Text>
-          </TouchableOpacity>
-        )}
       </View>
       {loading ? (
         <View style={styles.centered}>
@@ -141,21 +135,9 @@ export default function EventsListScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     margin: 16,
     marginBottom: 0,
-    gap: 8,
   },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    padding: 10,
-  },
-  resetButton: {
-    padding: 10,
-  },
-  resetText: { fontSize: 13, color: '#1a4fd8' },
   list: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   card: { margin: 16, marginBottom: 8, padding: 12, borderWidth: 1 },

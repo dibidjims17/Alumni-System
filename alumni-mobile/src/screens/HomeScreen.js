@@ -1,51 +1,76 @@
 // src/screens/HomeScreen.js
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Newspaper, Briefcase, CalendarDays, Users, User, LogOut } from 'lucide-react-native';
+import { Newspaper, Briefcase, CalendarDays, Users, User, LogOut, Bell } from 'lucide-react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
-import TopBar from '../components/TopBar';
+import apiClient from '../api/client';
 
 const ACCENT = '#1a4fd8';
 
 const TILES = [
-  { key: 'news', label: 'News', screen: 'NewsList', Icon: Newspaper },
-  { key: 'jobs', label: 'Jobs', screen: 'JobsList', Icon: Briefcase },
-  { key: 'events', label: 'Events', screen: 'EventsList', Icon: CalendarDays },
-  { key: 'directory', label: 'Find Alumni', screen: 'Directory', Icon: Users },
-  { key: 'profile', label: 'Profile', screen: 'Profile', Icon: User },
+  { key: 'news', label: 'News', Icon: Newspaper, target: ['CommunityTab', 'NewsList'] },
+  { key: 'jobs', label: 'Jobs', Icon: Briefcase, target: ['CareerTab', 'JobsList'] },
+  { key: 'events', label: 'Events', Icon: CalendarDays, target: ['CommunityTab', 'EventsList'] },
+  { key: 'directory', label: 'Find Alumni', Icon: Users, target: ['CommunityTab', 'Directory'] },
+  { key: 'profile', label: 'Profile', Icon: User, target: ['ProfileTab', 'Profile'] },
 ];
 
 export default function HomeScreen({ navigation }) {
   const { student, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      apiClient
+        .get('/Notification/unread-count')
+        .then((res) => setUnreadCount(res.data.count || 0))
+        .catch(() => {});
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
-      <TopBar active="Home" navigation={navigation} />
-
-      <View style={styles.body}>
-        <Text style={styles.title}>Welcome, {student?.fullName}</Text>
-        <Text style={styles.detail}>
-          {student?.studentNumber} • {student?.program}
-        </Text>
-
-        <View style={styles.grid}>
-          {TILES.map(({ key, label, screen, Icon }) => (
-            <TouchableOpacity
-              key={key}
-              style={styles.tile}
-              onPress={() => navigation.navigate(screen)}
-            >
-              <Icon size={32} color={ACCENT} />
-              <Text style={styles.tileLabel}>{label}</Text>
-            </TouchableOpacity>
-          ))}
+      <View style={styles.header}>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>Welcome, {student?.fullName}</Text>
+          <Text style={styles.detail}>
+            {student?.studentNumber} • {student?.program}
+          </Text>
         </View>
-
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <LogOut size={16} color={ACCENT} />
-          <Text style={styles.logoutText}>Log Out</Text>
+        <TouchableOpacity
+          style={styles.bellButton}
+          onPress={() => navigation.navigate('Notifications')}
+          accessibilityLabel="Notifications"
+        >
+          <Bell size={26} color={ACCENT} />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {unreadCount > 99 ? '99+' : String(unreadCount)}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
+
+      <View style={styles.grid}>
+        {TILES.map(({ key, label, Icon, target }) => (
+          <TouchableOpacity
+            key={key}
+            style={styles.tile}
+            onPress={() => navigation.navigate(target[0], { screen: target[1] })}
+          >
+            <Icon size={32} color={ACCENT} />
+            <Text style={styles.tileLabel}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <LogOut size={16} color={ACCENT} />
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -53,10 +78,17 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  body: {
-    flex: 1,
     padding: 24,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  headerText: {
+    flex: 1,
+    marginRight: 12,
   },
   title: {
     fontSize: 20,
@@ -66,11 +98,30 @@ const styles = StyleSheet.create({
     marginTop: 2,
     color: '#555',
   },
+  bellButton: {
+    padding: 8,
+  },
+  badge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#cc0000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginTop: 24,
   },
   tile: {
     flexBasis: '48%',

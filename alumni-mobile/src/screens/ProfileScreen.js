@@ -15,7 +15,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import apiClient from '../api/client';
 import { API_BASE_URL } from '../config';
 import ProfileCompleteness from '../components/ProfileCompleteness';
-import TopBar from '../components/TopBar';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
 const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
@@ -111,14 +110,15 @@ export default function ProfileScreen({ navigation }) {
     }, [])
   );
 
+  if (isLoading || !profile) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.outer}>
-      <TopBar active="Profile" navigation={navigation} />
-      {isLoading || !profile ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" />
-        </View>
-      ) : (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <TouchableOpacity onPress={handleChangePicture} accessibilityLabel="Change profile picture">
         <Image
@@ -180,7 +180,7 @@ export default function ProfileScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.editButton}
-        onPress={() => navigation.navigate('MyApplications')}
+        onPress={() => navigation.navigate('CareerTab', { screen: 'MyApplications' })}
       >
         <Text style={styles.buttonText}>My Applications</Text>
       </TouchableOpacity>
@@ -280,13 +280,10 @@ export default function ProfileScreen({ navigation }) {
         )}
       </View>
     </ScrollView>
-      )}
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  outer: { flex: 1 },
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   avatar: {

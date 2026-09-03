@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
-import TopBar from '../components/TopBar';
 
 export default function NotificationsScreen({ navigation }) {
   const [items, setItems] = useState([]);
@@ -60,14 +59,23 @@ export default function NotificationsScreen({ navigation }) {
 
     switch (item.type) {
       case 'APPLICATION_STATUS':
-        navigation.navigate('MyApplications');
+        navigation.navigate('CareerTab', { screen: 'MyApplications' });
         break;
       case 'JOB':
-        navigation.navigate('JobDetail', { jobId: item.relatedId });
+        navigation.navigate('CareerTab', {
+          screen: 'JobDetail',
+          params: { jobId: item.relatedId },
+        });
+        break;
+      case 'EVENT':
+        navigation.navigate('CommunityTab', { screen: 'EventsList' });
         break;
       case 'MENTION':
       case 'COMMENT_REPLY':
-        navigation.navigate('NewsDetail', { newsId: item.relatedId });
+        navigation.navigate('CommunityTab', {
+          screen: 'NewsDetail',
+          params: { newsId: item.relatedId },
+        });
         break;
       default:
         break;
@@ -87,31 +95,30 @@ export default function NotificationsScreen({ navigation }) {
     );
   }
 
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <TopBar active="Notifications" navigation={navigation} />
-      {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" />
-        </View>
-      ) : (
-        <>
-          <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllRead}>
-            <Text style={styles.buttonText}>Mark all as read</Text>
-          </TouchableOpacity>
+      <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllRead}>
+        <Text style={styles.buttonText}>Mark all as read</Text>
+      </TouchableOpacity>
 
-          <FlatList
-            data={items}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-            }
-            ListEmptyComponent={<Text style={styles.emptyText}>No notifications yet.</Text>}
-          />
-        </>
-      )}
+      <FlatList
+        data={items}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+        ListEmptyComponent={<Text style={styles.emptyText}>No notifications yet.</Text>}
+      />
     </View>
   );
 }

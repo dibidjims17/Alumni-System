@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
-import TopBar from '../components/TopBar';
 
 export default function JobDetailScreen({ route, navigation }) {
   const { jobId } = route.params;
@@ -75,14 +74,17 @@ export default function JobDetailScreen({ route, navigation }) {
     }
   }
 
+  if (isLoading || !job) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const deadlinePassed = job.deadline && new Date(job.deadline) < new Date();
+
   return (
-    <View style={styles.outer}>
-      <TopBar active="JobsList" navigation={navigation} />
-      {isLoading || !job ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" />
-        </View>
-      ) : (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.title}>{job.jobTitle}</Text>
       <Text style={styles.company}>{job.company}</Text>
@@ -98,7 +100,7 @@ export default function JobDetailScreen({ route, navigation }) {
       {job.deadline && (
         <Text style={styles.meta}>
           Deadline: {new Date(job.deadline).toLocaleDateString()}
-          {new Date(job.deadline) < new Date() ? ' (Closed)' : ''}
+          {deadlinePassed ? ' (Closed)' : ''}
         </Text>
       )}
 
@@ -112,7 +114,7 @@ export default function JobDetailScreen({ route, navigation }) {
             {myApplication ? ` Status: ${myApplication.status}` : ''}
           </Text>
         </View>
-      ) : job.isActive && !(job.deadline && new Date(job.deadline) < new Date()) ? (
+      ) : job.isActive && !deadlinePassed ? (
         <View style={styles.applySection}>
           <View style={styles.switchRow}>
             <Text style={styles.label}>Attach my resume</Text>
@@ -136,13 +138,10 @@ export default function JobDetailScreen({ route, navigation }) {
         </View>
       )}
     </ScrollView>
-      )}
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  outer: { flex: 1 },
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { fontSize: 18, marginBottom: 4 },

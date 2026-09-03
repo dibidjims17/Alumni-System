@@ -3,7 +3,6 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -13,7 +12,13 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import TopBar from '../components/TopBar';
+import SearchBar from '../components/SearchBar';
+import SectionTabs from '../components/SectionTabs';
+
+const CAREER_TABS = [
+  { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
+  { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
+];
 
 export default function JobsListScreen({ navigation }) {
   const { student } = useAuth();
@@ -59,12 +64,6 @@ export default function JobsListScreen({ navigation }) {
     fetchJobs(search).finally(() => setIsLoading(false));
   }
 
-  function resetSearch() {
-    setSearch('');
-    setIsLoading(true);
-    fetchJobs('').finally(() => setIsLoading(false));
-  }
-
   function renderItem({ item }) {
     return (
       <TouchableOpacity
@@ -82,7 +81,7 @@ export default function JobsListScreen({ navigation }) {
   if (!isGraduate) {
     return (
       <View style={styles.container}>
-        <TopBar active="JobsList" navigation={navigation} />
+        <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
         <View style={styles.centered}>
           <Text style={styles.infoText}>
             Job listings are available for Graduate students only.
@@ -94,21 +93,14 @@ export default function JobsListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TopBar active="JobsList" navigation={navigation} />
+      <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
       <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search title or company"
+        <SearchBar
+          placeholder="Search jobs or companies"
           value={search}
           onChangeText={setSearch}
-          onSubmitEditing={submitSearch}
-          returnKeyType="search"
+          onSubmit={submitSearch}
         />
-        {search.trim() !== '' && (
-          <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
-            <Text style={styles.resetText}>Reset</Text>
-          </TouchableOpacity>
-        )}
       </View>
       {isLoading ? (
         <View style={styles.centered}>
@@ -139,21 +131,9 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   listContent: { padding: 16 },
   searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     margin: 16,
     marginBottom: 0,
-    gap: 8,
   },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    padding: 10,
-  },
-  resetButton: {
-    padding: 10,
-  },
-  resetText: { fontSize: 13, color: '#1a4fd8' },
   card: {
     padding: 12,
     marginBottom: 12,
