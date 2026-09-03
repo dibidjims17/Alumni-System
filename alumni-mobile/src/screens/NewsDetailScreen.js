@@ -1,5 +1,5 @@
 // src/screens/NewsDetailScreen.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -74,15 +75,24 @@ export default function NewsDetailScreen({ route, navigation }) {
   const [expandedThreads, setExpandedThreads] = useState({});
   const [notFound, setNotFound] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const baseWindowHeight = useRef(Dimensions.get('window').height);
 
   // Android: KeyboardAvoidingView is unreliable here, so track the keyboard
   // height directly and pad the root view. Hide always resets to 0.
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
+      const winH = Dimensions.get('window').height;
+      const scrH = Dimensions.get('screen').height;
+      const kbH = e.endCoordinates.height;
+      const kbTop = e.endCoordinates.screenY;
+      console.log(`[kb] win=${winH} screen=${scrH} kbTop=${kbTop} kbH=${kbH}`);
+      // If the OS already shrank the window, don't double-count it.
+      const resizedBy = Math.max(0, baseWindowHeight.current - winH);
+      setKeyboardHeight(Math.max(0, kbH - resizedBy));
     });
     const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      baseWindowHeight.current = Dimensions.get('window').height;
       setKeyboardHeight(0);
     });
     return () => {
