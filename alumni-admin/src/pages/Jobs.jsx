@@ -38,6 +38,12 @@ export default function Jobs() {
     return `₱${Number(value).toLocaleString()}`;
   }
 
+  function stepSalary(field, delta) {
+    const current = Number(form[field]) || 0;
+    const next = Math.min(FORM_SALARY_CAP, Math.max(0, current + delta));
+    setForm({ ...form, [field]: next });
+  }
+
   async function loadJobs(activeSearch = "") {
     setLoading(true);
     setError("");
@@ -280,15 +286,19 @@ export default function Jobs() {
               <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
                 <div style={{ flex: 1 }}>
                   <label>Salary Min — {formatPeso(form.salaryMin)}</label><br />
-                  <input
-                    type="range"
-                    min={0}
-                    max={FORM_SALARY_CAP}
-                    step={FORM_SALARY_STEP}
-                    value={Number(form.salaryMin) || 0}
-                    onChange={(e) => setForm({ ...form, salaryMin: Number(e.target.value) })}
-                    style={{ width: "100%" }}
-                  />
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <button type="button" onClick={() => stepSalary("salaryMin", -FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>−</button>
+                    <input
+                      type="range"
+                      min={0}
+                      max={FORM_SALARY_CAP}
+                      step={FORM_SALARY_STEP}
+                      value={Number(form.salaryMin) || 0}
+                      onChange={(e) => setForm({ ...form, salaryMin: Number(e.target.value) })}
+                      style={{ flex: 1 }}
+                    />
+                    <button type="button" onClick={() => stepSalary("salaryMin", FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>+</button>
+                  </div>
                   <input
                     type="number"
                     value={form.salaryMin}
@@ -299,15 +309,19 @@ export default function Jobs() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label>Salary Max — {formatPeso(form.salaryMax)}</label><br />
-                  <input
-                    type="range"
-                    min={0}
-                    max={FORM_SALARY_CAP}
-                    step={FORM_SALARY_STEP}
-                    value={Number(form.salaryMax) || 0}
-                    onChange={(e) => setForm({ ...form, salaryMax: Number(e.target.value) })}
-                    style={{ width: "100%" }}
-                  />
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <button type="button" onClick={() => stepSalary("salaryMax", -FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>−</button>
+                    <input
+                      type="range"
+                      min={0}
+                      max={FORM_SALARY_CAP}
+                      step={FORM_SALARY_STEP}
+                      value={Number(form.salaryMax) || 0}
+                      onChange={(e) => setForm({ ...form, salaryMax: Number(e.target.value) })}
+                      style={{ flex: 1 }}
+                    />
+                    <button type="button" onClick={() => stepSalary("salaryMax", FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>+</button>
+                  </div>
                   <input
                     type="number"
                     value={form.salaryMax}
