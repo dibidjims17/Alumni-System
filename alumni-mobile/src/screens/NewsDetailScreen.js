@@ -69,6 +69,7 @@ export default function NewsDetailScreen({ route, navigation }) {
   const [editingComment, setEditingComment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedThreads, setExpandedThreads] = useState({});
+  const [notFound, setNotFound] = useState(false);
 
   function toggleThread(commentId) {
     setExpandedThreads((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
@@ -76,10 +77,15 @@ export default function NewsDetailScreen({ route, navigation }) {
 
   async function fetchDetail() {
     try {
+      setNotFound(false);
       const res = await apiClient.get(`/News/${newsId}`);
       setNews(res.data);
     } catch (err) {
-      Alert.alert('Error', 'Could not load this post.');
+      if (err.response?.status === 404) {
+        setNotFound(true);
+      } else {
+        Alert.alert('Error', 'Could not load this post.');
+      }
     }
   }
 
@@ -178,10 +184,27 @@ export default function NewsDetailScreen({ route, navigation }) {
     }
   }
 
-  if (isLoading || !news) {
+  if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: c.background }]}>
         <ActivityIndicator size="large" color={c.primary} />
+      </View>
+    );
+  }
+
+  if (!news) {
+    return (
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
+        <Text style={[styles.notFoundTitle, { color: c.text }]}>No longer available</Text>
+        <Text style={[styles.notFoundText, { color: c.textMuted }]}>
+          This post may have been removed by an admin.
+        </Text>
+        <TouchableOpacity
+          style={[styles.goBackButton, { borderColor: c.border }]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.goBackText, { color: c.primary }]}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -347,7 +370,16 @@ export default function NewsDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 24 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  notFoundTitle: { fontSize: 17, fontWeight: '700', marginBottom: 8 },
+  notFoundText: { fontSize: 13, textAlign: 'center', marginBottom: 16 },
+  goBackButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  goBackText: { fontSize: 14, fontWeight: '600' },
   postCard: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,

@@ -77,7 +77,16 @@ export default function NotificationsScreen({ navigation }) {
         });
         break;
       case 'EVENT':
-        navigation.navigate('CommunityTab', { screen: 'EventsList' });
+        navigation.navigate('CommunityTab', {
+          screen: 'EventDetail',
+          params: { eventId: item.relatedId },
+        });
+        break;
+      case 'NEWS':
+        navigation.navigate('CommunityTab', {
+          screen: 'NewsDetail',
+          params: { newsId: item.relatedId },
+        });
         break;
       case 'MENTION':
       case 'COMMENT_REPLY':

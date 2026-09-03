@@ -23,9 +23,11 @@ export default function JobDetailScreen({ route, navigation }) {
   const [isApplying, setIsApplying] = useState(false);
   const [attachResume, setAttachResume] = useState(true);
   const [myApplication, setMyApplication] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   async function fetchJob() {
     try {
+      setNotFound(false);
       const res = await apiClient.get(`/Jobs/${jobId}`);
       setJob(res.data);
 
@@ -37,7 +39,11 @@ export default function JobDetailScreen({ route, navigation }) {
         setMyApplication(null);
       }
     } catch (err) {
-      Alert.alert('Error', 'Could not load job details.');
+      if (err.response?.status === 404) {
+        setNotFound(true);
+      } else {
+        Alert.alert('Error', 'Could not load job details.');
+      }
     }
   }
 
@@ -77,15 +83,30 @@ export default function JobDetailScreen({ route, navigation }) {
     }
   }
 
-  if (isLoading || !job) {
+  if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
 
-  const deadlinePassed = job.deadline && new Date(job.deadline) < new Date();
+  if (!job) {
+    return (
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
+        <Text style={[styles.notFoundTitle, { color: c.text }]}>No longer available</Text>
+        <Text style={[styles.notFoundText, { color: c.textMuted }]}>
+          This job may have been removed by an admin.
+        </Text>
+        <TouchableOpacity
+          style={[styles.goBackButton, { borderColor: c.border }]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.goBackText, { color: c.primary }]}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -152,9 +173,18 @@ export default function JobDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f4f4f6' },
   content: { padding: 16, paddingBottom: 24 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  notFoundTitle: { fontSize: 17, fontWeight: '700', marginBottom: 8 },
+  notFoundText: { fontSize: 13, textAlign: 'center', marginBottom: 16 },
+  goBackButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  goBackText: { fontSize: 14, fontWeight: '600' },
   card: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,

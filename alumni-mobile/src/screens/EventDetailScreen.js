@@ -13,20 +13,26 @@ import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function EventDetailScreen({ route }) {
+export default function EventDetailScreen({ route, navigation }) {
   const { eventId } = route.params;
   const { theme } = useTheme();
   const c = theme.colors;
   const [event, setEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   async function fetchEvent() {
     try {
+      setNotFound(false);
       const res = await apiClient.get(`/Events/${eventId}`);
       setEvent(res.data);
     } catch (err) {
-      Alert.alert('Error', 'Could not load this event.');
+      if (err.response?.status === 404) {
+        setNotFound(true);
+      } else {
+        Alert.alert('Error', 'Could not load this event.');
+      }
     }
   }
 
@@ -60,10 +66,27 @@ export default function EventDetailScreen({ route }) {
     }
   }
 
-  if (isLoading || !event) {
+  if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: c.background }]}>
         <ActivityIndicator size="large" color={c.primary} />
+      </View>
+    );
+  }
+
+  if (!event) {
+    return (
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
+        <Text style={[styles.notFoundTitle, { color: c.text }]}>No longer available</Text>
+        <Text style={[styles.notFoundText, { color: c.textMuted }]}>
+          This event may have been removed by an admin.
+        </Text>
+        <TouchableOpacity
+          style={[styles.goBackButton, { borderColor: c.border }]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.goBackText, { color: c.primary }]}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -117,7 +140,16 @@ export default function EventDetailScreen({ route }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 24 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  notFoundTitle: { fontSize: 17, fontWeight: '700', marginBottom: 8 },
+  notFoundText: { fontSize: 13, textAlign: 'center', marginBottom: 16 },
+  goBackButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  goBackText: { fontSize: 14, fontWeight: '600' },
   card: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
