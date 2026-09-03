@@ -194,6 +194,39 @@ export default function ProfileScreen({ navigation }) {
           <Text style={[styles.fieldLabel, { color: c.textMuted }]}>Phone</Text>
           <Text style={[styles.fieldValue, { color: c.text }]}>{profile.phone || 'Not set'}</Text>
         </View>
+
+        <View style={[styles.actionCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[styles.sectionHeader, { color: c.text }]}>Job Preferences</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('JobPreferences')}>
+              <Text style={[styles.editLink, { color: c.primary }]}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          {jobPreferences ? (
+            <>
+              <Text style={[styles.fieldLabel, { color: c.textMuted }]}>Preferred Job Title</Text>
+              <Text style={[styles.fieldValue, { color: c.text }]}>
+                {jobPreferences.preferredJobTitle || 'Not set'}
+              </Text>
+              <Text style={[styles.fieldLabel, { color: c.textMuted }]}>Preferred Industry</Text>
+              <Text style={[styles.fieldValue, { color: c.text }]}>
+                {jobPreferences.preferredIndustry || 'Not set'}
+              </Text>
+              <Text style={[styles.fieldLabel, { color: c.textMuted }]}>Preferred Location</Text>
+              <Text style={[styles.fieldValue, { color: c.text }]}>
+                {jobPreferences.preferredLocation || 'Not set'}
+              </Text>
+              <Text style={[styles.fieldLabel, { color: c.textMuted }]}>Open to Work</Text>
+              <Text style={[styles.fieldValue, { color: c.text }]}>
+                {jobPreferences.isOpenToWork ? 'Yes' : 'No'}
+              </Text>
+            </>
+          ) : (
+            <Text style={[styles.fieldValue, { color: c.text }]}>
+              No job preferences set yet.
+            </Text>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -223,6 +256,12 @@ const styles = StyleSheet.create({
   },
   actionCardText: { fontSize: 15, fontWeight: '600' },
   sectionHeader: { fontSize: 13, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.8 },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editLink: { fontSize: 13, fontWeight: '600' },
   fieldLabel: { fontSize: 11, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.4 },
   fieldValue: { fontSize: 14, marginTop: 2 },
 });
