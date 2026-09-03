@@ -36,6 +36,14 @@ namespace MyApp.Application.Services
             }).ToList();
         }
 
+        public async Task<(int Total, int Active, int Graduate)> GetStatsAsync()
+        {
+            var total = await _studentRepository.CountAllAsync();
+            var active = await _studentRepository.CountActiveAsync();
+            var graduate = await _studentRepository.CountGraduateAsync();
+            return (total, active, graduate);
+        }
+
         public async Task<ImportResultDto> ImportStudentsAsync(List<ImportStudentDto> students, int adminId)
         {
             var result = new ImportResultDto();

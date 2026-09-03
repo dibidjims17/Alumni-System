@@ -64,6 +64,7 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<News?> GetByIdIncludingDeletedAsync(int id)
         {
             return await _context.News
+                .IgnoreQueryFilters()
                 .Include(n => n.PostedByAdmin)
                 .Include(n => n.Hearts)
                 .FirstOrDefaultAsync(n => n.Id == id);
@@ -72,6 +73,7 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<List<News>> GetDeletedAsync()
         {
             return await _context.News
+                .IgnoreQueryFilters()
                 .Where(n => n.IsDeleted)
                 .Include(n => n.PostedByAdmin)
                 .Include(n => n.Hearts)

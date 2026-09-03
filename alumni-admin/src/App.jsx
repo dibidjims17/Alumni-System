@@ -18,6 +18,17 @@ function ProtectedRoute({ children }) {
   return session ? children : <Navigate to="/login" replace />;
 }
 
+// Only SuperAdmins may access these pages; Staff get bounced to the dashboard
+// even if they type the URL directly.
+function SuperAdminRoute({ children }) {
+  const session = getSession();
+  return session?.role === "SuperAdmin" ? (
+    children
+  ) : (
+    <Navigate to="/dashboard" replace />
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -38,9 +49,9 @@ export default function App() {
           <Route path="/news" element={<News />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id/applicants" element={<JobApplicants />} />
-          <Route path="/manage-admins" element={<ManageAdmins />} />
-          <Route path="/trash" element={<Trash />} />
-          <Route path="/activity-log" element={<ActivityLog />} />
+          <Route path="/manage-admins" element={<SuperAdminRoute><ManageAdmins /></SuperAdminRoute>} />
+          <Route path="/trash" element={<SuperAdminRoute><Trash /></SuperAdminRoute>} />
+          <Route path="/activity-log" element={<SuperAdminRoute><ActivityLog /></SuperAdminRoute>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

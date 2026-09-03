@@ -26,5 +26,15 @@ namespace MyApp.Infrastructure.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<AlumniDocument> AlumniDocuments { get; set; }
         public DbSet<NewsCommentLike> NewsCommentLikes { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Soft-delete global filters: queries never return deleted rows unless
+            // the repository explicitly opts out with IgnoreQueryFilters().
+            modelBuilder.Entity<Job>().HasQueryFilter(j => !j.IsDeleted);
+            modelBuilder.Entity<News>().HasQueryFilter(n => !n.IsDeleted);
+        }
     }
 }

@@ -7,5 +7,6 @@ namespace MyApp.Application.Interfaces
         Task<List<StudentDto>> GetAllStudentsAsync();
         Task<ImportResultDto> ImportStudentsAsync(List<ImportStudentDto> students, int adminId);
         Task<bool> ToggleStudentStatusAsync(int studentId, int adminId);
+        Task<(int Total, int Active, int Graduate)> GetStatsAsync();
     }
 }

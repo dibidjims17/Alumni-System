@@ -87,6 +87,7 @@ builder.Services.AddRateLimiter(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -126,6 +127,10 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Convert unhandled exceptions into consistent JSON problem details instead of
+// leaking stack traces or returning an empty 500.
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

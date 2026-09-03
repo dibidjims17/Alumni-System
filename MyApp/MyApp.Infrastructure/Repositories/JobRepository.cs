@@ -42,6 +42,7 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<Job?> GetByIdIncludingDeletedAsync(int id)
         {
             return await _context.Jobs
+                .IgnoreQueryFilters()
                 .Include(j => j.Applications)
                 .Include(j => j.PostedByAdmin)
                 .FirstOrDefaultAsync(j => j.Id == id);
@@ -50,6 +51,7 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<List<Job>> GetDeletedAsync()
         {
             return await _context.Jobs
+                .IgnoreQueryFilters()
                 .Where(j => j.IsDeleted)
                 .Include(j => j.Applications)
                 .OrderByDescending(j => j.PostedAt)

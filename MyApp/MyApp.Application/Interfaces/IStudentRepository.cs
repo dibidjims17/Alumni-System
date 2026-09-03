@@ -10,5 +10,8 @@ namespace MyApp.Application.Interfaces
         Task UpdateAsync(Student student);
         Task CreateAsync(Student student);
         Task<Student?> GetByEmailAsync(string email);
+        Task<int> CountAllAsync();
+        Task<int> CountActiveAsync();
+        Task<int> CountGraduateAsync();
     }
 }

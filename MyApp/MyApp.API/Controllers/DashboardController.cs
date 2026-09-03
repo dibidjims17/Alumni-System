@@ -27,15 +27,15 @@ namespace MyApp.API.Controllers
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {
-            var students = await _studentService.GetAllStudentsAsync();
+            var (totalStudents, activeStudents, graduateStudents) = await _studentService.GetStatsAsync();
             var totalNews = await _newsRepository.GetTotalCountAsync();
             var totalJobs = await _jobRepository.GetActiveCountAsync();
 
             return Ok(new
             {
-                totalStudents = students.Count,
-                activeStudents = students.Count(s => s.IsActive),
-                graduateStudents = students.Count(s => s.SchoolYear == "Graduate"),
+                totalStudents,
+                activeStudents,
+                graduateStudents,
                 totalNews,
                 totalJobs
             });

@@ -49,5 +49,20 @@ namespace MyApp.Infrastructure.Repositories
             await _context.Students.AddAsync(student);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<int> CountAllAsync()
+        {
+            return await _context.Students.CountAsync();
+        }
+
+        public async Task<int> CountActiveAsync()
+        {
+            return await _context.Students.CountAsync(s => s.IsActive);
+        }
+
+        public async Task<int> CountGraduateAsync()
+        {
+            return await _context.Students.CountAsync(s => s.SchoolYear == "Graduate");
+        }
     }
 }
