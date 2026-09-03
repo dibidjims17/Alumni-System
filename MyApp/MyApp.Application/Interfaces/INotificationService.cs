@@ -13,5 +13,6 @@ namespace MyApp.Application.Interfaces
         Task NotifyMentionAsync(int mentionedStudentId, string mentionedStudentEmail, string mentionerName, string newsTitle, int newsId);
         Task NotifyNewsPostedAsync(string newsTitle, int newsId);
         Task NotifyJobPostedAsync(string jobTitle, int jobId);
+        Task NotifyEventPostedAsync(string eventTitle, int eventId);
     }
 }

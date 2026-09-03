@@ -7,6 +7,7 @@ const baseNavItems = [
   { path: "/documents", label: "Documents" },
   { path: "/news", label: "News" },
   { path: "/jobs", label: "Jobs" },
+  { path: "/events", label: "Events" },
 ];
 
 const superAdminOnlyNavItems = [

@@ -30,6 +30,7 @@ builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAlumniDocumentRepository, AlumniDocumentRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -43,6 +44,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, MyApp.Infrastructure.Notifications.EmailService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAlumniDocumentService, AlumniDocumentService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"];

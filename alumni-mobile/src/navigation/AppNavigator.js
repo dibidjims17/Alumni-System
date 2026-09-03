@@ -23,6 +23,8 @@ import JobsListScreen from '../screens/JobsListScreen';
 import JobDetailScreen from '../screens/JobDetailScreen';
 import MyApplicationsScreen from '../screens/MyApplicationsScreen';
 
+import EventsListScreen from '../screens/EventsListScreen';
+
 import NotificationsScreen from '../screens/NotificationsScreen';
 
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
@@ -67,6 +69,7 @@ export default function AppNavigator() {
             <Stack.Screen name="JobsList" component={JobsListScreen} options={{ title: 'Jobs' }} />
             <Stack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Job Details' }} />
             <Stack.Screen name="MyApplications" component={MyApplicationsScreen} options={{ title: 'My Applications' }} />
+            <Stack.Screen name="EventsList" component={EventsListScreen} options={{ title: 'Events' }} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
           </>
         )}

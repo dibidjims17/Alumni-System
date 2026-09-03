@@ -41,6 +41,13 @@ export default function HomeScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.newsButton}
+        onPress={() => navigation.navigate('EventsList')}
+      >
+        <Text style={styles.buttonText}>View Events</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.newsButton}
         onPress={() => navigation.navigate('Notifications')}
       >
         <Text style={styles.buttonText}>

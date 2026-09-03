@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import { getSession } from "./services/api";
 import Jobs from "./pages/Jobs";
 import JobApplicants from "./pages/JobApplicants";
+import Events from "./pages/Events";
 import ActivityLog from "./pages/ActivityLog";
 import ManageAdmins from "./pages/ManageAdmins";
 import Trash from "./pages/Trash";
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/news" element={<News />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id/applicants" element={<JobApplicants />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/manage-admins" element={<SuperAdminRoute><ManageAdmins /></SuperAdminRoute>} />
           <Route path="/trash" element={<SuperAdminRoute><Trash /></SuperAdminRoute>} />
           <Route path="/activity-log" element={<SuperAdminRoute><ActivityLog /></SuperAdminRoute>} />

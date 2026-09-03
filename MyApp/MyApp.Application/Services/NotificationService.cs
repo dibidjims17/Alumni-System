@@ -150,5 +150,22 @@ namespace MyApp.Application.Services
                 });
             }
         }
+
+        public async Task NotifyEventPostedAsync(string eventTitle, int eventId)
+        {
+            var allStudents = await _studentRepository.GetAllAsync();
+            foreach (var student in allStudents.Where(s => s.IsActive))
+            {
+                await _notificationRepository.CreateAsync(new Notification
+                {
+                    StudentId = student.Id,
+                    Title = "New Event",
+                    Message = $"New alumni event: \"{eventTitle}\"",
+                    Type = "EVENT",
+                    RelatedId = eventId,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
     }
 }

@@ -26,6 +26,8 @@ namespace MyApp.Infrastructure.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<AlumniDocument> AlumniDocuments { get; set; }
         public DbSet<NewsCommentLike> NewsCommentLikes { get; set; }
+        public DbSet<Event> Events { get; set; }
+        public DbSet<EventRsvp> EventRsvps { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +37,11 @@ namespace MyApp.Infrastructure.Data
             // the repository explicitly opts out with IgnoreQueryFilters().
             modelBuilder.Entity<Job>().HasQueryFilter(j => !j.IsDeleted);
             modelBuilder.Entity<News>().HasQueryFilter(n => !n.IsDeleted);
+
+            // A student can RSVP to a given event only once.
+            modelBuilder.Entity<EventRsvp>()
+                .HasIndex(r => new { r.EventId, r.StudentId })
+                .IsUnique();
         }
     }
 }
