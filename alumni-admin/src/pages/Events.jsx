@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput } from "../components/kit";
 
 const EditButton = iconButton("Edit", Pencil);
 const DeleteButton = iconButton("Delete", Trash2);
@@ -224,158 +224,89 @@ export default function Events() {
       )}
 
       {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={closeModalGuarded}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: 24,
-              borderRadius: 8,
-              maxWidth: 500,
-              width: "90%",
-              maxHeight: "85vh",
-              overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>{editingId ? "Edit Event" : "Add New Event"}</h3>
-              <button onClick={closeModalGuarded}>✕</button>
+        <ModalShell title={editingId ? "Edit Event" : "Add New Event"} onClose={closeModalGuarded}>
+          <form onSubmit={handleSubmit}>
+            <Field label="Title">
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => updateForm({ title: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Location">
+              <input
+                type="text"
+                value={form.location}
+                onChange={(e) => updateForm({ location: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Date & Time">
+              <input
+                type="datetime-local"
+                value={form.eventDate}
+                onChange={(e) => updateForm({ eventDate: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Description">
+              <textarea
+                value={form.description}
+                onChange={(e) => updateForm({ description: e.target.value })}
+                rows={6}
+                required
+                style={{ ...textInput, minHeight: 130, resize: "vertical" }}
+              />
+            </Field>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="submit" disabled={saving}>
+                {saving ? "Saving..." : editingId ? "Update Event" : "Add Event"}
+              </button>
+              <button type="button" onClick={closeModalGuarded}>
+                Cancel
+              </button>
             </div>
-
-            <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-              <div>
-                <label>Title</label><br />
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => updateForm({ title: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Location</label><br />
-                <input
-                  type="text"
-                  value={form.location}
-                  onChange={(e) => updateForm({ location: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Date &amp; Time</label><br />
-                <input
-                  type="datetime-local"
-                  value={form.eventDate}
-                  onChange={(e) => updateForm({ eventDate: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Description</label><br />
-                <textarea
-                  value={form.description}
-                  onChange={(e) => updateForm({ description: e.target.value })}
-                  rows={6}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <button type="submit" disabled={saving}>
-                  {saving ? "Saving..." : editingId ? "Update Event" : "Add Event"}
-                </button>
-                <button type="button" onClick={closeModalGuarded} style={{ marginLeft: 8 }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </ModalShell>
       )}
 
       {attendeeEvent && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={() => setAttendeeEvent(null)}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: 24,
-              borderRadius: 8,
-              maxWidth: 600,
-              width: "90%",
-              maxHeight: "85vh",
-              overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>
-                Attendees ({attendeeEvent.title})
-              </h3>
-              <button onClick={() => setAttendeeEvent(null)}>✕</button>
-            </div>
-
-            {loadingAttendees ? (
-              <p>Loading attendees...</p>
-            ) : attendees.length === 0 ? (
-              <p>No RSVPs yet.</p>
-            ) : (
-              <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%", marginTop: 12 }}>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Student #</th>
-                    <th>Program</th>
-                    <th>Year</th>
+        <ModalShell title={`Attendees (${attendeeEvent.title})`} onClose={() => setAttendeeEvent(null)} width={600}>
+          {loadingAttendees ? (
+            <p>Loading attendees...</p>
+          ) : attendees.length === 0 ? (
+            <p>No RSVPs yet.</p>
+          ) : (
+            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%", marginTop: 12 }}>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Student #</th>
+                  <th>Program</th>
+                  <th>Year</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendees.map((a) => (
+                  <tr key={a.id}>
+                    <td>{a.fullName}</td>
+                    <td>{a.studentNumber}</td>
+                    <td>{a.program}</td>
+                    <td>{a.schoolYear}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {attendees.map((a) => (
-                    <tr key={a.id}>
-                      <td>{a.fullName}</td>
-                      <td>{a.studentNumber}</td>
-                      <td>{a.program}</td>
-                      <td>{a.schoolYear}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </ModalShell>
       )}
 
       <ConfirmDialog

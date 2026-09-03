@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
+import { Activity, User } from "lucide-react";
 import { getAllActivityLogs } from "../services/activityLogApi";
+import { SearchBox, card, cardMeta } from "../components/kit";
 
 const PAGE_SIZE = 20;
 
@@ -65,13 +67,12 @@ export default function ActivityLog() {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <input
-          type="text"
+      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <SearchBox
           placeholder="Search by name or details"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ minWidth: 260 }}
+          onChange={setSearchTerm}
+          onReset={() => setSearchTerm("")}
         />
 
         <select value={actorTypeFilter} onChange={(e) => setActorTypeFilter(e.target.value)}>
@@ -103,30 +104,50 @@ export default function ActivityLog() {
       ) : (
         <>
           <p>{filteredLogs.length} entries found</p>
-          <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead>
-              <tr>
-                <th>Actor</th>
-                <th>Type</th>
-                <th>Action</th>
-                <th>Details</th>
-                <th>IP Address</th>
-                <th>Date/Time</th>
-              </tr>
-            </thead>
-            <tbody>
+
+          {pagedLogs.length === 0 ? (
+            <p>No entries found.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
               {pagedLogs.map((log) => (
-                <tr key={log.id}>
-                  <td>{log.actorName}</td>
-                  <td>{log.actorType}</td>
-                  <td>{log.action}</td>
-                  <td>{log.details}</td>
-                  <td>{log.ipAddress}</td>
-                  <td>{new Date(log.createdAt).toLocaleString()}</td>
-                </tr>
+                <div key={log.id} style={card}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%", background: "#eef3ec",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 700, color: "#1B5E20", flexShrink: 0, fontSize: 15,
+                    }}>
+                      {(log.actorName || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <strong style={{ fontSize: 14 }}>{log.actorName || "—"}</strong>
+                    <span style={{
+                      fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999,
+                      background: log.actorType === "Admin" ? "#e3f2fd" : "#e6f4ea",
+                      color: log.actorType === "Admin" ? "#1565c0" : "#1e7e34",
+                    }}>
+                      {log.actorType || "—"}
+                    </span>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999,
+                      background: "#f3f4f6", color: "#374151",
+                    }}>
+                      <Activity size={13} />
+                      {log.action}
+                    </span>
+                    <span style={{ marginLeft: "auto", fontSize: 12, color: "#666" }}>
+                      {new Date(log.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p style={{ ...cardMeta, margin: 0 }}>{log.details || "—"}</p>
+                  <p style={{ ...cardMeta, margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
+                    <User size={13} color="#888" />
+                    IP: {log.ipAddress || "—"}
+                  </p>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
 
           <div style={{ marginTop: 16 }}>
             <button disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>

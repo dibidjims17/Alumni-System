@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
+import { RotateCcw, Trash2, Briefcase, Newspaper } from "lucide-react";
 import { getDeletedJobs, restoreJob, permanentlyDeleteJob } from "../services/jobsApi";
 import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton } from "../components/kit";
 
 export default function Trash() {
   const [deletedJobs, setDeletedJobs] = useState([]);
@@ -155,13 +157,12 @@ export default function Trash() {
 
       <h2>Trash</h2>
 
-      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <input
-          type="text"
+      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <SearchBox
           placeholder="Search deleted jobs or news..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ minWidth: 280 }}
+          onChange={setSearchTerm}
+          onReset={() => setSearchTerm("")}
         />
 
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
@@ -185,33 +186,47 @@ export default function Trash() {
       ) : combinedItems.length === 0 ? (
         <p>Nothing in trash{searchTerm ? " matching your search." : "."}</p>
       ) : (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Title</th>
-              <th>{typeFilter === "jobs" ? "Company" : typeFilter === "news" ? "Posted By" : "Company / Posted By"}</th>
-              <th>Posted At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {combinedItems.map((item) => (
-              <tr key={`${item.type}-${item.id}`}>
-                <td>{item.type}</td>
-                <td>{item.title}</td>
-                <td>{item.subtitle}</td>
-                <td>{new Date(item.postedAt).toLocaleDateString()}</td>
-                <td>
-                  <button onClick={item.onRestore}>Restore</button>{" "}
-                  <button onClick={item.onDeleteForever} style={{ color: "#dc2626" }}>
-                    Delete Forever
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div style={cardGrid}>
+          {combinedItems.map((item) => (
+            <div key={`${item.type}-${item.id}`} style={card}>
+              <div>
+                <span
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
+                    background: item.type === "Job" ? "#e3f2fd" : "#f3e5f5",
+                    color: item.type === "Job" ? "#1565c0" : "#6a1b9a",
+                  }}
+                >
+                  {item.type === "Job" ? <Briefcase size={13} /> : <Newspaper size={13} />}
+                  {item.type}
+                </span>
+              </div>
+
+              <h3 style={{ ...cardTitle, margin: 0 }}>{item.title}</h3>
+
+              {item.type === "Job" ? (
+                <p style={{ ...cardMeta, margin: 0 }}>{item.subtitle || "—"}</p>
+              ) : (
+                item.subtitle && (
+                  <p style={{ ...cardMeta, margin: 0 }}>Posted by {item.subtitle}</p>
+                )
+              )}
+
+              <p style={{ ...cardMeta, margin: 0 }}>
+                Posted {new Date(item.postedAt).toLocaleDateString()}
+              </p>
+
+              <div style={actionsRow}>
+                {iconButton("Restore", RotateCcw)(item.onRestore)}
+                {iconButton("Delete Forever", Trash2)(item.onDeleteForever, {
+                  color: "#dc2626",
+                  borderColor: "#e0b4b4",
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

@@ -99,28 +99,88 @@ export const actionsRow = {
   alignItems: "center",
 };
 
+// iconButton factory — usable BOTH ways:
+//   const EditBtn = iconButton("Edit", Pencil); <EditBtn onClick={fn} />
+//   or inline: iconButton("Edit", Pencil)(fn)
 export function iconButton(label, Icon) {
-  return (onClick, extra = {}) => (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
+  return (first, second) => {
+    const isProps = first && typeof first === "object" && !Array.isArray(first);
+    const onClick = isProps ? first.onClick : first;
+    const style = isProps ? first.style : second;
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        title={label}
+        aria-label={label}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 10px",
+          border: "1px solid #ccc",
+          borderRadius: 8,
+          background: "#fff",
+          cursor: "pointer",
+          fontSize: 13,
+          ...style,
+        }}
+      >
+        <Icon size={15} />
+        {label}
+      </button>
+    );
+  };
+}
+
+// Clean modal shell: overlay + titled panel. Caller supplies the body.
+export function ModalShell({ title, onClose, width = 500, children }) {
+  return (
+    <div
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "6px 10px",
-        border: "1px solid #ccc",
-        borderRadius: 8,
-        background: "#fff",
-        cursor: "pointer",
-        fontSize: 13,
-        ...extra,
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.5)", display: "flex",
+        alignItems: "center", justifyContent: "center", zIndex: 1000,
       }}
+      onClick={onClose}
     >
-      <Icon size={15} />
-      {label}
-    </button>
+      <div
+        style={{
+          background: "#fff", padding: 22, borderRadius: 10,
+          maxWidth: width, width: "92%", maxHeight: "88vh", overflowY: "auto",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 17 }}>{title}</h3>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ border: "none", background: "none", cursor: "pointer", fontSize: 16 }}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
   );
 }
+
+// Form field: label + control, consistent spacing.
+export function Field({ label, hint, children }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4, color: "#333" }}>
+        {label}
+      </label>
+      {children}
+      {hint && <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>{hint}</div>}
+    </div>
+  );
+}
+
+export const textInput = {
+  width: "100%",
+  padding: "9px 10px",
+  border: "1px solid #ccc",
+  borderRadius: 8,
+  fontSize: 14,
+  boxSizing: "border-box",
+};
+
+export const selectStyle = { ...textInput, background: "#fff" };

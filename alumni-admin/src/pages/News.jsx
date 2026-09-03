@@ -2,10 +2,70 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucide-react";
 import { getNews, createNews, updateNews, deleteNews, getNewsDetail, deleteCommentAsAdmin } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput } from "../components/kit";
 
 const EditButton = iconButton("Edit", Pencil);
 const DeleteButton = iconButton("Delete", Trash2);
+
+function CommentRow({ data, onDelete }) {
+  const initial = (data.studentName || "?").charAt(0).toUpperCase();
+  return (
+    <div style={{ display: "flex", gap: 10 }}>
+      <div
+        style={{
+          flexShrink: 0,
+          width: 30,
+          height: 30,
+          borderRadius: "50%",
+          background: "#e7eefb",
+          color: "#34558b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 600,
+          fontSize: 13,
+        }}
+      >
+        {initial}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", columnGap: 8, alignItems: "baseline" }}>
+          <strong style={{ fontSize: 13 }}>{data.studentName}</strong>
+          <span style={{ fontSize: 11, color: "#888" }}>
+            {new Date(data.commentedAt).toLocaleString()}
+          </span>
+        </div>
+        <p style={{ margin: "2px 0 0", fontSize: 13, color: "#333", lineHeight: 1.4, wordBreak: "break-word" }}>
+          {data.comment}
+        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+          <span style={{ fontSize: 11, color: "#999" }}>{data.likeCount} likes</span>
+          <button
+            type="button"
+            onClick={() => onDelete(data.id)}
+            title="Delete comment"
+            aria-label="Delete comment"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "2px 8px",
+              border: "1px solid #e0b4b4",
+              borderRadius: 6,
+              background: "#fff",
+              color: "#c0392b",
+              cursor: "pointer",
+              fontSize: 12,
+            }}
+          >
+            <Trash2 size={12} />
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const emptyForm = { title: "", content: "", isPublished: true, imageFile: null };
 
@@ -185,162 +245,159 @@ export default function News() {
         <p>No news yet.</p>
       ) : (
         <div style={cardGrid}>
-          {newsList.map((item) => (
-            <div key={item.id} style={card}>
-              <h3 style={cardTitle}>{item.title}</h3>
-              <p style={cardMeta}>
-                Posted by {item.postedByAdminName} • {new Date(item.postedAt).toLocaleString()}
-              </p>
-              <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16, marginTop: 2 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  <Heart size={14} color="#d64550" />
-                  {item.heartCount}
-                </span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  <MessageCircle size={14} color="#4574b8" />
-                  {item.commentCount}
-                </span>
-              </p>
-              <div style={actionsRow}>
-                <EditButton onClick={() => openEditModal(item)} />
-                <DeleteButton
-                  onClick={() => setConfirmDeleteId(item.id)}
-                  extra={{ color: "#c0392b", borderColor: "#e0b4b4" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => toggleComments(item.id)}
-                  title={expandedId === item.id ? "Hide Comments" : "View Comments"}
+          {newsList.map((item) => {
+            const isOpen = expandedId === item.id;
+            return (
+              <div
+                key={item.id}
+                style={{ ...card, cursor: "pointer", gap: 8 }}
+                onClick={() => toggleComments(item.id)}
+              >
+                <h3 style={cardTitle}>{item.title}</h3>
+                <p style={cardMeta}>
+                  Posted by {item.postedByAdminName} • {new Date(item.postedAt).toLocaleString()}
+                </p>
+                <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16, marginTop: 2 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <Heart size={14} color="#d64550" />
+                    {item.heartCount}
+                  </span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <MessageCircle size={14} color="#4574b8" />
+                    {item.commentCount}
+                  </span>
+                </p>
+                <div style={actionsRow}>
+                  <EditButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditModal(item);
+                    }}
+                  />
+                  <DeleteButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDeleteId(item.id);
+                    }}
+                    extra={{ color: "#c0392b", borderColor: "#e0b4b4" }}
+                  />
+                </div>
+                {isOpen && (
+                  <div
+                    style={{ borderTop: "1px solid #eee", marginTop: 4, paddingTop: 12 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {commentsLoading ? (
+                      <p style={{ ...cardMeta, textAlign: "center", padding: "4px 0" }}>Loading comments...</p>
+                    ) : comments.length === 0 ? (
+                      <p style={{ ...cardMeta, textAlign: "center", padding: "4px 0" }}>No comments yet.</p>
+                    ) : (
+                      <div>
+                        {comments.map((c) => (
+                          <div key={c.id} style={{ marginBottom: 14 }}>
+                            <CommentRow data={c} onDelete={(id) => handleDeleteComment(id, item.id)} />
+                            {c.replies?.length > 0 && (
+                              <div
+                                style={{
+                                  marginLeft: 20,
+                                  paddingLeft: 14,
+                                  borderLeft: "2px solid #eee",
+                                  marginTop: 10,
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 10,
+                                }}
+                              >
+                                {c.replies.map((r) => (
+                                  <CommentRow
+                                    key={r.id}
+                                    data={r}
+                                    onDelete={(id) => handleDeleteComment(id, item.id)}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div
                   style={{
-                    display: "inline-flex",
+                    display: "flex",
                     alignItems: "center",
+                    justifyContent: "center",
                     gap: 6,
-                    padding: "6px 10px",
-                    border: "1px solid #ccc",
-                    borderRadius: 8,
-                    background: "#fff",
-                    cursor: "pointer",
-                    fontSize: 13,
+                    marginTop: 2,
+                    paddingTop: 8,
+                    borderTop: "1px solid #f0f0f0",
+                    color: "#4574b8",
+                    fontSize: 12,
+                    fontWeight: 500,
                   }}
                 >
-                  <MessageSquare size={15} />
-                  {expandedId === item.id ? "Hide Comments" : "View Comments"}
-                </button>
-              </div>
-              {expandedId === item.id && (
-                <div style={{ borderTop: "1px solid #eee", marginTop: 6, paddingTop: 10 }}>
-                  {commentsLoading ? (
-                    <p>Loading comments...</p>
-                  ) : comments.length === 0 ? (
-                    <p>No comments yet.</p>
-                  ) : (
-                    <ul style={{ paddingLeft: 16 }}>
-                      {comments.map((c) => (
-                        <li key={c.id} style={{ marginBottom: 10 }}>
-                          <strong>{c.studentName}</strong>: {c.comment}{" "}
-                          <span style={{ fontSize: 12, color: "#666" }}>
-                            ({new Date(c.commentedAt).toLocaleString()}, {c.likeCount} likes)
-                          </span>{" "}
-                          <button onClick={() => handleDeleteComment(c.id, item.id)}>Delete</button>
-                          {c.replies?.length > 0 && (
-                            <ul style={{ paddingLeft: 20, marginTop: 6 }}>
-                              {c.replies.map((r) => (
-                                <li key={r.id} style={{ marginBottom: 6 }}>
-                                  <strong>{r.studentName}</strong>: {r.comment}{" "}
-                                  <span style={{ fontSize: 12, color: "#666" }}>
-                                    ({new Date(r.commentedAt).toLocaleString()}, {r.likeCount} likes)
-                                  </span>{" "}
-                                  <button onClick={() => handleDeleteComment(r.id, item.id)}>Delete</button>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <MessageSquare size={13} />
+                  {isOpen ? "Hide comments" : `View comments${item.commentCount ? ` (${item.commentCount})` : ""}`}
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
       {showModal && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.5)", display: "flex",
-            alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={closeModalGuarded}
-        >
-          <div
-            style={{
-              background: "#fff", padding: 24, borderRadius: 8,
-              maxWidth: 500, width: "90%", maxHeight: "85vh", overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>{editingId ? "Edit Post" : "Create New Post"}</h3>
-              <button onClick={closeModalGuarded}>✕</button>
+        <ModalShell title={editingId ? "Edit News" : "Add News"} onClose={closeModalGuarded}>
+          <form onSubmit={handleSubmit}>
+            <Field label="Title">
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => updateField({ title: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Content">
+              <textarea
+                value={form.content}
+                onChange={(e) => updateField({ content: e.target.value })}
+                required
+                rows={5}
+                style={{ ...textInput, minHeight: 130, resize: "vertical" }}
+              />
+            </Field>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#333", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.isPublished}
+                  onChange={(e) => updateField({ isPublished: e.target.checked })}
+                />
+                Published
+              </label>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-              <div>
-                <label>Title</label><br />
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => updateField({ title: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
+            <Field label={`Image ${editingId ? "(leave blank to keep current)" : "(optional)"}`}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => updateField({ imageFile: e.target.files[0] || null })}
+              />
+            </Field>
 
-              <div style={{ marginTop: 10 }}>
-                <label>Content</label><br />
-                <textarea
-                  value={form.content}
-                  onChange={(e) => updateField({ content: e.target.value })}
-                  required
-                  rows={5}
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={form.isPublished}
-                    onChange={(e) => updateField({ isPublished: e.target.checked })}
-                  />{" "}
-                  Published
-                </label>
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Image {editingId ? "(leave blank to keep current)" : "(optional)"}</label><br />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => updateField({ imageFile: e.target.files[0] || null })}
-                />
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <button type="submit" disabled={saving}>
-                  {saving ? "Saving..." : editingId ? "Update Post" : "Create Post"}
-                </button>
-                <button type="button" onClick={closeModalGuarded} style={{ marginLeft: 8 }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="submit" disabled={saving}>
+                {saving ? "Saving..." : editingId ? "Update Post" : "Create Post"}
+              </button>
+              <button type="button" onClick={closeModalGuarded}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </ModalShell>
       )}
 
       <ConfirmDialog

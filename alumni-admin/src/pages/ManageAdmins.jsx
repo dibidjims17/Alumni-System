@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
+import { ShieldCheck, UserCheck, UserX } from "lucide-react";
 import { getAdmins, createAdmin, toggleAdminStatus, updateAdminRole } from "../services/adminApi";
 import Toast from "../components/Toast";
+import {
+  ModalShell, Field, textInput, selectStyle,
+  cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton,
+} from "../components/kit";
 
 const emptyForm = { username: "", fullName: "", email: "", password: "", role: "Staff" };
 
@@ -74,6 +79,22 @@ export default function ManageAdmins() {
     }
   }
 
+  function avatarInitial(admin) {
+    return (admin.fullName || admin.username || "?").charAt(0).toUpperCase();
+  }
+
+  function rolePillStyle(role) {
+    return role === "SuperAdmin"
+      ? { background: "#ede7f6", color: "#5e35b1" }
+      : { background: "#e3f2fd", color: "#1565c0" };
+  }
+
+  function statusPillStyle(isActive) {
+    return isActive
+      ? { background: "#e6f4ea", color: "#1e7e34" }
+      : { background: "#fdecea", color: "#c0392b" };
+  }
+
   return (
     <div>
       <Toast
@@ -90,128 +111,126 @@ export default function ManageAdmins() {
       {loading ? (
         <p>Loading admins...</p>
       ) : (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Last Login</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {admins.map((a) => (
-              <tr key={a.id}>
-                <td>{a.username}</td>
-                <td>{a.fullName}</td>
-                <td>{a.email}</td>
-                <td>
-                  <select value={a.role} onChange={(e) => handleRoleChange(a.id, e.target.value)}>
-                    <option value="Staff">Staff</option>
-                    <option value="SuperAdmin">SuperAdmin</option>
-                  </select>
-                </td>
-                <td>{a.isActive ? "Active" : "Inactive"}</td>
-                <td>{a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : "Never"}</td>
-                <td>
-                  <button onClick={() => handleToggleStatus(a.id)}>
-                    {a.isActive ? "Deactivate" : "Activate"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        <div style={cardGrid}>
+          {admins.map((a) => (
+            <div key={a.id} style={card}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%", background: "#eceaf6",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 700, color: "#4a3b8f", flexShrink: 0,
+                }}>
+                  {avatarInitial(a)}
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <h4 style={{ ...cardTitle, margin: 0 }}>{a.fullName}</h4>
+                  <p style={{ ...cardMeta, margin: "2px 0 0" }}>@{a.username}</p>
+                </div>
+                <span style={{
+                  fontSize: 12, fontWeight: 600, padding: "2px 10px",
+                  borderRadius: 999, whiteSpace: "nowrap", ...statusPillStyle(a.isActive),
+                }}>
+                  {a.isActive ? "Active" : "Inactive"}
+                </span>
+              </div>
 
-      {showModal && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.5)", display: "flex",
-            alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={closeModal}
-        >
-          <div
-            style={{
-              background: "#fff", padding: 24, borderRadius: 8,
-              maxWidth: 420, width: "90%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>Add New Admin</h3>
-              <button onClick={closeModal}>✕</button>
-            </div>
+              <p style={{ ...cardMeta, margin: 0 }}>{a.email}</p>
 
-            <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
               <div>
-                <label>Username</label><br />
-                <input
-                  type="text"
-                  value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  fontSize: 12, fontWeight: 600, padding: "3px 10px",
+                  borderRadius: 999, ...rolePillStyle(a.role),
+                }}>
+                  <ShieldCheck size={13} />
+                  {a.role}
+                </span>
               </div>
-              <div style={{ marginTop: 10 }}>
-                <label>Full Name</label><br />
-                <input
-                  type="text"
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <label>Email</label><br />
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <label>Password</label><br />
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <label>Role</label><br />
+
+              <p style={{ ...cardMeta, margin: 0 }}>
+                Last login: {a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : "Never"}
+              </p>
+
+              <div style={actionsRow}>
                 <select
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  style={{ width: "100%" }}
+                  value={a.role}
+                  onChange={(e) => handleRoleChange(a.id, e.target.value)}
+                  title="Change role"
+                  style={{ ...selectStyle, width: "auto", flex: 1, padding: "6px 8px", fontSize: 13 }}
                 >
                   <option value="Staff">Staff</option>
                   <option value="SuperAdmin">SuperAdmin</option>
                 </select>
+                {iconButton(
+                  a.isActive ? "Deactivate" : "Activate",
+                  a.isActive ? UserX : UserCheck
+                )(() => handleToggleStatus(a.id))}
               </div>
-
-              <div style={{ marginTop: 16 }}>
-                <button type="submit" disabled={saving}>
-                  {saving ? "Creating..." : "Create Admin"}
-                </button>
-                <button type="button" onClick={closeModal} style={{ marginLeft: 8 }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {showModal && (
+        <ModalShell title="Add New Admin" onClose={closeModal} width={520}>
+          <form onSubmit={handleSubmit}>
+            <Field label="Username">
+              <input
+                type="text"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+            <Field label="Full Name">
+              <input
+                type="text"
+                value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+            <Field label="Email">
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+            <Field label="Password">
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+            <Field label="Role">
+              <select
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                style={selectStyle}
+              >
+                <option value="Staff">Staff</option>
+                <option value="SuperAdmin">SuperAdmin</option>
+              </select>
+            </Field>
+
+            <div style={actionsRow}>
+              <button type="submit" disabled={saving}>
+                {saving ? "Creating..." : "Create Admin"}
+              </button>
+              <button type="button" onClick={closeModal}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </ModalShell>
       )}
     </div>
   );
