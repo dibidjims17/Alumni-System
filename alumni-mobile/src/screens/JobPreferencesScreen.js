@@ -44,7 +44,13 @@ export default function JobPreferencesScreen({ navigation }) {
       }
       resetDirty();
     } catch (err) {
-      Alert.alert('Error', 'Could not load job preferences.');
+      // No saved preferences yet returns 404 — that is not an error.
+      if (err.response?.status === 404) {
+        setHasSetPreferencesBefore(false);
+        resetDirty();
+      } else {
+        Alert.alert('Error', 'Could not load job preferences.');
+      }
     }
   }
 

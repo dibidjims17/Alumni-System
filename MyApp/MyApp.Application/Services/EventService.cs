@@ -51,7 +51,7 @@ namespace MyApp.Application.Services
                 Description = request.Description,
                 Location = request.Location,
                 EventDate = request.EventDate!.Value,
-                CreatedByAdminId = adminId,
+                PostedByAdminId = adminId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
