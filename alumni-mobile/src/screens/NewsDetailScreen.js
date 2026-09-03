@@ -1,5 +1,5 @@
 // src/screens/NewsDetailScreen.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -72,6 +73,23 @@ export default function NewsDetailScreen({ route, navigation }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedThreads, setExpandedThreads] = useState({});
   const [notFound, setNotFound] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Android: KeyboardAvoidingView is unreliable here, so track the keyboard
+  // height directly and pad the root view. Hide always resets to 0.
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   function toggleThread(commentId) {
     setExpandedThreads((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
@@ -231,12 +249,9 @@ export default function NewsDetailScreen({ route, navigation }) {
     );
   }
 
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
-    >
+  function renderContent() {
+    return (
+      <>
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={styles.scrollContent}
@@ -386,7 +401,26 @@ export default function NewsDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       </View>
-    </KeyboardAvoidingView>
+      </>
+    );
+  }
+
+  if (Platform.OS === 'ios') {
+    return (
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior="padding"
+        keyboardVerticalOffset={headerHeight}
+      >
+        {renderContent()}
+      </KeyboardAvoidingView>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, paddingBottom: keyboardHeight }}>
+      {renderContent()}
+    </View>
   );
 }
 
