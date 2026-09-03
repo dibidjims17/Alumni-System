@@ -14,10 +14,17 @@ namespace MyApp.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<List<News>> GetPublishedAsync(int page, int pageSize)
+        public async Task<List<News>> GetPublishedAsync(int page, int pageSize, string? search = null)
         {
-            return await _context.News
-                .Where(n => n.IsPublished && !n.IsDeleted)
+            var query = _context.News.Where(n => n.IsPublished && !n.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(n => n.Title.Contains(term) || n.Content.Contains(term));
+            }
+
+            return await query
                 .Include(n => n.PostedByAdmin)
                 .Include(n => n.Hearts)
                 .Include(n => n.Comments.Where(c => !c.IsDeleted))
@@ -81,9 +88,17 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync()
+        public async Task<int> GetTotalCountAsync(string? search = null)
         {
-            return await _context.News.CountAsync(n => n.IsPublished && !n.IsDeleted);
+            var query = _context.News.Where(n => n.IsPublished && !n.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(n => n.Title.Contains(term) || n.Content.Contains(term));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task CreateAsync(News news)

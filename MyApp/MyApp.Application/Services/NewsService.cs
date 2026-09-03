@@ -24,10 +24,10 @@ namespace MyApp.Application.Services
             _studentRepository = studentRepository;
         }
 
-        public async Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId)
+        public async Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null)
         {
-            var newsList = await _newsRepository.GetPublishedAsync(page, PageSize);
-            var total = await _newsRepository.GetTotalCountAsync();
+            var newsList = await _newsRepository.GetPublishedAsync(page, PageSize, search);
+            var total = await _newsRepository.GetTotalCountAsync(search);
 
             var items = newsList.Select(n => new NewsDto
             {

@@ -20,10 +20,10 @@ namespace MyApp.Application.Services
             _notificationService = notificationService;
         }
 
-        public async Task<(List<EventDto> Items, int TotalCount)> GetUpcomingEventsAsync(int page, int pageSize, int studentId)
+        public async Task<(List<EventDto> Items, int TotalCount)> GetUpcomingEventsAsync(int page, int pageSize, int studentId, string? search = null)
         {
-            var events = await _eventRepository.GetUpcomingAsync(page, pageSize);
-            var total = await _eventRepository.CountUpcomingAsync();
+            var events = await _eventRepository.GetUpcomingAsync(page, pageSize, search);
+            var total = await _eventRepository.CountUpcomingAsync(search);
             var items = events.Select(e => Map(e, studentId)).ToList();
             return (items, total);
         }

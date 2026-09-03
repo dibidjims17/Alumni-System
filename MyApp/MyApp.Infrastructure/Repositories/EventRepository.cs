@@ -14,10 +14,17 @@ namespace MyApp.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<List<Event>> GetUpcomingAsync(int page, int pageSize)
+        public async Task<List<Event>> GetUpcomingAsync(int page, int pageSize, string? search = null)
         {
-            return await _context.Events
-                .Where(e => e.EventDate >= DateTime.UtcNow)
+            var query = _context.Events.Where(e => e.EventDate >= DateTime.UtcNow);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(e => e.Title.Contains(term) || e.Location.Contains(term));
+            }
+
+            return await query
                 .Include(e => e.PostedByAdmin)
                 .Include(e => e.Rsvps)
                 .OrderBy(e => e.EventDate)
@@ -26,9 +33,17 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> CountUpcomingAsync()
+        public async Task<int> CountUpcomingAsync(string? search = null)
         {
-            return await _context.Events.CountAsync(e => e.EventDate >= DateTime.UtcNow);
+            var query = _context.Events.Where(e => e.EventDate >= DateTime.UtcNow);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(e => e.Title.Contains(term) || e.Location.Contains(term));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<List<Event>> GetAllAsync(int page, int pageSize)

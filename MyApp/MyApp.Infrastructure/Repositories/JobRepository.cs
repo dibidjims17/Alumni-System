@@ -14,10 +14,17 @@ namespace MyApp.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<List<Job>> GetActiveAsync(int page, int pageSize)
+        public async Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null)
         {
-            return await _context.Jobs
-                .Where(j => j.IsActive && !j.IsDeleted)
+            var query = _context.Jobs.Where(j => j.IsActive && !j.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(j => j.JobTitle.Contains(term) || j.Company.Contains(term));
+            }
+
+            return await query
                 .Include(j => j.Applications)
                 .OrderByDescending(j => j.PostedAt)
                 .Skip((page - 1) * pageSize)
@@ -25,9 +32,17 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync()
+        public async Task<int> GetTotalCountAsync(string? search = null)
         {
-            return await _context.Jobs.CountAsync(j => j.IsActive);
+            var query = _context.Jobs.Where(j => j.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(j => j.JobTitle.Contains(term) || j.Company.Contains(term));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<Job?> GetByIdAsync(int id)

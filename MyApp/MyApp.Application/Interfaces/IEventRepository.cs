@@ -4,8 +4,8 @@ namespace MyApp.Application.Interfaces
 {
     public interface IEventRepository
     {
-        Task<List<Event>> GetUpcomingAsync(int page, int pageSize);
-        Task<int> CountUpcomingAsync();
+        Task<List<Event>> GetUpcomingAsync(int page, int pageSize, string? search = null);
+        Task<int> CountUpcomingAsync(string? search = null);
         Task<List<Event>> GetAllAsync(int page, int pageSize);
         Task<int> CountAllAsync();
         Task<Event?> GetByIdAsync(int id);

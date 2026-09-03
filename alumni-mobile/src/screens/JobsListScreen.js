@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -20,10 +21,14 @@ export default function JobsListScreen({ navigation }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
 
-  async function fetchJobs() {
+  async function fetchJobs(activeSearch = '') {
     try {
-      const res = await apiClient.get('/Jobs?page=1');
+      const query = activeSearch.trim()
+        ? `/Jobs?page=1&search=${encodeURIComponent(activeSearch.trim())}`
+        : '/Jobs?page=1';
+      const res = await apiClient.get(query);
       setItems(res.data.items || []);
     } catch (err) {
       // silent — empty list will show
@@ -37,14 +42,26 @@ export default function JobsListScreen({ navigation }) {
         return;
       }
       setIsLoading(true);
-      fetchJobs().finally(() => setIsLoading(false));
+      setSearch('');
+      fetchJobs('').finally(() => setIsLoading(false));
     }, [isGraduate])
   );
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    await fetchJobs();
+    await fetchJobs(search);
     setIsRefreshing(false);
+  }
+
+  function submitSearch() {
+    setIsLoading(true);
+    fetchJobs(search).finally(() => setIsLoading(false));
+  }
+
+  function resetSearch() {
+    setSearch('');
+    setIsLoading(true);
+    fetchJobs('').finally(() => setIsLoading(false));
   }
 
   function renderItem({ item }) {
@@ -88,6 +105,22 @@ export default function JobsListScreen({ navigation }) {
         <Text style={styles.buttonText}>My Applications</Text>
       </TouchableOpacity>
 
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search title or company"
+          value={search}
+          onChangeText={setSearch}
+          onSubmitEditing={submitSearch}
+          returnKeyType="search"
+        />
+        {search.trim() !== '' && (
+          <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
+            <Text style={styles.resetText}>Reset</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.id)}
@@ -96,7 +129,11 @@ export default function JobsListScreen({ navigation }) {
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
-        ListEmptyComponent={<Text style={styles.emptyText}>No jobs posted yet.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            {search.trim() ? 'No jobs match your search.' : 'No jobs posted yet.'}
+          </Text>
+        }
       />
     </View>
   );
@@ -113,6 +150,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
   },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 16,
+    marginBottom: 0,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    padding: 10,
+  },
+  resetButton: {
+    padding: 10,
+  },
+  resetText: { fontSize: 13, color: '#1a4fd8' },
   card: {
     padding: 12,
     marginBottom: 12,

@@ -1,6 +1,6 @@
 // src/screens/EventsListScreen.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 
@@ -8,10 +8,14 @@ export default function EventsListScreen() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState(null);
+  const [search, setSearch] = useState('');
 
-  async function loadEvents() {
+  async function loadEvents(activeSearch = '') {
     try {
-      const res = await apiClient.get('/Events?page=1');
+      const query = activeSearch.trim()
+        ? `/Events?page=1&search=${encodeURIComponent(activeSearch.trim())}`
+        : '/Events?page=1';
+      const res = await apiClient.get(query);
       setEvents(res.data.items || []);
     } catch (err) {
       const message = err.response?.data?.message || 'Could not load events.';
@@ -24,12 +28,12 @@ export default function EventsListScreen() {
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
-      loadEvents();
+      setSearch('');
+      loadEvents('');
     }, [])
   );
 
-  async function toggleRsvp(event) {
-    if (togglingId) return;
+  async function toggleRsvp(event) {    if (togglingId) return;
     setTogglingId(event.id);
     try {
       const res = await apiClient.post(`/Events/${event.id}/rsvp`);
@@ -51,6 +55,17 @@ export default function EventsListScreen() {
     } finally {
       setTogglingId(null);
     }
+  }
+
+  function submitSearch() {
+    setLoading(true);
+    loadEvents(search);
+  }
+
+  function resetSearch() {
+    setSearch('');
+    setLoading(true);
+    loadEvents('');
   }
 
   function renderItem({ item }) {
@@ -92,18 +107,56 @@ export default function EventsListScreen() {
   }
 
   return (
-    <FlatList
-      style={styles.list}
-      contentContainerStyle={events.length === 0 && styles.centered}
-      data={events}
-      keyExtractor={(item) => String(item.id)}
-      renderItem={renderItem}
-      ListEmptyComponent={<Text style={styles.infoText}>No upcoming events.</Text>}
-    />
+    <View style={styles.container}>
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search title or location"
+          value={search}
+          onChangeText={setSearch}
+          onSubmitEditing={submitSearch}
+          returnKeyType="search"
+        />
+        {search.trim() !== '' && (
+          <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
+            <Text style={styles.resetText}>Reset</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <FlatList
+        style={styles.list}
+        contentContainerStyle={events.length === 0 && styles.centered}
+        data={events}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderItem}
+        ListEmptyComponent={
+          <Text style={styles.infoText}>
+            {search.trim() ? 'No events match your search.' : 'No upcoming events.'}
+          </Text>
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1 },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 16,
+    marginBottom: 0,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    padding: 10,
+  },
+  resetButton: {
+    padding: 10,
+  },
+  resetText: { fontSize: 13, color: '#1a4fd8' },
   list: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   card: { margin: 16, marginBottom: 8, padding: 12, borderWidth: 1 },

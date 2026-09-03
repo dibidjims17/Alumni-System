@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -17,10 +18,14 @@ export default function NewsListScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
 
-  async function fetchNews() {
+  async function fetchNews(activeSearch = '') {
     try {
-      const res = await apiClient.get('/News?page=1');
+      const query = activeSearch.trim()
+        ? `/News?page=1&search=${encodeURIComponent(activeSearch.trim())}`
+        : '/News?page=1';
+      const res = await apiClient.get(query);
       setItems(res.data.items || []);
       setError(null);
     } catch (err) {
@@ -31,14 +36,26 @@ export default function NewsListScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       setIsLoading(true);
-      fetchNews().finally(() => setIsLoading(false));
+      setSearch('');
+      fetchNews('').finally(() => setIsLoading(false));
     }, [])
   );
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    await fetchNews();
+    await fetchNews(search);
     setIsRefreshing(false);
+  }
+
+  function submitSearch() {
+    setIsLoading(true);
+    fetchNews(search).finally(() => setIsLoading(false));
+  }
+
+  function resetSearch() {
+    setSearch('');
+    setIsLoading(true);
+    fetchNews('').finally(() => setIsLoading(false));
   }
 
   function renderItem({ item }) {
@@ -72,6 +89,21 @@ export default function NewsListScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {error && <Text style={styles.errorText}>{error}</Text>}
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search title or content"
+          value={search}
+          onChangeText={setSearch}
+          onSubmitEditing={submitSearch}
+          returnKeyType="search"
+        />
+        {search.trim() !== '' && (
+          <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
+            <Text style={styles.resetText}>Reset</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.id)}
@@ -81,7 +113,9 @@ export default function NewsListScreen({ navigation }) {
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No news posts yet.</Text>
+          <Text style={styles.emptyText}>
+            {search.trim() ? 'No posts match your search.' : 'No news posts yet.'}
+          </Text>
         }
       />
     </View>
@@ -91,6 +125,22 @@ export default function NewsListScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 16,
+    marginBottom: 0,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    padding: 10,
+  },
+  resetButton: {
+    padding: 10,
+  },
+  resetText: { fontSize: 13, color: '#1a4fd8' },
   listContent: { padding: 16 },
   card: {
     padding: 12,

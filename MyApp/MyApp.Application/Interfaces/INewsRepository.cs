@@ -4,9 +4,9 @@ namespace MyApp.Application.Interfaces
 {
     public interface INewsRepository
     {
-        Task<List<News>> GetPublishedAsync(int page, int pageSize);
+        Task<List<News>> GetPublishedAsync(int page, int pageSize, string? search = null);
         Task<News?> GetByIdAsync(int id);
-        Task<int> GetTotalCountAsync();
+        Task<int> GetTotalCountAsync(string? search = null);
         Task CreateAsync(News news);
         Task UpdateAsync(News news);
         Task DeleteAsync(News news);

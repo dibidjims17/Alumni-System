@@ -24,10 +24,10 @@ namespace MyApp.Application.Services
             _notificationService = notificationService;
         }
 
-        public async Task<(List<JobDto> Items, int TotalCount)> GetJobsAsync(int page, int studentId)
+        public async Task<(List<JobDto> Items, int TotalCount)> GetJobsAsync(int page, int studentId, string? search = null)
         {
-            var jobs = await _jobRepository.GetActiveAsync(page, PageSize);
-            var total = await _jobRepository.GetTotalCountAsync();
+            var jobs = await _jobRepository.GetActiveAsync(page, PageSize, search);
+            var total = await _jobRepository.GetTotalCountAsync(search);
 
             var items = jobs.Select(j => new JobDto
             {

@@ -25,9 +25,9 @@ namespace MyApp.API.Controllers
 
         [Authorize(Roles = "Student")]
         [HttpGet]
-        public async Task<IActionResult> GetUpcomingEvents([FromQuery] int page = 1)
+        public async Task<IActionResult> GetUpcomingEvents([FromQuery] int page = 1, [FromQuery] string? search = null)
         {
-            var (items, total) = await _eventService.GetUpcomingEventsAsync(page, PageSize, GetStudentId());
+            var (items, total) = await _eventService.GetUpcomingEventsAsync(page, PageSize, GetStudentId(), search);
             return Ok(new { items, total, page, pageSize = PageSize });
         }
 
