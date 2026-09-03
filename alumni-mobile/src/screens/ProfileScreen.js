@@ -82,6 +82,27 @@ export default function ProfileScreen({ navigation }) {
         Alert.alert('Error', message);
       }
     }
+
+    function confirmRemovePicture() {
+      Alert.alert(
+        'Remove photo',
+        'Remove your profile picture and go back to the default?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Remove', style: 'destructive', onPress: handleRemovePicture },
+        ]
+      );
+    }
+
+    async function handleRemovePicture() {
+      try {
+        await apiClient.delete('/Profile/picture');
+        await fetchProfile();
+      } catch (err) {
+        const message = err.response?.data?.message || 'Could not remove profile picture.';
+        Alert.alert('Error', message);
+      }
+    }
   
   useFocusEffect(
     useCallback(() => {
@@ -109,6 +130,11 @@ export default function ProfileScreen({ navigation }) {
           style={styles.avatar}
         />
       </TouchableOpacity>
+      {profile.profilePictureUrl ? (
+        <TouchableOpacity onPress={confirmRemovePicture} accessibilityLabel="Remove profile picture">
+          <Text style={styles.removePhotoText}>Remove photo</Text>
+        </TouchableOpacity>
+      ) : null}
       <Text style={styles.name}>{profile.fullName}</Text>
       <Text style={styles.subtext}>{profile.studentNumber} - {profile.program}</Text>
       {profile.headline ? <Text style={styles.headline}>{profile.headline}</Text> : null}
@@ -268,7 +294,13 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     alignSelf: 'center',
+    marginBottom: 4,
+  },
+  removePhotoText: {
+    fontSize: 12,
+    textAlign: 'center',
     marginBottom: 12,
+    color: '#1a4fd8',
   },
   name: { fontSize: 20 },
   subtext: { fontSize: 13, marginTop: 2 },

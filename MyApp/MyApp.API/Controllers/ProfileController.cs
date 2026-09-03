@@ -157,5 +157,16 @@ namespace MyApp.API.Controllers
 
             return Ok(new { profilePictureUrl = url });
         }
+
+        [HttpDelete("picture")]
+        public async Task<IActionResult> DeleteProfilePicture()
+        {
+            if (!IsGraduate()) return Forbid();
+
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var success = await _profileService.DeleteProfilePictureAsync(GetStudentId(), ipAddress);
+            if (!success) return NotFound(new { message = "No profile picture to remove." });
+            return Ok(new { message = "Profile picture removed." });
+        }
     }
 }

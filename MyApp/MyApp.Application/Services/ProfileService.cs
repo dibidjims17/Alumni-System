@@ -150,6 +150,22 @@ namespace MyApp.Application.Services
             return relativePath;
         }
 
+        public async Task<bool> DeleteProfilePictureAsync(int studentId, string ipAddress)
+        {
+            var profile = await _profileRepository.GetByStudentIdAsync(studentId);
+            if (profile == null || string.IsNullOrWhiteSpace(profile.ProfilePicturePath))
+                return false;
+
+            DeleteProfilePictureFile(profile.ProfilePicturePath);
+            profile.ProfilePicturePath = null;
+            profile.UpdatedAt = DateTime.UtcNow;
+            await _profileRepository.UpdateAsync(profile);
+
+            await _activityLogRepository.LogStudentAsync(studentId, "DELETE_PROFILE_PICTURE",
+                "Student removed their profile picture", ipAddress);
+            return true;
+        }
+
         private static void DeleteProfilePictureFile(string? oldPath)
         {
             try
