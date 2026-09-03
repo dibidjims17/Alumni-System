@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -32,6 +33,7 @@ export default function ProfileScreen({ navigation }) {
   const [jobPreferences, setJobPreferences] = useState(null);
   const [hasResume, setHasResume] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   async function fetchProfile() {
     try {
@@ -72,6 +74,12 @@ export default function ProfileScreen({ navigation }) {
       );
     }, [])
   );
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await Promise.all([fetchProfile(), fetchJobPreferences(), fetchResumeStatus()]);
+    setIsRefreshing(false);
+  }
 
   async function handleChangePicture() {
     try {
@@ -130,7 +138,13 @@ export default function ProfileScreen({ navigation }) {
     <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
       <AppHeader title="Profile" navigation={navigation} />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+      >
         <TouchableOpacity onPress={handleChangePicture} accessibilityLabel="Change profile picture">
           <Image
             source={

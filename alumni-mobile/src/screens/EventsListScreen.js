@@ -1,6 +1,6 @@
 // src/screens/EventsListScreen.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
@@ -20,6 +20,7 @@ export default function EventsListScreen({ navigation }) {
   const c = theme.colors;
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
   const [search, setSearch] = useState('');
 
@@ -73,6 +74,12 @@ export default function EventsListScreen({ navigation }) {
   function submitSearch() {
     setLoading(true);
     loadEvents(search);
+  }
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await loadEvents(search);
+    setIsRefreshing(false);
   }
 
   function renderItem({ item }) {
@@ -138,6 +145,9 @@ export default function EventsListScreen({ navigation }) {
           data={events}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
           ListEmptyComponent={
             <Text style={[styles.infoText, { color: c.textMuted }]}>
               {search.trim() ? 'No events match your search.' : 'No upcoming events.'}

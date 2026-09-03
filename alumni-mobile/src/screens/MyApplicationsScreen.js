@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
   Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -38,6 +39,7 @@ export default function MyApplicationsScreen({ navigation }) {
 
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [historyFor, setHistoryFor] = useState(null);
   const [history, setHistory] = useState([]);
@@ -59,8 +61,13 @@ export default function MyApplicationsScreen({ navigation }) {
     }, [])
   );
 
-  async function openHistory(item) {
-    setHistoryFor(item);
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await fetchApplications();
+    setIsRefreshing(false);
+  }
+
+  async function openHistory(item) {    setHistoryFor(item);
     setHistory([]);
     setLoadingHistory(true);
     try {
@@ -114,6 +121,9 @@ export default function MyApplicationsScreen({ navigation }) {
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
           ListEmptyComponent={
             <Text style={[styles.emptyText, { color: c.text }]}>
               You haven't applied to any jobs yet.

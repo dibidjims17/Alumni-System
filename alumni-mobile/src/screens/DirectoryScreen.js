@@ -8,6 +8,7 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
   Alert,
 } from 'react-native';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
@@ -47,6 +48,7 @@ export default function DirectoryScreen({ navigation }) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const pageRef = useRef(1);
 
@@ -105,6 +107,13 @@ export default function DirectoryScreen({ navigation }) {
   function submitSearch() {
     setPickerOpen(false);
     loadDirectory(true, search, program);
+  }
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await loadFilters();
+    await loadDirectory(true, search, program);
+    setIsRefreshing(false);
   }
 
   function renderItem({ item }) {
@@ -194,6 +203,9 @@ export default function DirectoryScreen({ navigation }) {
           keyExtractor={(_, index) => String(index)}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
           ListEmptyComponent={
             <Text style={[styles.emptyText, { color: c.text }]}>
               {search.trim() || program
