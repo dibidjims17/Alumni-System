@@ -63,3 +63,6 @@ git commit -m "leave a message on what changed"
 
 if you want to push it in the main
 git push origin main
+
+git branches
+
