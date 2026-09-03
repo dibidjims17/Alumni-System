@@ -1,0 +1,503 @@
+# Git & GitHub Cheat Sheet
+
+## 1. Check Git Status
+
+See which files have been changed, added, or deleted.
+
+```bash
+git status
+```
+
+---
+
+## 2. Check Branches
+
+See all local branches.
+
+```bash
+git branch
+```
+
+The `*` shows your current branch.
+
+---
+
+## 3. Create a New Branch
+
+Create a branch and immediately switch to it.
+
+```bash
+git switch -c feature/branch-name
+```
+
+Example:
+
+```bash
+git switch -c feature/notifications
+```
+
+---
+
+## 4. Switch Branches
+
+Switch to another existing branch.
+
+```bash
+git switch branch-name
+```
+
+Example:
+
+```bash
+git switch main
+```
+
+---
+
+## 5. Add Changes
+
+Add a specific file:
+
+```bash
+git add filename
+```
+
+Example:
+
+```bash
+git add MyApp/MyApp.API/Controllers/AuthController.cs
+```
+
+Add all changed files:
+
+```bash
+git add .
+```
+
+---
+
+## 6. Commit Changes
+
+Save your changes to Git history.
+
+```bash
+git commit -m "Your commit message"
+```
+
+Examples:
+
+```bash
+git commit -m "Add password reset"
+git commit -m "Fix login validation"
+git commit -m "Add notification service"
+```
+
+### Recommended Commit Prefixes
+
+```text
+feat:     New feature
+fix:      Bug fix
+docs:     Documentation
+refactor: Code restructuring
+style:    Formatting/UI changes
+test:     Tests
+chore:    Maintenance
+```
+
+Examples:
+
+```bash
+git commit -m "feat: add forgot password"
+git commit -m "fix: resolve student login issue"
+git commit -m "docs: update Git cheat sheet"
+```
+
+---
+
+## 7. Push Changes to GitHub
+
+For an existing branch:
+
+```bash
+git push
+```
+
+For a newly created branch:
+
+```bash
+git push -u origin branch-name
+```
+
+Example:
+
+```bash
+git push -u origin feature/notifications
+```
+
+After the first push, you can simply use:
+
+```bash
+git push
+```
+
+---
+
+## 8. Pull Latest Changes
+
+Download and apply the latest changes from GitHub.
+
+```bash
+git pull
+```
+
+Recommended before starting work:
+
+```bash
+git switch main
+git pull
+```
+
+---
+
+## 9. Clone the Repository
+
+Download the project from GitHub.
+
+```bash
+git clone https://github.com/USERNAME/REPOSITORY.git
+```
+
+Then enter the project:
+
+```bash
+cd REPOSITORY
+```
+
+---
+
+## 10. View Commit History
+
+Normal history:
+
+```bash
+git log
+```
+
+Short version:
+
+```bash
+git log --oneline
+```
+
+Example:
+
+```text
+a82f31c feat: add forgot password
+71c92ab fix: resolve login issue
+4d182fe feat: add notifications
+```
+
+---
+
+## 11. View Changes
+
+See changes that have not been staged:
+
+```bash
+git diff
+```
+
+See a summary:
+
+```bash
+git diff --stat
+```
+
+---
+
+## 12. Unstage a File
+
+If you accidentally used `git add`:
+
+```bash
+git restore --staged filename
+```
+
+Example:
+
+```bash
+git restore --staged ReadMe.txt
+```
+
+---
+
+## 13. Discard Changes
+
+WARNING: This removes your uncommitted changes.
+
+For one file:
+
+```bash
+git restore filename
+```
+
+For all files:
+
+```bash
+git restore .
+```
+
+---
+
+# Branching Workflow
+
+For new features, do NOT work directly on `main`.
+
+### Step 1: Update main
+
+```bash
+git switch main
+git pull
+```
+
+### Step 2: Create a feature branch
+
+```bash
+git switch -c feature/feature-name
+```
+
+Example:
+
+```bash
+git switch -c feature/notifications
+```
+
+### Step 3: Work on the feature
+
+Edit your code and test it.
+
+### Step 4: Check changes
+
+```bash
+git status
+```
+
+### Step 5: Stage
+
+```bash
+git add .
+```
+
+### Step 6: Commit
+
+```bash
+git commit -m "feat: add notifications"
+```
+
+### Step 7: Push
+
+```bash
+git push -u origin feature/notifications
+```
+
+### Step 8: Create a Pull Request
+
+Go to GitHub and create a Pull Request from:
+
+```text
+feature/notifications
+        ↓
+       main
+```
+
+After the feature has been reviewed and tested, merge it into `main`.
+
+---
+
+# Recommended Branch Names
+
+### Features
+
+```text
+feature/notifications
+feature/password-reset
+feature/student-profile
+feature/job-postings
+feature/alumni-events
+```
+
+### Bug Fixes
+
+```text
+fix/login-error
+fix/password-reset
+fix/notification-error
+```
+
+### Documentation
+
+```text
+docs/update-readme
+docs/api-documentation
+```
+
+---
+
+# Common Git Workflow
+
+The basic workflow is:
+
+```bash
+git status
+git add .
+git commit -m "feat: description of changes"
+git push
+```
+
+Before starting new work:
+
+```bash
+git switch main
+git pull
+git switch -c feature/your-feature
+```
+
+---
+
+# Merging a Branch Locally
+
+Switch to main:
+
+```bash
+git switch main
+```
+
+Update main:
+
+```bash
+git pull
+```
+
+Merge your feature:
+
+```bash
+git merge feature/your-feature
+```
+
+Push the updated main:
+
+```bash
+git push origin main
+```
+
+---
+
+# Delete a Branch
+
+Delete a local branch:
+
+```bash
+git branch -d feature/branch-name
+```
+
+Delete a branch from GitHub:
+
+```bash
+git push origin --delete feature/branch-name
+```
+
+Only delete a branch after confirming that its work has been merged or is no longer needed.
+
+---
+
+# See Remote Repository
+
+Check which GitHub repository your project is connected to:
+
+```bash
+git remote -v
+```
+
+---
+
+# Change Remote Repository
+
+```bash
+git remote set-url origin https://github.com/USERNAME/REPOSITORY.git
+```
+
+---
+
+# Quick Reference
+
+| Task                 | Command                                |
+| -------------------- | -------------------------------------- |
+| Check status         | `git status`                           |
+| See branches         | `git branch`                           |
+| Create branch        | `git switch -c branch-name`            |
+| Switch branch        | `git switch branch-name`               |
+| Add all changes      | `git add .`                            |
+| Commit               | `git commit -m "message"`              |
+| Push                 | `git push`                             |
+| Pull                 | `git pull`                             |
+| View history         | `git log --oneline`                    |
+| View changes         | `git diff`                             |
+| Unstage              | `git restore --staged file`            |
+| Discard changes      | `git restore file`                     |
+| Merge branch         | `git merge branch-name`                |
+| Delete local branch  | `git branch -d branch-name`            |
+| Delete GitHub branch | `git push origin --delete branch-name` |
+| View remote          | `git remote -v`                        |
+
+---
+
+# Important Rules for the Capstone
+
+1. **Do not develop directly on `main`** unless the change is very small or specifically agreed upon.
+2. **Pull before starting work.**
+3. **Create a separate branch for major features.**
+4. **Commit regularly.**
+5. Use descriptive commit messages.
+6. Test your changes before creating a Pull Request.
+7. Do not commit passwords, API keys, or other secrets.
+8. Do not force-push to `main`.
+9. Make sure migrations are committed when database changes are made.
+10. Keep `main` in a working/stable state.
+
+---
+
+# Example Capstone Workflow
+
+Developer wants to add notifications:
+
+```bash
+git switch main
+git pull
+
+git switch -c feature/notifications
+
+# Make code changes...
+
+git status
+git add .
+git commit -m "feat: add notification service"
+
+git push -u origin feature/notifications
+```
+
+Then create a Pull Request on GitHub:
+
+```text
+feature/notifications → main
+```
+
+After review and testing, merge the Pull Request.
+
+Then update the local main branch:
+
+```bash
+git switch main
+git pull
+```
+
+The project is now ready for the next feature.
