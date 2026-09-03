@@ -139,17 +139,18 @@ export default function MyApplicationsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  outer: { flex: 1 },
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f4f4f6' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: 16 },
+  listContent: { padding: 16, paddingBottom: 24 },
   card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
     padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
+    marginBottom: 10,
   },
-  title: { fontSize: 15, marginBottom: 4 },
-  company: { fontSize: 13, marginBottom: 4 },
+  title: { fontSize: 15, marginBottom: 4 },  company: { fontSize: 13, marginBottom: 4 },
   meta: { fontSize: 11, marginBottom: 2 },
   status: { fontSize: 12, marginTop: 4, marginBottom: 2 },
   timelineButton: { marginTop: 8, alignSelf: 'flex-start' },

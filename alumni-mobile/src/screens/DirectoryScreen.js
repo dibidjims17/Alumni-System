@@ -207,7 +207,7 @@ export default function DirectoryScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: 16, backgroundColor: '#f4f4f6' },
   filterLabel: { fontSize: 12, marginTop: 12, marginBottom: 4, color: '#555' },
   dropdown: {
     borderWidth: 1,
@@ -232,10 +232,12 @@ const styles = StyleSheet.create({
   optionTextActive: { color: ACCENT, fontWeight: '600' },
   listContent: { paddingTop: 12, paddingBottom: 24 },
   card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
     padding: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
   },
   cardRow: {
     flexDirection: 'row',

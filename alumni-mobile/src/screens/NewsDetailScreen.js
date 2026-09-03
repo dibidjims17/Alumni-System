@@ -14,9 +14,12 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Heart } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
+
+const HEART_ACTIVE = '#e0245e';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
   return (
@@ -24,9 +27,14 @@ function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, current
       <Text style={styles.commentAuthor}>{comment.studentName}</Text>
       <Text style={styles.commentText}>{comment.comment}</Text>
       <View style={styles.commentActions}>
-        <TouchableOpacity onPress={() => onLike(comment.id)}>
-          <Text style={styles.actionText}>
-            {comment.isLiked ? '[Liked]' : '[Like]'} {comment.likeCount}
+        <TouchableOpacity onPress={() => onLike(comment.id)} style={styles.commentLikeBtn}>
+          <Heart
+            size={13}
+            color={comment.isLiked ? HEART_ACTIVE : '#777'}
+            fill={comment.isLiked ? HEART_ACTIVE : 'none'}
+          />
+          <Text style={[styles.actionText, comment.isLiked && styles.actionTextActive]}>
+            {comment.likeCount}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => onReply(comment, level)}>
@@ -190,8 +198,13 @@ export default function NewsDetailScreen({ route, navigation }) {
         <Text style={styles.content}>{news.content}</Text>
 
         <TouchableOpacity style={styles.heartRow} onPress={handleHeart}>
-          <Text style={styles.heartText}>
-            {news.isHearted ? '[Hearted]' : '[Heart]'} {news.heartCount}
+          <Heart
+            size={20}
+            color={news.isHearted ? HEART_ACTIVE : '#777'}
+            fill={news.isHearted ? HEART_ACTIVE : 'none'}
+          />
+          <Text style={[styles.heartText, news.isHearted && styles.heartTextActive]}>
+            {news.heartCount}
           </Text>
         </TouchableOpacity>
 
@@ -293,8 +306,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   content: { fontSize: 14, marginBottom: 16 },
-  heartRow: { marginBottom: 20 },
-  heartText: { fontSize: 14 },
+  heartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 20,
+  },
+  heartText: { fontSize: 14, marginLeft: 6, color: '#777' },
+  heartTextActive: { color: HEART_ACTIVE },
   commentsHeader: { fontSize: 15, marginBottom: 10 },
 
   threadBlock: {
@@ -324,7 +343,9 @@ const styles = StyleSheet.create({
     gap: 16,
     marginTop: 6,
   },
-  actionText: { fontSize: 12 },
+  actionText: { fontSize: 12, marginLeft: 3 },
+  actionTextActive: { color: HEART_ACTIVE },
+  commentLikeBtn: { flexDirection: 'row', alignItems: 'center' },
   emptyText: { textAlign: 'center', marginTop: 20 },
   composer: {
     borderTopWidth: 1,
