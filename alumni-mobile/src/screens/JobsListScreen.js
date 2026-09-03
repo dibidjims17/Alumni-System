@@ -12,6 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
+import { formatSalary, deadlineInfo } from '../utils/jobs';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import SearchBar from '../components/SearchBar';
@@ -67,27 +68,6 @@ export default function JobsListScreen({ navigation }) {
   function submitSearch() {
     setIsLoading(true);
     fetchJobs(search).finally(() => setIsLoading(false));
-  }
-
-  function formatSalary(min, max) {
-    const peso = (v) => `₱${Number(v).toLocaleString()}`;
-    if (min && max) return `${peso(min)} – ${peso(max)}`;
-    if (min) return `${peso(min)}+`;
-    if (max) return `Up to ${peso(max)}`;
-    return null;
-  }
-
-  function deadlineInfo(deadline) {
-    if (!deadline) return null;
-    const days = Math.ceil((new Date(deadline) - Date.now()) / 86400000);
-    if (days < 0) return null;
-    if (days === 0) return { text: 'Closes today', urgent: true };
-    if (days === 1) return { text: 'Closes tomorrow', urgent: true };
-    if (days <= 7) return { text: `Closing in ${days}d`, urgent: true };
-    return {
-      text: `Apply by ${new Date(deadline).toLocaleDateString()}`,
-      urgent: false,
-    };
   }
 
   function renderItem({ item }) {

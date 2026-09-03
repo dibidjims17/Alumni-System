@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { formatSalary, deadlineInfo } from '../utils/jobs';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 
@@ -109,6 +110,10 @@ export default function JobDetailScreen({ route, navigation }) {
     );
   }
 
+  const salary = formatSalary(job.salaryMin, job.salaryMax);
+  const deadline = deadlineInfo(job.deadline);
+  const isClosed = job.deadline && new Date(job.deadline) < new Date();
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: c.background }]}
@@ -116,24 +121,55 @@ export default function JobDetailScreen({ route, navigation }) {
     >
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         <Text style={[styles.title, { color: c.text }]}>{job.jobTitle}</Text>
-        <Text style={[styles.company, { color: c.text }]}>{job.company}</Text>
-        <Text style={[styles.meta, { color: c.textMuted }]}>{job.location}</Text>
-        <Text style={[styles.meta, { color: c.textMuted }]}>
-          {job.employmentType} - {job.industry}
+        <Text style={[styles.company, { color: c.text }]}>
+          {job.company}
+          {job.location ? (
+            <Text style={{ color: c.textMuted }}> • {job.location}</Text>
+          ) : null}
         </Text>
-
-        {(job.salaryMin || job.salaryMax) && (
-          <Text style={[styles.meta, { color: c.textMuted }]}>
-            Salary: {job.salaryMin ? `₱${job.salaryMin.toLocaleString()}` : '?'} - {job.salaryMax ? `₱${job.salaryMax.toLocaleString()}` : '?'}
-          </Text>
+        {salary && (
+          <Text style={[styles.salary, { color: c.primary }]}>{salary}</Text>
         )}
-
-        {job.deadline && (
-          <Text style={[styles.meta, { color: c.textMuted }]}>
-            Deadline: {new Date(job.deadline).toLocaleDateString()}
-            {new Date(job.deadline) < new Date() ? ' (Closed)' : ''}
-          </Text>
-        )}
+        <View style={styles.tagRow}>
+          {job.employmentType ? (
+            <View style={[styles.tag, { backgroundColor: c.surfaceAlt }]}>
+              <Text style={[styles.tagText, { color: c.textMuted }]}>
+                {job.employmentType}
+              </Text>
+            </View>
+          ) : null}
+          {job.industry ? (
+            <View style={[styles.tag, { backgroundColor: c.surfaceAlt }]}>
+              <Text style={[styles.tagText, { color: c.textMuted }]}>
+                {job.industry}
+              </Text>
+            </View>
+          ) : null}
+          {deadline ? (
+            <View
+              style={[
+                styles.tag,
+                deadline.urgent
+                  ? { backgroundColor: c.danger }
+                  : { backgroundColor: c.surfaceAlt },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tagText,
+                  { color: deadline.urgent ? '#fff' : c.textMuted },
+                ]}
+              >
+                {deadline.text}
+              </Text>
+            </View>
+          ) : null}
+          {isClosed ? (
+            <View style={[styles.tag, { backgroundColor: c.danger }]}>
+              <Text style={[styles.tagText, { color: '#fff' }]}>Closed</Text>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
@@ -192,8 +228,21 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
-  title: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
-  company: { fontSize: 14, marginBottom: 8 },
+  title: { fontSize: 19, fontWeight: '800', lineHeight: 24 },
+  company: { fontSize: 14, marginTop: 2 },
+  salary: { fontSize: 18, fontWeight: '800', marginTop: 8 },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 12,
+  },
+  tag: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+  },
+  tagText: { fontSize: 11, fontWeight: '600' },
   meta: { fontSize: 12, marginBottom: 4 },
   sectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
   description: { fontSize: 13, lineHeight: 20 },
