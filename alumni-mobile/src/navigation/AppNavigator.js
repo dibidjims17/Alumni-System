@@ -144,6 +144,7 @@ function AppTabs() {
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarItemStyle: { justifyContent: 'center', alignItems: 'center' },
         tabBarStyle: {
           backgroundColor: c.surface,
           borderTopColor: c.border,

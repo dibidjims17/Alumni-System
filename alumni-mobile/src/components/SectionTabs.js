@@ -48,6 +48,8 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: 12,
   },
   chip: {

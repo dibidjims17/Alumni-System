@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   iconButton: { padding: 6, minWidth: 36 },
-  title: { fontSize: 17, fontWeight: '700' },
+  title: { fontSize: 19, fontWeight: '800', letterSpacing: 0.3 },
   modalBackdrop: { flex: 1, justifyContent: 'flex-end' },
   modalBackdropTouch: { flex: 1 },
   menuSheet: {
