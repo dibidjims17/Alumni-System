@@ -145,9 +145,6 @@ export default function JobsListScreen({ navigation }) {
       </TouchableOpacity>
     );
   }
-      </TouchableOpacity>
-    );
-  }
 
   if (!isGraduate) {
     return (
