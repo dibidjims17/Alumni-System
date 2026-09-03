@@ -8,7 +8,7 @@ function authHeader() {
 export async function getNews(search = "") {
   const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
   const response = await fetch(`${API_BASE_URL}/News${query}`, {
-    headers: authHeaders(),
+    headers: authHeader(),
   });
   if (!response.ok) throw new Error("Failed to fetch news");
   const data = await response.json();
