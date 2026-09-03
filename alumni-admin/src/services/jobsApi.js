@@ -8,8 +8,12 @@ function authHeaders() {
   };
 }
 
-export async function getJobs(search = "") {
-  const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+export async function getJobs(search = "", minSalary = null, maxSalary = null) {
+  const params = new URLSearchParams();
+  if (search.trim()) params.append("search", search.trim());
+  if (minSalary != null) params.append("minSalary", minSalary);
+  if (maxSalary != null) params.append("maxSalary", maxSalary);
+  const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(`${API_BASE_URL}/Jobs${query}`, {
     headers: authHeaders(),
   });

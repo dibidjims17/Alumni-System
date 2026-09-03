@@ -30,6 +30,14 @@ export default function Jobs() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const FORM_SALARY_CAP = 500000;
+  const FORM_SALARY_STEP = 1000;
+
+  function formatPeso(value) {
+    if (value === "" || value == null) return "Undisclosed";
+    return `₱${Number(value).toLocaleString()}`;
+  }
+
   async function loadJobs(activeSearch = "") {
     setLoading(true);
     setError("");
@@ -271,21 +279,41 @@ export default function Jobs() {
 
               <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <label>Salary Min</label><br />
+                  <label>Salary Min — {formatPeso(form.salaryMin)}</label><br />
+                  <input
+                    type="range"
+                    min={0}
+                    max={FORM_SALARY_CAP}
+                    step={FORM_SALARY_STEP}
+                    value={Number(form.salaryMin) || 0}
+                    onChange={(e) => setForm({ ...form, salaryMin: Number(e.target.value) })}
+                    style={{ width: "100%" }}
+                  />
                   <input
                     type="number"
                     value={form.salaryMin}
                     onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
-                    style={{ width: "100%" }}
+                    placeholder="Undisclosed"
+                    style={{ width: "100%", marginTop: 4 }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label>Salary Max</label><br />
+                  <label>Salary Max — {formatPeso(form.salaryMax)}</label><br />
+                  <input
+                    type="range"
+                    min={0}
+                    max={FORM_SALARY_CAP}
+                    step={FORM_SALARY_STEP}
+                    value={Number(form.salaryMax) || 0}
+                    onChange={(e) => setForm({ ...form, salaryMax: Number(e.target.value) })}
+                    style={{ width: "100%" }}
+                  />
                   <input
                     type="number"
                     value={form.salaryMax}
                     onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
-                    style={{ width: "100%" }}
+                    placeholder="Undisclosed"
+                    style={{ width: "100%", marginTop: 4 }}
                   />
                 </div>
               </div>

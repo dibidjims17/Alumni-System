@@ -4,8 +4,8 @@ namespace MyApp.Application.Interfaces
 {
     public interface IJobRepository
     {
-        Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null);
-        Task<int> GetTotalCountAsync(string? search = null);
+        Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null, decimal? minSalary = null, decimal? maxSalary = null);
+        Task<int> GetTotalCountAsync(string? search = null, decimal? minSalary = null, decimal? maxSalary = null);
         Task<Job?> GetByIdAsync(int id);
         Task CreateAsync(Job job);
         Task UpdateAsync(Job job);

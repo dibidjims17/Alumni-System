@@ -31,9 +31,9 @@ namespace MyApp.API.Controllers
         // ─── Alumni endpoints ───────────────────────────────
 
         [HttpGet]
-        public async Task<IActionResult> GetJobs([FromQuery] int page = 1, [FromQuery] string? search = null)
+        public async Task<IActionResult> GetJobs([FromQuery] int page = 1, [FromQuery] string? search = null, [FromQuery] decimal? minSalary = null, [FromQuery] decimal? maxSalary = null)
         {
-            var (items, total) = await _jobService.GetJobsAsync(page, GetUserId(), search);
+            var (items, total) = await _jobService.GetJobsAsync(page, GetUserId(), search, minSalary, maxSalary);
             return Ok(new { items, total, page, pageSize = 10 });
         }
 

@@ -14,7 +14,7 @@ namespace MyApp.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null)
+        public async Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null, decimal? minSalary = null, decimal? maxSalary = null)
         {
             var query = _context.Jobs.Where(j => j.IsActive && !j.IsDeleted);
 
@@ -24,6 +24,8 @@ namespace MyApp.Infrastructure.Repositories
                 query = query.Where(j => j.JobTitle.Contains(term) || j.Company.Contains(term));
             }
 
+            query = ApplySalaryFilter(query, minSalary, maxSalary);
+
             return await query
                 .Include(j => j.Applications)
                 .OrderByDescending(j => j.PostedAt)
@@ -32,7 +34,7 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync(string? search = null)
+        public async Task<int> GetTotalCountAsync(string? search = null, decimal? minSalary = null, decimal? maxSalary = null)
         {
             var query = _context.Jobs.Where(j => j.IsActive);
 
@@ -42,7 +44,22 @@ namespace MyApp.Infrastructure.Repositories
                 query = query.Where(j => j.JobTitle.Contains(term) || j.Company.Contains(term));
             }
 
+            query = ApplySalaryFilter(query, minSalary, maxSalary);
+
             return await query.CountAsync();
+        }
+
+        // Overlap semantics: a bound only excludes jobs whose KNOWN range
+        // falls entirely outside it. Undisclosed salaries always pass.
+        private static IQueryable<Job> ApplySalaryFilter(IQueryable<Job> query, decimal? minSalary, decimal? maxSalary)
+        {
+            if (minSalary.HasValue)
+                query = query.Where(j => j.SalaryMax == null || j.SalaryMax >= minSalary.Value);
+
+            if (maxSalary.HasValue)
+                query = query.Where(j => j.SalaryMin == null || j.SalaryMin <= maxSalary.Value);
+
+            return query;
         }
 
         public async Task<Job?> GetByIdAsync(int id)
