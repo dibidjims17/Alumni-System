@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton } from "../components/kit";
+
+const EditButton = iconButton("Edit", Pencil);
+const DeleteButton = iconButton("Delete", Trash2);
+const AttendeesButton = iconButton("Attendees", Users);
 
 const emptyForm = {
   title: "",
@@ -27,6 +33,9 @@ export default function Events() {
   const [attendeeEvent, setAttendeeEvent] = useState(null);
   const [attendees, setAttendees] = useState([]);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
+
+  const { withGuard, setDirty } = useDirtyGuard();
+  const pristineRef = useRef("");
 
   const isSuperAdmin = getSession()?.role === "SuperAdmin";
 
@@ -61,7 +70,7 @@ export default function Events() {
   }, []);
 
   function submitSearch(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
     loadEvents(searchTerm);
   }
 
@@ -70,22 +79,34 @@ export default function Events() {
     loadEvents("");
   }
 
+  function updateForm(patch) {
+    setForm((prev) => ({ ...prev, ...patch }));
+    setDirty(true);
+  }
+
   function openCreateModal() {
     setEditingId(null);
     setForm(emptyForm);
+    pristineRef.current = JSON.stringify(emptyForm);
+    setDirty(false);
     setShowModal(true);
   }
 
   function openEditModal(event) {
     setEditingId(event.id);
-    setForm({
+    const nextForm = {
       title: event.title || "",
       description: event.description || "",
       location: event.location || "",
       eventDate: event.eventDate ? toLocalDateTimeInputValue(event.eventDate) : "",
-    });
+    };
+    setForm(nextForm);
+    pristineRef.current = JSON.stringify(nextForm);
+    setDirty(false);
     setShowModal(true);
   }
+
+  const closeModalGuarded = () => withGuard(closeModal);
 
   function closeModal() {
     setShowModal(false);
@@ -116,6 +137,7 @@ export default function Events() {
       } else {
         await createEvent(payload);
       }
+      setDirty(false);
       closeModal();
       loadEvents(searchTerm);
     } catch (err) {
@@ -154,16 +176,19 @@ export default function Events() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Events</h2>
-        <button onClick={openCreateModal}>+ Add New Event</button>
+        <button onClick={openCreateModal} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <Plus size={15} />
+          Add New Event
+        </button>
       </div>
 
-      <form onSubmit={submitSearch} style={{ margin: "16px 0", display: "flex", gap: 8 }}>
-        <input
-          type="text"
+      <form onSubmit={submitSearch} style={{ margin: "16px 0", display: "flex", gap: 8, alignItems: "center" }}>
+        <SearchBox
           placeholder="Search title or location"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ minWidth: 280 }}
+          onChange={setSearchTerm}
+          onSubmit={submitSearch}
+          onReset={resetSearch}
         />
         <button type="submit">Search</button>
         {searchTerm.trim() !== "" && (
@@ -175,40 +200,27 @@ export default function Events() {
 
       {loading ? (
         <p>Loading events...</p>
+      ) : events.length === 0 ? (
+        <p>No events yet.</p>
       ) : (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Location</th>
-              <th>Date</th>
-              <th>Going</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.length === 0 && (
-              <tr>
-                <td colSpan="5">No events yet.</td>
-              </tr>
-            )}
-            {events.map((event) => (
-              <tr key={event.id}>
-                <td>{event.title}</td>
-                <td>{event.location}</td>
-                <td>{event.eventDate ? new Date(event.eventDate).toLocaleString() : "—"}</td>
-                <td>{event.attendeeCount ?? 0}</td>
-                <td>
-                  <button onClick={() => openEditModal(event)}>Edit</button>{" "}
-                  <button onClick={() => openAttendees(event)}>Attendees</button>{" "}
-                  {isSuperAdmin && (
-                    <button onClick={() => setConfirmDeleteId(event.id)}>Delete</button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div style={cardGrid}>
+          {events.map((event) => (
+            <div key={event.id} style={card}>
+              <h3 style={cardTitle}>{event.title}</h3>
+              <p style={cardMeta}>{event.eventDate ? new Date(event.eventDate).toLocaleString() : "—"}</p>
+              <p style={cardMeta}>Location: {event.location}</p>
+              <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 5 }}>
+                <Users size={13} />
+                {event.attendeeCount ?? 0} going
+              </p>
+              <div style={actionsRow}>
+                <EditButton onClick={() => openEditModal(event)} />
+                <AttendeesButton onClick={() => openAttendees(event)} />
+                {isSuperAdmin && <DeleteButton onClick={() => setConfirmDeleteId(event.id)} />}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {showModal && (
@@ -225,7 +237,7 @@ export default function Events() {
             justifyContent: "center",
             zIndex: 1000,
           }}
-          onClick={closeModal}
+          onClick={closeModalGuarded}
         >
           <div
             style={{
@@ -241,7 +253,7 @@ export default function Events() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0 }}>{editingId ? "Edit Event" : "Add New Event"}</h3>
-              <button onClick={closeModal}>✕</button>
+              <button onClick={closeModalGuarded}>✕</button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
@@ -250,7 +262,7 @@ export default function Events() {
                 <input
                   type="text"
                   value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  onChange={(e) => updateForm({ title: e.target.value })}
                   required
                   style={{ width: "100%" }}
                 />
@@ -261,7 +273,7 @@ export default function Events() {
                 <input
                   type="text"
                   value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  onChange={(e) => updateForm({ location: e.target.value })}
                   required
                   style={{ width: "100%" }}
                 />
@@ -272,7 +284,7 @@ export default function Events() {
                 <input
                   type="datetime-local"
                   value={form.eventDate}
-                  onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+                  onChange={(e) => updateForm({ eventDate: e.target.value })}
                   required
                 />
               </div>
@@ -281,7 +293,7 @@ export default function Events() {
                 <label>Description</label><br />
                 <textarea
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) => updateForm({ description: e.target.value })}
                   rows={6}
                   required
                   style={{ width: "100%" }}
@@ -292,7 +304,7 @@ export default function Events() {
                 <button type="submit" disabled={saving}>
                   {saving ? "Saving..." : editingId ? "Update Event" : "Add Event"}
                 </button>
-                <button type="button" onClick={closeModal} style={{ marginLeft: 8 }}>
+                <button type="button" onClick={closeModalGuarded} style={{ marginLeft: 8 }}>
                   Cancel
                 </button>
               </div>

@@ -166,5 +166,47 @@ namespace MyApp.Application.Services
 
             return temporaryPassword;
         }
+
+        public async Task<StudentDto?> CreateStudentAsync(CreateStudentRequest request, int adminId)
+        {
+            var existing = await _studentRepository.GetByStudentNumberAsync(request.StudentNumber);
+            if (existing != null) return null;
+
+            var student = new Student
+            {
+                StudentNumber = request.StudentNumber,
+                FullName = request.FullName,
+                Email = request.Email,
+                Program = request.Program,
+                SchoolYear = request.SchoolYear,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.StudentNumber),
+                IsActive = true,
+                MustChangePassword = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _studentRepository.CreateAsync(student);
+
+            // Auto-initialize documents for Graduate students only
+            if (request.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase))
+            {
+                await _documentService.InitializeDocumentsAsync(student.Id, adminId);
+            }
+
+            await _activityLogRepository.LogAdminAsync(adminId, "CREATE_STUDENT",
+                $"Created student: {request.StudentNumber}", "system");
+
+            return new StudentDto
+            {
+                Id = student.Id,
+                StudentNumber = student.StudentNumber,
+                FullName = student.FullName,
+                Email = student.Email,
+                Program = student.Program,
+                SchoolYear = student.SchoolYear,
+                IsActive = student.IsActive,
+                CreatedAt = student.CreatedAt
+            };
+        }
     }
 }

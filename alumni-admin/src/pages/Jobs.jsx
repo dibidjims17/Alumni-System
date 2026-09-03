@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton } from "../components/kit";
 
 const emptyForm = {
   jobTitle: "",
@@ -30,6 +32,9 @@ export default function Jobs() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const { setDirty, withGuard } = useDirtyGuard();
+  const pristineRef = useRef("");
+
   const FORM_SALARY_CAP = 500000;
   const FORM_SALARY_STEP = 1000;
 
@@ -38,10 +43,23 @@ export default function Jobs() {
     return `₱${Number(value).toLocaleString()}`;
   }
 
+  function formatSalaryRange(job) {
+    const hasMin = job.salaryMin !== "" && job.salaryMin != null;
+    const hasMax = job.salaryMax !== "" && job.salaryMax != null;
+    if (!hasMin && !hasMax) return "";
+    return `${hasMin ? formatPeso(job.salaryMin) : "—"} – ${hasMax ? formatPeso(job.salaryMax) : "—"}`;
+  }
+
   function stepSalary(field, delta) {
     const current = Number(form[field]) || 0;
     const next = Math.min(FORM_SALARY_CAP, Math.max(0, current + delta));
-    setForm({ ...form, [field]: next });
+    updateField({ [field]: next });
+  }
+
+  function updateField(patch) {
+    const next = { ...form, ...patch };
+    setForm(next);
+    setDirty(JSON.stringify(next) !== pristineRef.current);
   }
 
   async function loadJobs(activeSearch = "") {
@@ -74,12 +92,14 @@ export default function Jobs() {
   function openCreateModal() {
     setEditingId(null);
     setForm(emptyForm);
+    pristineRef.current = JSON.stringify(emptyForm);
+    setDirty(false);
     setShowModal(true);
   }
 
   function openEditModal(job) {
     setEditingId(job.id);
-    setForm({
+    const next = {
       jobTitle: job.jobTitle || "",
       company: job.company || "",
       location: job.location || "",
@@ -90,7 +110,10 @@ export default function Jobs() {
       description: job.description || "",
       deadline: job.deadline ? job.deadline.slice(0, 10) : "",
       isActive: job.isActive,
-    });
+    };
+    setForm(next);
+    pristineRef.current = JSON.stringify(next);
+    setDirty(false);
     setShowModal(true);
   }
 
@@ -98,6 +121,10 @@ export default function Jobs() {
     setShowModal(false);
     setEditingId(null);
     setForm(emptyForm);
+  }
+
+  function closeModalGuarded() {
+    withGuard(closeModal);
   }
 
   async function handleSubmit(e) {
@@ -118,6 +145,7 @@ export default function Jobs() {
         await createJob(payload);
       }
       closeModal();
+      setDirty(false);
       loadJobs(searchTerm);
     } catch (err) {
       setError(err.message);
@@ -141,16 +169,23 @@ export default function Jobs() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Jobs</h2>
-        <button onClick={openCreateModal}>+ Add New Job</button>
+        <button
+          onClick={openCreateModal}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          <Plus size={16} /> Add New Job
+        </button>
       </div>
 
-      <form onSubmit={submitSearch} style={{ margin: "16px 0", display: "flex", gap: 8 }}>
-        <input
-          type="text"
+      <form
+        onSubmit={submitSearch}
+        style={{ margin: "16px 0", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+      >
+        <SearchBox
           placeholder="Search title or company"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ minWidth: 280 }}
+          onChange={setSearchTerm}
+          onReset={resetSearch}
         />
         <button type="submit">Search</button>
         {searchTerm.trim() !== "" && (
@@ -162,35 +197,51 @@ export default function Jobs() {
 
       {loading ? (
         <p>Loading jobs...</p>
+      ) : jobs.length === 0 ? (
+        <p>No jobs found.</p>
       ) : (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Job Title</th>
-              <th>Company</th>
-              <th>Type</th>
-              <th>Deadline</th>
-              <th>Active</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {jobs.map((job) => (
-              <tr key={job.id}>
-                <td>{job.jobTitle}</td>
-                <td>{job.company}</td>
-                <td>{job.employmentType}</td>
-                <td>{job.deadline ? new Date(job.deadline).toLocaleDateString() : "—"}</td>
-                <td>{job.isActive ? "Yes" : "No"}</td>
-                <td>
-                  <button onClick={() => openEditModal(job)}>Edit</button>{" "}
-                  <button onClick={() => setConfirmDeleteId(job.id)}>Delete</button>{" "}
-                  <Link to={`/jobs/${job.id}/applicants`}>Applicants</Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div style={cardGrid}>
+          {jobs.map((job) => {
+            const salaryLine = formatSalaryRange(job);
+            const deadlineDate = job.deadline ? new Date(job.deadline).toLocaleDateString() : "—";
+            const isClosed = job.deadline ? new Date(job.deadline).getTime() < Date.now() : false;
+            return (
+              <div key={job.id} style={card}>
+                <h3 style={cardTitle}>{job.jobTitle}</h3>
+                <p style={cardMeta}>{job.company || "—"} • {job.location || "—"}</p>
+                <p style={cardMeta}>{job.employmentType || "—"} • {job.industry || "—"}</p>
+                {salaryLine && <p style={cardMeta}>Salary: {salaryLine}</p>}
+                <p style={cardMeta}>
+                  Deadline: {deadlineDate}
+                  {isClosed ? " (Closed)" : ""}
+                </p>
+                <div style={{ ...actionsRow, flexWrap: "wrap" }}>
+                  {iconButton("Edit", Pencil)(() => openEditModal(job))}
+                  {iconButton("Delete", Trash2)(() => setConfirmDeleteId(job.id), { color: "#c0392b" })}
+                  <Link
+                    to={`/jobs/${job.id}/applicants`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 10px",
+                      border: "1px solid #ccc",
+                      borderRadius: 8,
+                      background: "#fff",
+                      cursor: "pointer",
+                      fontSize: 13,
+                      color: "inherit",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Users size={15} />
+                    Applicants
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {showModal && (
@@ -207,7 +258,7 @@ export default function Jobs() {
             justifyContent: "center",
             zIndex: 1000,
           }}
-          onClick={closeModal}
+          onClick={closeModalGuarded}
         >
           <div
             style={{
@@ -223,7 +274,7 @@ export default function Jobs() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0 }}>{editingId ? "Edit Job" : "Post New Job"}</h3>
-              <button onClick={closeModal}>✕</button>
+              <button onClick={closeModalGuarded}>✕</button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
@@ -232,7 +283,7 @@ export default function Jobs() {
                 <input
                   type="text"
                   value={form.jobTitle}
-                  onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+                  onChange={(e) => updateField({ jobTitle: e.target.value })}
                   required
                   style={{ width: "100%" }}
                 />
@@ -243,7 +294,7 @@ export default function Jobs() {
                 <input
                   type="text"
                   value={form.company}
-                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  onChange={(e) => updateField({ company: e.target.value })}
                   required
                   style={{ width: "100%" }}
                 />
@@ -254,7 +305,7 @@ export default function Jobs() {
                 <input
                   type="text"
                   value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  onChange={(e) => updateField({ location: e.target.value })}
                   style={{ width: "100%" }}
                 />
               </div>
@@ -264,7 +315,7 @@ export default function Jobs() {
                 <input
                   type="text"
                   value={form.industry}
-                  onChange={(e) => setForm({ ...form, industry: e.target.value })}
+                  onChange={(e) => updateField({ industry: e.target.value })}
                   style={{ width: "100%" }}
                 />
               </div>
@@ -273,7 +324,7 @@ export default function Jobs() {
                 <label>Employment Type</label><br />
                 <select
                   value={form.employmentType}
-                  onChange={(e) => setForm({ ...form, employmentType: e.target.value })}
+                  onChange={(e) => updateField({ employmentType: e.target.value })}
                   style={{ width: "100%" }}
                 >
                   <option value="">Select...</option>
@@ -294,7 +345,7 @@ export default function Jobs() {
                       max={FORM_SALARY_CAP}
                       step={FORM_SALARY_STEP}
                       value={Number(form.salaryMin) || 0}
-                      onChange={(e) => setForm({ ...form, salaryMin: Number(e.target.value) })}
+                      onChange={(e) => updateField({ salaryMin: Number(e.target.value) })}
                       style={{ flex: 1 }}
                     />
                     <button type="button" onClick={() => stepSalary("salaryMin", FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>+</button>
@@ -302,7 +353,7 @@ export default function Jobs() {
                   <input
                     type="number"
                     value={form.salaryMin}
-                    onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
+                    onChange={(e) => updateField({ salaryMin: e.target.value })}
                     placeholder="Undisclosed"
                     style={{ width: "100%", marginTop: 4 }}
                   />
@@ -317,7 +368,7 @@ export default function Jobs() {
                       max={FORM_SALARY_CAP}
                       step={FORM_SALARY_STEP}
                       value={Number(form.salaryMax) || 0}
-                      onChange={(e) => setForm({ ...form, salaryMax: Number(e.target.value) })}
+                      onChange={(e) => updateField({ salaryMax: Number(e.target.value) })}
                       style={{ flex: 1 }}
                     />
                     <button type="button" onClick={() => stepSalary("salaryMax", FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>+</button>
@@ -325,7 +376,7 @@ export default function Jobs() {
                   <input
                     type="number"
                     value={form.salaryMax}
-                    onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
+                    onChange={(e) => updateField({ salaryMax: e.target.value })}
                     placeholder="Undisclosed"
                     style={{ width: "100%", marginTop: 4 }}
                   />
@@ -336,7 +387,7 @@ export default function Jobs() {
                 <label>Description</label><br />
                 <textarea
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) => updateField({ description: e.target.value })}
                   rows={5}
                   style={{ width: "100%" }}
                 />
@@ -347,7 +398,7 @@ export default function Jobs() {
                 <input
                   type="date"
                   value={form.deadline}
-                  onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+                  onChange={(e) => updateField({ deadline: e.target.value })}
                 />
               </div>
 
@@ -356,7 +407,7 @@ export default function Jobs() {
                   <input
                     type="checkbox"
                     checked={form.isActive}
-                    onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                    onChange={(e) => updateField({ isActive: e.target.checked })}
                   />{" "}
                   Active
                 </label>
@@ -366,7 +417,7 @@ export default function Jobs() {
                 <button type="submit" disabled={saving}>
                   {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
                 </button>
-                <button type="button" onClick={closeModal} style={{ marginLeft: 8 }}>
+                <button type="button" onClick={closeModalGuarded} style={{ marginLeft: 8 }}>
                   Cancel
                 </button>
               </div>

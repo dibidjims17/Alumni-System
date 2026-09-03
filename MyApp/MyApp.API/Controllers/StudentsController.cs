@@ -91,6 +91,17 @@ namespace MyApp.API.Controllers
             var temporaryPassword = await _studentService.ResetStudentPasswordAsync(id, GetUserId());
             if (temporaryPassword == null) return NotFound();
             return Ok(new { temporaryPassword });
+        }
+
+        // Manual single-student creation (not just bulk CSV import).
+        // Default password = student number, forced change on first login.
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpPost]
+        public async Task<IActionResult> CreateStudent([FromBody] CreateStudentRequest request)
+        {
+            var created = await _studentService.CreateStudentAsync(request, GetUserId());
+            if (created == null) return Conflict(new { message = "Student number already exists." });
+            return Ok(created);
         }     
     }
 }

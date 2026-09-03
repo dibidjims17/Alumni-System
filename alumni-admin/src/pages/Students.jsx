@@ -1,12 +1,15 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX } from "lucide-react";
 import { API_BASE_URL } from "../config";
-import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword } from "../services/studentsApi";
+import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow } from "../components/kit";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
+const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "1" };
 
 const YEAR_OPTIONS = ["1", "2", "3", "4", "Graduate"];
 
@@ -38,6 +41,34 @@ export default function Students() {
 
   const [confirmResetId, setConfirmResetId] = useState(null);
   const [resetResult, setResetResult] = useState(null);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState(emptyAddForm);
+  const [savingAdd, setSavingAdd] = useState(false);
+
+  function openAddModal() {
+    setAddForm(emptyAddForm);
+    setShowAddModal(true);
+  }
+
+  function closeAddModal() {
+    setShowAddModal(false);
+  }
+
+  async function handleAddSave(e) {
+    e.preventDefault();
+    setSavingAdd(true);
+    setError("");
+    try {
+      await createStudent(addForm);
+      closeAddModal();
+      loadStudents();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingAdd(false);
+    }
+  }
 
   async function loadStudents() {
     setLoading(true);
@@ -155,6 +186,16 @@ export default function Students() {
     setEditingStudent(null);
   }
 
+  function requestCloseEdit() {
+    const changed =
+      editForm.fullName !== editingStudent?.fullName ||
+      editForm.email !== editingStudent?.email ||
+      editForm.program !== editingStudent?.program ||
+      editForm.schoolYear !== editingStudent?.schoolYear;
+    if (changed && !window.confirm("You have unsaved changes. Discard them?")) return;
+    closeEditModal();
+  }
+
   async function handleEditSave(e) {
     e.preventDefault();
     setSavingEdit(true);
@@ -207,16 +248,21 @@ export default function Students() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Students</h2>
-        <button onClick={openImportModal}>+ Import CSV</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={openAddModal}>
+            <UserPlus size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+            Add Student
+          </button>
+          <button onClick={openImportModal}>+ Import CSV</button>
+        </div>
       </div>
 
-      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <input
-          type="text"
+      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <SearchBox
           placeholder="Search by Student Number, Name, or Email"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ minWidth: 280 }}
+          onChange={setSearchTerm}
+          onReset={() => setSearchTerm("")}
         />
 
         <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}>
@@ -240,7 +286,8 @@ export default function Students() {
             setProgramFilter("");
           }}
         >
-          Reset Filters
+          <RotateCcw size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+          Reset
         </button>
       </div>
 
@@ -250,40 +297,54 @@ export default function Students() {
       {!loading && !error && (
         <>
           <p>{filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} found</p>
-          <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead>
-              <tr>
-                <th>Student Number</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Program</th>
-                <th>Year</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStudents.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.studentNumber}</td>
-                  <td>{s.fullName}</td>
-                  <td>{s.email}</td>
-                  <td>{s.program}</td>
-                  <td>{s.schoolYear}</td>
-                  <td>{s.isActive ? "Active" : "Inactive"}</td>
-                  <td>
-                    <button onClick={() => openViewProfile(s)}>View</button>{" "}
-                    <button onClick={() => openEditModal(s)}>Edit</button>{" "}
-                    <button onClick={() => setConfirmResetId(s.id)}>Reset PW</button>{" "}
-                    <Link to={`/students/${s.id}/documents`}>Documents</Link>{" "}
-                    <button onClick={() => handleToggleStatus(s.id)}>
-                      {s.isActive ? "Deactivate" : "Activate"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={cardGrid}>
+            {filteredStudents.map((s) => (
+              <div key={s.id} style={card}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%", background: "#eef3ec",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 700, color: "#1B5E20", flexShrink: 0,
+                  }}>
+                    {(s.fullName || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <h4 style={{ ...cardTitle, margin: 0 }}>{s.fullName}</h4>
+                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.studentNumber}</p>
+                  </div>
+                </div>
+                <p style={{ ...cardMeta, margin: 0 }}>{s.email}</p>
+                <p style={{ ...cardMeta, margin: 0 }}>{s.program} • {s.schoolYear}</p>
+                <span
+                  style={{
+                    alignSelf: "flex-start", fontSize: 12, fontWeight: 600,
+                    padding: "2px 10px", borderRadius: 999,
+                    background: s.isActive ? "#e6f4ea" : "#fdecea",
+                    color: s.isActive ? "#1e7e34" : "#c0392b",
+                  }}
+                >
+                  {s.isActive ? "Active" : "Inactive"}
+                </span>
+                <div style={actionsRow}>
+                  <button type="button" title="View" onClick={() => openViewProfile(s)}><Eye size={15} /> View</button>
+                  <button type="button" title="Edit" onClick={() => openEditModal(s)}><Pencil size={15} /> Edit</button>
+                  <button type="button" title="Reset password" onClick={() => setConfirmResetId(s.id)}><KeyRound size={15} /> Reset PW</button>
+                  <Link to={`/students/${s.id}/documents`}><FileText size={15} /> Docs</Link>
+                  <button
+                    type="button"
+                    title={s.isActive ? "Deactivate" : "Activate"}
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`)) {
+                        handleToggleStatus(s.id);
+                      }
+                    }}
+                  >
+                    {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />} {s.isActive ? "Deactivate" : "Activate"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </>
       )}
 
@@ -454,7 +515,7 @@ export default function Students() {
             background: "rgba(0,0,0,0.5)", display: "flex",
             alignItems: "center", justifyContent: "center", zIndex: 1000,
           }}
-          onClick={closeEditModal}
+          onClick={requestCloseEdit}
         >
           <div
             style={{
@@ -465,7 +526,7 @@ export default function Students() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0 }}>Edit Student — {editingStudent.studentNumber}</h3>
-              <button onClick={closeEditModal}>✕</button>
+              <button onClick={requestCloseEdit}>✕</button>
             </div>
 
             <form onSubmit={handleEditSave} style={{ marginTop: 16 }}>
@@ -521,7 +582,103 @@ export default function Students() {
                 <button type="submit" disabled={savingEdit}>
                   {savingEdit ? "Saving..." : "Save Changes"}
                 </button>
-                <button type="button" onClick={closeEditModal} style={{ marginLeft: 8 }}>
+                <button type="button" onClick={requestCloseEdit} style={{ marginLeft: 8 }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.5)", display: "flex",
+            alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}
+          onClick={closeAddModal}
+        >
+          <div
+            style={{
+              background: "#fff", padding: 24, borderRadius: 8,
+              maxWidth: 480, width: "90%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>Add Student</h3>
+              <button onClick={closeAddModal}>✕</button>
+            </div>
+
+            <form onSubmit={handleAddSave} style={{ marginTop: 16 }}>
+              <div>
+                <label>Student Number</label><br />
+                <input
+                  type="text"
+                  value={addForm.studentNumber}
+                  onChange={(e) => setAddForm({ ...addForm, studentNumber: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Full Name</label><br />
+                <input
+                  type="text"
+                  value={addForm.fullName}
+                  onChange={(e) => setAddForm({ ...addForm, fullName: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Email</label><br />
+                <input
+                  type="email"
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>Program</label><br />
+                <input
+                  type="text"
+                  value={addForm.program}
+                  onChange={(e) => setAddForm({ ...addForm, program: e.target.value })}
+                  required
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <label>School Year</label><br />
+                <select
+                  value={addForm.schoolYear}
+                  onChange={(e) => setAddForm({ ...addForm, schoolYear: e.target.value })}
+                  style={{ width: "100%" }}
+                >
+                  {YEAR_OPTIONS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+
+              <p style={{ fontSize: 13, color: "#555", marginTop: 8 }}>
+                Default password is the student number; they must change it on first login.
+              </p>
+
+              <div style={{ marginTop: 16 }}>
+                <button type="submit" disabled={savingAdd}>
+                  {savingAdd ? "Saving..." : "Add Student"}
+                </button>
+                <button type="button" onClick={closeAddModal} style={{ marginLeft: 8 }}>
                   Cancel
                 </button>
               </div>

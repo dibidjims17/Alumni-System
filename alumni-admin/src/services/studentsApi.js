@@ -63,6 +63,19 @@ export async function resetStudentPassword(id) {
   return response.json();
 }
 
+export async function createStudent(payload) {
+  const response = await fetch(`${API_BASE_URL}/Students`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || "Failed to create student");
+  }
+  return response.json();
+}
+
 // Maps parsed CSV rows (PascalCase headers) to the API's expected camelCase body
 export async function importStudents(csvRows) {
   const payload = csvRows.map((row) => ({
