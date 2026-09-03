@@ -34,7 +34,7 @@ namespace MyApp.Application.Services
                 Id = n.Id,
                 Title = n.Title,
                 Content = n.Content,
-                ImagePath = n.ImagePath,
+                ImagePath = NormalizeImageUrl(n.ImagePath),
                 PostedByAdminName = n.PostedByAdmin.FullName,
                 PostedAt = n.PostedAt,
                 HeartCount = n.Hearts.Count,
@@ -297,7 +297,7 @@ namespace MyApp.Application.Services
                 Id = n.Id,
                 Title = n.Title,
                 Content = n.Content,
-                ImagePath = n.ImagePath,
+                ImagePath = NormalizeImageUrl(n.ImagePath),
                 PostedByAdminName = n.PostedByAdmin.FullName,
                 PostedAt = n.PostedAt,
                 HeartCount = n.Hearts.Count,
@@ -360,6 +360,18 @@ namespace MyApp.Application.Services
             await _activityLogRepository.LogAdminAsync(adminId, "ADMIN_DELETE_COMMENT",
                 $"Admin deleted comment ID: {commentId}", "system");
             return true;
+        }
+
+        // Converts a stored image path (relative "Uploads/News/x" or an older
+        // absolute Windows path) into a web-safe relative URL clients can display.
+        private static string? NormalizeImageUrl(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return null;
+
+            var normalized = path.Replace('\\', '/').TrimStart('/');
+            var marker = "Uploads/";
+            var index = normalized.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            return index >= 0 ? normalized.Substring(index) : normalized;
         }
     }
 }

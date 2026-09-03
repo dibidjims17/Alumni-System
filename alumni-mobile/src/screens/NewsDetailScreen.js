@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -15,6 +16,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { assetUrl } from '../utils/media';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
   return (
@@ -178,6 +180,13 @@ export default function NewsDetailScreen({ route, navigation }) {
         <Text style={styles.meta}>
           {news.postedByAdminName} - {new Date(news.postedAt).toLocaleDateString()}
         </Text>
+        {assetUrl(news.imagePath) && (
+          <Image
+            source={{ uri: assetUrl(news.imagePath) }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        )}
         <Text style={styles.content}>{news.content}</Text>
 
         <TouchableOpacity style={styles.heartRow} onPress={handleHeart}>
@@ -277,6 +286,12 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { fontSize: 18, marginBottom: 4 },
   meta: { fontSize: 12, marginBottom: 12 },
+  image: {
+    width: '100%',
+    height: 200,
+    marginBottom: 12,
+    borderRadius: 8,
+  },
   content: { fontSize: 14, marginBottom: 16 },
   heartRow: { marginBottom: 20 },
   heartText: { fontSize: 14 },

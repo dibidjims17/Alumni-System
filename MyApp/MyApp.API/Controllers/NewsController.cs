@@ -50,7 +50,9 @@ namespace MyApp.API.Controllers
                 await image.CopyToAsync(stream);
             }
 
-            return (true, filePath, null);
+            // Store a relative path so clients can build a URL from it (Uploads/News/<file>).
+            var relativePath = $"Uploads/News/{storedFileName}";
+            return (true, relativePath, null);
         }
 
         // ─── Alumni endpoints ───────────────────────────────────────

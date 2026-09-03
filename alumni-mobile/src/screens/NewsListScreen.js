@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -10,7 +11,9 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
+import { assetUrl } from '../utils/media';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 
@@ -60,27 +63,33 @@ export default function NewsListScreen({ navigation }) {
   }
 
   function renderItem({ item }) {
+    const imageUrl = assetUrl(item.imagePath);
     return (
       <TouchableOpacity
         style={styles.card}
         onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
       >
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.preview} numberOfLines={2}>
-          {item.content}
-        </Text>
-        <View style={styles.metaRow}>
-          <Text style={styles.metaText}>{item.postedByAdminName}</Text>
-          <Text style={styles.metaText}>
-            {item.heartCount} hearts, {item.commentCount} comments
+        {imageUrl && (
+          <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
+        )}
+        <View style={styles.cardBody}>
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.preview} numberOfLines={2}>
+            {item.content}
           </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaText}>{item.postedByAdminName}</Text>
+            <Text style={styles.metaText}>
+              {item.heartCount} hearts, {item.commentCount} comments
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <SectionTabs items={COMMUNITY_TABS} active="NewsList" navigation={navigation} />
       {error && <Text style={styles.errorText}>{error}</Text>}
       <View style={styles.searchRow}>
@@ -111,7 +120,7 @@ export default function NewsListScreen({ navigation }) {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -124,12 +133,21 @@ const styles = StyleSheet.create({
   },
   listContent: { padding: 16 },
   card: {
-    padding: 12,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fff',
+    overflow: 'hidden',
   },
-  title: { fontSize: 16, marginBottom: 6 },
-  preview: { fontSize: 13, marginBottom: 10 },
+  cardImage: {
+    width: '100%',
+    height: 160,
+  },
+  cardBody: {
+    padding: 12,
+  },
+  title: { fontSize: 16, fontWeight: '600', marginBottom: 6 },
+  preview: { fontSize: 13, marginBottom: 10, color: '#444' },
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

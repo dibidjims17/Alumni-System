@@ -10,6 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/SearchBar';
@@ -80,19 +81,19 @@ export default function JobsListScreen({ navigation }) {
 
   if (!isGraduate) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
         <View style={styles.centered}>
           <Text style={styles.infoText}>
             Job listings are available for Graduate students only.
           </Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <SearchBar
@@ -122,7 +123,7 @@ export default function JobsListScreen({ navigation }) {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

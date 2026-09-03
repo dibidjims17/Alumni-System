@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Newspaper, Briefcase, CalendarDays, Users, User, LogOut, Bell } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 
@@ -30,7 +31,7 @@ export default function HomeScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.title}>Welcome, {student?.fullName}</Text>
@@ -71,7 +72,7 @@ export default function HomeScreen({ navigation }) {
         <LogOut size={16} color={ACCENT} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 

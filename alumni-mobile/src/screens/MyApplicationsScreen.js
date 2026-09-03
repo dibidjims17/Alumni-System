@@ -10,6 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import SectionTabs from '../components/SectionTabs';
 
@@ -74,7 +75,7 @@ export default function MyApplicationsScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <SectionTabs items={CAREER_TABS} active="MyApplications" navigation={navigation} />
       {isLoading ? (
         <View style={styles.centered}>
@@ -133,7 +134,7 @@ export default function MyApplicationsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 

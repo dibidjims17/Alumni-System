@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
@@ -101,7 +102,7 @@ export default function EventsListScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <SectionTabs items={COMMUNITY_TABS} active="EventsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <SearchBar
@@ -126,9 +127,9 @@ export default function EventsListScreen({ navigation }) {
               {search.trim() ? 'No events match your search.' : 'No upcoming events.'}
             </Text>
           }
-        />
-      )}
-    </View>
+          />
+        )}
+    </SafeAreaView>
   );
 }
 
