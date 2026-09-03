@@ -1,11 +1,12 @@
 // src/navigation/AppNavigator.js
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { House, Users, Briefcase, User } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
 
 import LoginScreen from '../screens/LoginScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
@@ -33,17 +34,36 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 
-const ACCENT = '#1a4fd8';
-
 const Tab = createBottomTabNavigator();
 const HomeStackNav = createNativeStackNavigator();
 const CommunityStackNav = createNativeStackNavigator();
 const CareerStackNav = createNativeStackNavigator();
 const ProfileStackNav = createNativeStackNavigator();
 
+// Shared colors for the tab bar and stack headers.
+const TAB_ICONS = {
+  HomeTab: House,
+  CommunityTab: Users,
+  CareerTab: Briefcase,
+  ProfileTab: User,
+};
+
+function headerOptions(c) {
+  return {
+    headerStyle: { backgroundColor: c.surface },
+    headerTintColor: c.text,
+    headerShadowVisible: false,
+    contentStyle: { backgroundColor: c.background },
+    headerTitleStyle: { fontWeight: '600' },
+  };
+}
+
 function HomeStack() {
+  const { theme } = useTheme();
   return (
-    <HomeStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <HomeStackNav.Navigator
+      screenOptions={{ ...headerOptions(theme.colors), headerShown: false }}
+    >
       <HomeStackNav.Screen name="Home" component={HomeScreen} />
       <HomeStackNav.Screen
         name="Notifications"
@@ -55,8 +75,11 @@ function HomeStack() {
 }
 
 function CommunityStack() {
+  const { theme } = useTheme();
   return (
-    <CommunityStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <CommunityStackNav.Navigator
+      screenOptions={{ ...headerOptions(theme.colors), headerShown: false }}
+    >
       <CommunityStackNav.Screen name="NewsList" component={NewsListScreen} />
       <CommunityStackNav.Screen name="EventsList" component={EventsListScreen} />
       <CommunityStackNav.Screen name="Directory" component={DirectoryScreen} />
@@ -75,8 +98,11 @@ function CommunityStack() {
 }
 
 function CareerStack() {
+  const { theme } = useTheme();
   return (
-    <CareerStackNav.Navigator screenOptions={{ headerShown: false }}>
+    <CareerStackNav.Navigator
+      screenOptions={{ ...headerOptions(theme.colors), headerShown: false }}
+    >
       <CareerStackNav.Screen name="JobsList" component={JobsListScreen} />
       <CareerStackNav.Screen name="MyApplications" component={MyApplicationsScreen} />
       <CareerStackNav.Screen
@@ -89,9 +115,14 @@ function CareerStack() {
 }
 
 function ProfileStack() {
+  const { theme } = useTheme();
   return (
-      <ProfileStackNav.Navigator>
-      <ProfileStackNav.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+    <ProfileStackNav.Navigator screenOptions={headerOptions(theme.colors)}>
+      <ProfileStackNav.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
       <ProfileStackNav.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
       <ProfileStackNav.Screen name="JobPreferences" component={JobPreferencesScreen} options={{ title: 'Job Preferences' }} />
       <ProfileStackNav.Screen name="EditSkills" component={EditSkillsScreen} options={{ title: 'Edit Skills' }} />
@@ -103,21 +134,20 @@ function ProfileStack() {
   );
 }
 
-const TAB_ICONS = {
-  HomeTab: House,
-  CommunityTab: Users,
-  CareerTab: Briefcase,
-  ProfileTab: User,
-};
-
 function AppTabs() {
+  const { theme } = useTheme();
+  const c = theme.colors;
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: ACCENT,
-        tabBarInactiveTintColor: '#777',
-        tabBarLabelStyle: { fontSize: 11 },
+        tabBarActiveTintColor: c.primary,
+        tabBarInactiveTintColor: c.textMuted,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: c.surface,
+          borderTopColor: c.border,
+        },
         tabBarIcon: ({ color, size }) => {
           const Icon = TAB_ICONS[route.name];
           return Icon ? <Icon size={size} color={color} /> : null;
@@ -134,30 +164,46 @@ function AppTabs() {
 
 export default function AppNavigator() {
   const { student, isLoading } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+      <View
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.background }}
+      >
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
 
+  const authOptions = {
+    ...headerOptions(c),
+    headerShown: false,
+    contentStyle: { backgroundColor: c.background },
+  };
+
   return (
-    <NavigationContainer>
-      {!student ? (
-        <HomeStackNav.Navigator screenOptions={{ headerShown: false }}>
-          <HomeStackNav.Screen name="Login" component={LoginScreen} />
-          <HomeStackNav.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-          <HomeStackNav.Screen name="ResetPassword" component={ResetPasswordScreen} />
-        </HomeStackNav.Navigator>
-      ) : student.mustChangePassword ? (
-        <HomeStackNav.Navigator screenOptions={{ headerShown: false }}>
-          <HomeStackNav.Screen name="ChangePassword" component={ChangePasswordScreen} />
-        </HomeStackNav.Navigator>
-      ) : (
-        <AppTabs />
-      )}
-    </NavigationContainer>
+    <>
+      <StatusBar
+        barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={c.background}
+      />
+      <NavigationContainer>
+        {!student ? (
+          <HomeStackNav.Navigator screenOptions={authOptions}>
+            <HomeStackNav.Screen name="Login" component={LoginScreen} />
+            <HomeStackNav.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            <HomeStackNav.Screen name="ResetPassword" component={ResetPasswordScreen} />
+          </HomeStackNav.Navigator>
+        ) : student.mustChangePassword ? (
+          <HomeStackNav.Navigator screenOptions={authOptions}>
+            <HomeStackNav.Screen name="ChangePassword" component={ChangePasswordScreen} />
+          </HomeStackNav.Navigator>
+        ) : (
+          <AppTabs />
+        )}
+      </NavigationContainer>
+    </>
   );
 }

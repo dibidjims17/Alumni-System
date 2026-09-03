@@ -5,16 +5,19 @@ import {
   Text,
   ScrollView,
   Switch,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 export default function JobDetailScreen({ route, navigation }) {
   const { jobId } = route.params;
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isApplying, setIsApplying] = useState(false);
@@ -76,7 +79,7 @@ export default function JobDetailScreen({ route, navigation }) {
 
   if (isLoading || !job) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -85,60 +88,63 @@ export default function JobDetailScreen({ route, navigation }) {
   const deadlinePassed = job.deadline && new Date(job.deadline) < new Date();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{job.jobTitle}</Text>
-        <Text style={styles.company}>{job.company}</Text>
-        <Text style={styles.meta}>{job.location}</Text>
-        <Text style={styles.meta}>{job.employmentType} - {job.industry}</Text>
+    <ScrollView
+      style={[styles.container, { backgroundColor: c.background }]}
+      contentContainerStyle={styles.content}
+    >
+      <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+        <Text style={[styles.title, { color: c.text }]}>{job.jobTitle}</Text>
+        <Text style={[styles.company, { color: c.text }]}>{job.company}</Text>
+        <Text style={[styles.meta, { color: c.textMuted }]}>{job.location}</Text>
+        <Text style={[styles.meta, { color: c.textMuted }]}>
+          {job.employmentType} - {job.industry}
+        </Text>
 
         {(job.salaryMin || job.salaryMax) && (
-          <Text style={styles.meta}>
+          <Text style={[styles.meta, { color: c.textMuted }]}>
             Salary: {job.salaryMin ? `₱${job.salaryMin.toLocaleString()}` : '?'} - {job.salaryMax ? `₱${job.salaryMax.toLocaleString()}` : '?'}
           </Text>
         )}
 
         {job.deadline && (
-          <Text style={styles.meta}>
+          <Text style={[styles.meta, { color: c.textMuted }]}>
             Deadline: {new Date(job.deadline).toLocaleDateString()}
             {new Date(job.deadline) < new Date() ? ' (Closed)' : ''}
           </Text>
         )}
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.description}>{job.description}</Text>
+      <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+        <Text style={[styles.sectionTitle, { color: c.text }]}>Description</Text>
+        <Text style={[styles.description, { color: c.text }]}>{job.description}</Text>
       </View>
 
       {job.hasApplied ? (
-        <View style={styles.statusCard}>
-          <Text style={styles.statusText}>
+        <View style={[styles.statusCard, { backgroundColor: c.primaryTint }]}>
+          <Text style={[styles.statusText, { color: c.primary }]}>
             You applied to this job.
             {myApplication ? ` Status: ${myApplication.status}` : ''}
           </Text>
         </View>
       ) : job.isActive && !(job.deadline && new Date(job.deadline) < new Date()) ? (
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Attach my resume</Text>
+            <Text style={[styles.label, { color: c.text }]}>Attach my resume</Text>
             <Switch value={attachResume} onValueChange={setAttachResume} />
           </View>
-          <TouchableOpacity
-            style={styles.applyButton}
+          <PrimaryButton
+            title="Apply Now"
             onPress={confirmApply}
             disabled={isApplying}
-          >
-            {isApplying ? (
-              <ActivityIndicator />
-            ) : (
-              <Text style={styles.buttonText}>Apply Now</Text>
-            )}
-          </TouchableOpacity>
+            loading={isApplying}
+            style={styles.applyButton}
+          />
         </View>
       ) : (
-        <View style={styles.statusCard}>
-          <Text style={styles.statusText}>This job is no longer accepting applications.</Text>
+        <View style={[styles.statusCard, { backgroundColor: c.primaryTint }]}>
+          <Text style={[styles.statusText, { color: c.primary }]}>
+            This job is no longer accepting applications.
+          </Text>
         </View>
       )}
     </ScrollView>
@@ -146,22 +152,20 @@ export default function JobDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  container: { flex: 1 },
   content: { padding: 16, paddingBottom: 24 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     padding: 14,
     marginBottom: 12,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
-  company: { fontSize: 14, marginBottom: 8, color: '#333' },
-  meta: { fontSize: 12, marginBottom: 4, color: '#555' },
+  title: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  company: { fontSize: 14, marginBottom: 8 },
+  meta: { fontSize: 12, marginBottom: 4 },
   sectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
-  description: { fontSize: 13, lineHeight: 20, color: '#333' },
+  description: { fontSize: 13, lineHeight: 20 },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -170,19 +174,12 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 13 },
   applyButton: {
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
     marginTop: 4,
   },
   statusCard: {
-    backgroundColor: '#e8eefc',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
   },
-  statusText: { fontSize: 14, color: '#1a4fd8', textAlign: 'center' },
-  buttonText: { fontSize: 14 },
+  statusText: { fontSize: 14, textAlign: 'center' },
 });

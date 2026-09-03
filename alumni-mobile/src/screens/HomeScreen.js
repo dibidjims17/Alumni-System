@@ -1,13 +1,20 @@
 // src/screens/HomeScreen.js
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Newspaper, Briefcase, CalendarDays, Users, User, LogOut, Bell } from 'lucide-react-native';
+import {
+  Newspaper,
+  Briefcase,
+  CalendarDays,
+  Users,
+  User,
+  LogOut,
+  Bell,
+} from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
-
-const ACCENT = '#1a4fd8';
 
 const TILES = [
   { key: 'news', label: 'News', Icon: Newspaper, target: ['CommunityTab', 'NewsList'] },
@@ -19,6 +26,8 @@ const TILES = [
 
 export default function HomeScreen({ navigation }) {
   const { student, logout } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [unreadCount, setUnreadCount] = useState(0);
 
   useFocusEffect(
@@ -31,11 +40,14 @@ export default function HomeScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: c.background }]}
+      edges={['top', 'left', 'right']}
+    >
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Welcome, {student?.fullName}</Text>
-          <Text style={styles.detail}>
+          <Text style={[styles.title, { color: c.text }]}>Welcome, {student?.fullName}</Text>
+          <Text style={[styles.detail, { color: c.textMuted }]}>
             {student?.studentNumber} • {student?.program}
           </Text>
         </View>
@@ -44,9 +56,9 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate('Notifications')}
           accessibilityLabel="Notifications"
         >
-          <Bell size={26} color={ACCENT} />
+          <Bell size={26} color={c.primary} />
           {unreadCount > 0 && (
-            <View style={styles.badge}>
+            <View style={[styles.badge, { backgroundColor: c.badge }]}>
               <Text style={styles.badgeText}>
                 {unreadCount > 99 ? '99+' : String(unreadCount)}
               </Text>
@@ -59,18 +71,26 @@ export default function HomeScreen({ navigation }) {
         {TILES.map(({ key, label, Icon, target }) => (
           <TouchableOpacity
             key={key}
-            style={styles.tile}
+            style={[
+              styles.tile,
+              { backgroundColor: c.surface, borderColor: c.border },
+            ]}
+            activeOpacity={0.85}
             onPress={() => navigation.navigate(target[0], { screen: target[1] })}
           >
-            <Icon size={32} color={ACCENT} />
-            <Text style={styles.tileLabel}>{label}</Text>
+            <Icon size={32} color={c.primary} />
+            <Text style={[styles.tileLabel, { color: c.text }]}>{label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <LogOut size={16} color={ACCENT} />
-        <Text style={styles.logoutText}>Log Out</Text>
+      <TouchableOpacity
+        style={[styles.logoutButton, { borderColor: c.border }]}
+        onPress={logout}
+        activeOpacity={0.85}
+      >
+        <LogOut size={16} color={c.danger} />
+        <Text style={[styles.logoutText, { color: c.danger }]}>Log Out</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -79,7 +99,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
@@ -93,11 +113,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
+    fontWeight: '700',
   },
   detail: {
     fontSize: 13,
     marginTop: 2,
-    color: '#555',
   },
   bellButton: {
     padding: 8,
@@ -109,7 +129,6 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#cc0000',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -129,24 +148,27 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 24,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    paddingVertical: 26,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   tileLabel: {
     fontSize: 14,
-    marginTop: 8,
+    fontWeight: '600',
+    marginTop: 10,
   },
   logoutButton: {
     marginTop: 'auto',
-    padding: 12,
+    padding: 13,
     alignItems: 'center',
-    borderWidth: 1,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
   },
   logoutText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

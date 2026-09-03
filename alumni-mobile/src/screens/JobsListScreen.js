@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 
@@ -23,6 +24,8 @@ const CAREER_TABS = [
 
 export default function JobsListScreen({ navigation }) {
   const { student } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
   const isGraduate = student?.schoolYear === 'Graduate';
 
   const [items, setItems] = useState([]);
@@ -68,15 +71,19 @@ export default function JobsListScreen({ navigation }) {
   function renderItem({ item }) {
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
         onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
       >
-        <Text style={styles.title}>{item.jobTitle}</Text>
-        <Text style={styles.company}>{item.company} - {item.location}</Text>
-        <Text style={styles.meta}>{item.employmentType} - {item.industry}</Text>
+        <Text style={[styles.title, { color: c.text }]}>{item.jobTitle}</Text>
+        <Text style={[styles.company, { color: c.text }]}>
+          {item.company} - {item.location}
+        </Text>
+        <Text style={[styles.meta, { color: c.textMuted }]}>
+          {item.employmentType} - {item.industry}
+        </Text>
         {item.hasApplied && (
-          <View style={styles.appliedPill}>
-            <Text style={styles.appliedPillText}>Applied</Text>
+          <View style={[styles.appliedPill, { backgroundColor: c.primaryTint }]}>
+            <Text style={[styles.appliedPillText, { color: c.primary }]}>Applied</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -85,10 +92,13 @@ export default function JobsListScreen({ navigation }) {
 
   if (!isGraduate) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: c.background }]}
+        edges={['top', 'left', 'right']}
+      >
         <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
         <View style={styles.centered}>
-          <Text style={styles.infoText}>
+          <Text style={[styles.infoText, { color: c.text }]}>
             Job listings are available for Graduate students only.
           </Text>
         </View>
@@ -97,7 +107,10 @@ export default function JobsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: c.background }]}
+      edges={['top', 'left', 'right']}
+    >
       <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <SearchBar
@@ -121,7 +134,7 @@ export default function JobsListScreen({ navigation }) {
             <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
           }
           ListEmptyComponent={
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: c.text }]}>
               {search.trim() ? 'No jobs match your search.' : 'No jobs posted yet.'}
             </Text>
           }
@@ -132,7 +145,7 @@ export default function JobsListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   listContent: { padding: 16, paddingBottom: 24 },
   searchRow: {
@@ -140,25 +153,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     padding: 12,
     marginBottom: 10,
   },
-  title: { fontSize: 16, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
-  company: { fontSize: 13, marginBottom: 4, color: '#333' },
-  meta: { fontSize: 11, color: '#777' },
+  title: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  company: { fontSize: 13, marginBottom: 4 },
+  meta: { fontSize: 11 },
   appliedPill: {
     alignSelf: 'flex-start',
     marginTop: 8,
     paddingVertical: 3,
     paddingHorizontal: 10,
     borderRadius: 10,
-    backgroundColor: '#e8eefc',
   },
-  appliedPillText: { fontSize: 11, color: '#1a4fd8', fontWeight: '600' },
+  appliedPillText: { fontSize: 11, fontWeight: '600' },
   emptyText: { textAlign: 'center', marginTop: 40 },
   infoText: { fontSize: 13, textAlign: 'center' },
 });

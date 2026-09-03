@@ -18,36 +18,36 @@ import { Heart, Send, ChevronDown, ChevronUp } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
-
-const ACCENT = '#1a4fd8';
-const HEART_ACTIVE = '#e0245e';
+import { useTheme } from '../theme/ThemeContext';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   return (
-    <View style={level === 0 ? styles.topCommentRow : styles.replyRow}>
-      <Text style={styles.commentAuthor}>{comment.studentName}</Text>
-      <Text style={styles.commentText}>{comment.comment}</Text>
+    <View style={[level === 0 ? styles.topCommentRow : styles.replyRow, level !== 0 && { backgroundColor: c.background }]}>
+      <Text style={[styles.commentAuthor, { color: c.text }]}>{comment.studentName}</Text>
+      <Text style={[styles.commentText, { color: c.text }]}>{comment.comment}</Text>
       <View style={styles.commentActions}>
         <TouchableOpacity onPress={() => onLike(comment.id)} style={styles.commentLikeBtn}>
           <Heart
             size={13}
-            color={comment.isLiked ? HEART_ACTIVE : '#777'}
-            fill={comment.isLiked ? HEART_ACTIVE : 'none'}
+            color={comment.isLiked ? c.heart : c.textMuted}
+            fill={comment.isLiked ? c.heart : 'none'}
           />
-          <Text style={[styles.actionText, comment.isLiked && styles.actionTextActive]}>
+          <Text style={[styles.actionText, { color: comment.isLiked ? c.heart : c.textMuted }]}>
             {comment.likeCount}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => onReply(comment, level)}>
-          <Text style={styles.actionText}>Reply</Text>
+          <Text style={[styles.actionText, { color: c.textMuted }]}>Reply</Text>
         </TouchableOpacity>
         {comment.studentId === currentStudentId && (
           <>
             <TouchableOpacity onPress={() => onEdit(comment)}>
-              <Text style={styles.actionText}>Edit</Text>
+              <Text style={[styles.actionText, { color: c.textMuted }]}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onDelete(comment.id)}>
-              <Text style={styles.actionText}>Delete</Text>
+              <Text style={[styles.actionText, { color: c.textMuted }]}>Delete</Text>
             </TouchableOpacity>
           </>
         )}
@@ -59,6 +59,8 @@ function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, current
 export default function NewsDetailScreen({ route, navigation }) {
   const { newsId } = route.params;
   const { student } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [news, setNews] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
@@ -178,8 +180,8 @@ export default function NewsDetailScreen({ route, navigation }) {
 
   if (isLoading || !news) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -189,36 +191,45 @@ export default function NewsDetailScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.postCard}>
-          <Text style={styles.title}>{news.title}</Text>
-          <Text style={styles.meta}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={[styles.postCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Text style={[styles.title, { color: c.text }]}>{news.title}</Text>
+          <Text style={[styles.meta, { color: c.textMuted }]}>
             {news.postedByAdminName} - {new Date(news.postedAt).toLocaleDateString()}
           </Text>
           {assetUrl(news.imagePath) && (
             <Image
               source={{ uri: assetUrl(news.imagePath) }}
-              style={styles.image}
+              style={[styles.image, { backgroundColor: c.surfaceAlt }]}
               resizeMode="cover"
             />
           )}
-          <Text style={styles.content}>{news.content}</Text>
+          <Text style={[styles.content, { color: c.text }]}>{news.content}</Text>
 
-          <TouchableOpacity style={styles.heartRow} onPress={handleHeart}>
+          <TouchableOpacity
+            style={[styles.heartRow, { backgroundColor: c.background }]}
+            onPress={handleHeart}
+          >
             <Heart
               size={20}
-              color={news.isHearted ? HEART_ACTIVE : '#777'}
-              fill={news.isHearted ? HEART_ACTIVE : 'none'}
+              color={news.isHearted ? c.heart : c.textMuted}
+              fill={news.isHearted ? c.heart : 'none'}
             />
-            <Text style={[styles.heartText, news.isHearted && styles.heartTextActive]}>
+            <Text style={[styles.heartText, { color: news.isHearted ? c.heart : c.textMuted }]}>
               {news.heartCount}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.commentsHeader}>Comments</Text>
+        <Text style={[styles.commentsHeader, { color: c.text }]}>Comments</Text>
         {(news.comments || []).map((comment) => (
-          <View key={comment.id} style={styles.threadBlock}>
+          <View
+            key={comment.id}
+            style={[styles.threadBlock, { backgroundColor: c.surface, borderColor: c.border }]}
+          >
             <CommentRow
               comment={comment}
               level={0}
@@ -234,11 +245,11 @@ export default function NewsDetailScreen({ route, navigation }) {
                 onPress={() => toggleThread(comment.id)}
               >
                 {expandedThreads[comment.id] ? (
-                  <ChevronUp size={14} color="#1a4fd8" />
+                  <ChevronUp size={14} color={c.primary} />
                 ) : (
-                  <ChevronDown size={14} color="#1a4fd8" />
+                  <ChevronDown size={14} color={c.primary} />
                 )}
-                <Text style={styles.repliesToggleText}>
+                <Text style={[styles.repliesToggleText, { color: c.primary }]}>
                   {expandedThreads[comment.id]
                     ? 'Hide replies'
                     : `View ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`}
@@ -246,7 +257,7 @@ export default function NewsDetailScreen({ route, navigation }) {
               </TouchableOpacity>
             )}
             {expandedThreads[comment.id] && (comment.replies || []).length > 0 && (
-              <View style={styles.replyGroup}>
+              <View style={[styles.replyGroup, { borderLeftColor: c.border }]}>
                 {comment.replies.map((reply) => (
                   <View key={reply.id}>
                     <CommentRow
@@ -259,7 +270,7 @@ export default function NewsDetailScreen({ route, navigation }) {
                       currentStudentId={student?.id}
                     />
                     {(reply.replies || []).length > 0 && (
-                      <View style={styles.replyGroup}>
+                      <View style={[styles.replyGroup, { borderLeftColor: c.border }]}>
                         {reply.replies.map((subReply) => (
                           <CommentRow
                             key={subReply.id}
@@ -281,28 +292,31 @@ export default function NewsDetailScreen({ route, navigation }) {
           </View>
         ))}
         {(!news.comments || news.comments.length === 0) && (
-          <Text style={styles.emptyText}>No comments yet.</Text>
+          <Text style={[styles.emptyText, { color: c.textMuted }]}>No comments yet.</Text>
         )}
       </ScrollView>
 
-      <View style={styles.composer}>
+      <View style={[styles.composer, { backgroundColor: c.surface, borderColor: c.border }]}>
         {(replyTarget || editingComment) && (
-          <View style={styles.composerBanner}>
-            <Text style={styles.composerBannerText}>
+          <View style={[styles.composerBanner, { backgroundColor: c.primaryTint }]}>
+            <Text style={[styles.composerBannerText, { color: c.primary }]}>
               {editingComment
                 ? 'Editing comment'
                 : `Replying to ${replyTarget.mentionedStudentName}`}
             </Text>
             <TouchableOpacity onPress={cancelComposer}>
-              <Text style={styles.composerBannerCancel}>Cancel</Text>
+              <Text style={[styles.composerBannerCancel, { color: c.primary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         )}
         <View style={styles.composerRow}>
           <TextInput
-            style={styles.composerInput}
+            style={[
+              styles.composerInput,
+              { borderColor: c.border, backgroundColor: c.background, color: c.text },
+            ]}
             placeholder="Write a comment..."
-            placeholderTextColor="#999"
+            placeholderTextColor={c.placeholder}
             value={commentText}
             onChangeText={setCommentText}
             onSubmitEditing={handleSubmitComment}
@@ -313,13 +327,16 @@ export default function NewsDetailScreen({ route, navigation }) {
           <TouchableOpacity
             style={[
               styles.sendButton,
-              (!commentText.trim() || isSubmitting) && styles.sendButtonDisabled,
+              { backgroundColor: c.primary },
+              (!commentText.trim() || isSubmitting) && {
+                backgroundColor: c.primaryTint,
+              },
             ]}
             onPress={handleSubmitComment}
             disabled={isSubmitting || !commentText.trim()}
             accessibilityLabel="Send comment"
           >
-            <Send size={18} color="#fff" />
+            <Send size={18} color={c.onPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -328,28 +345,25 @@ export default function NewsDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  container: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 24 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   postCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     padding: 14,
     marginBottom: 16,
     overflow: 'hidden',
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
-  meta: { fontSize: 12, color: '#777', marginBottom: 12 },
+  title: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  meta: { fontSize: 12, marginBottom: 12 },
   image: {
     width: '100%',
     height: 200,
     marginBottom: 12,
     borderRadius: 8,
-    backgroundColor: '#eee',
   },
-  content: { fontSize: 14, lineHeight: 21, color: '#333' },
+  content: { fontSize: 14, lineHeight: 21 },
   heartRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -358,17 +372,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#f4f4f6',
   },
-  heartText: { fontSize: 13, marginLeft: 6, color: '#777' },
-  heartTextActive: { color: HEART_ACTIVE },
-  commentsHeader: { fontSize: 15, fontWeight: '600', marginBottom: 10, color: '#1a1a1a' },
+  heartText: { fontSize: 13, marginLeft: 6 },
+  commentsHeader: { fontSize: 15, fontWeight: '600', marginBottom: 10 },
 
   threadBlock: {
-    backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     padding: 12,
     marginBottom: 10,
   },
@@ -380,7 +390,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingLeft: 10,
     borderLeftWidth: 2,
-    borderLeftColor: '#e0e0e0',
   },
   repliesToggle: {
     flexDirection: 'row',
@@ -392,53 +401,45 @@ const styles = StyleSheet.create({
   },
   repliesToggleText: {
     fontSize: 12,
-    color: '#1a4fd8',
     fontWeight: '600',
     marginLeft: 2,
   },
   replyRow: {
-    backgroundColor: '#f4f4f6',
     borderRadius: 10,
     padding: 10,
     marginBottom: 8,
   },
 
-  commentAuthor: { fontSize: 13, fontWeight: '600', color: '#1a1a1a' },
-  commentText: { fontSize: 13, marginTop: 2, color: '#333', lineHeight: 18 },
+  commentAuthor: { fontSize: 13, fontWeight: '600' },
+  commentText: { fontSize: 13, marginTop: 2, lineHeight: 18 },
   commentActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
     marginTop: 8,
   },
-  actionText: { fontSize: 12, marginLeft: 3, color: '#777' },
-  actionTextActive: { color: HEART_ACTIVE },
+  actionText: { fontSize: 12, marginLeft: 3 },
   commentLikeBtn: { flexDirection: 'row', alignItems: 'center' },
-  emptyText: { textAlign: 'center', marginTop: 20, color: '#888' },
+  emptyText: { textAlign: 'center', marginTop: 20 },
   composer: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
     padding: 10,
   },
   composerBanner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#e8eefc',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     marginBottom: 8,
   },
-  composerBannerText: { fontSize: 12, color: ACCENT },
-  composerBannerCancel: { fontSize: 12, color: ACCENT, fontWeight: '600' },
+  composerBannerText: { fontSize: 12 },
+  composerBannerCancel: { fontSize: 12, fontWeight: '600' },
   composerRow: { flexDirection: 'row', alignItems: 'center' },
   composerInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#f4f4f6',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -449,11 +450,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: ACCENT,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  sendButtonDisabled: {
-    backgroundColor: '#b3c4ea',
   },
 });

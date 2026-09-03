@@ -8,17 +8,20 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 export default function EditWorkExperienceScreen({ route, navigation }) {
   const existing = route.params?.workExperience || null;
   const isEditing = !!existing;
+  const { theme } = useTheme();
+  const c = theme.colors;
 
   const [jobTitle, setJobTitle] = useState(existing?.jobTitle || '');
   const [company, setCompany] = useState(existing?.company || '');
@@ -93,64 +96,102 @@ export default function EditWorkExperienceScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-        <Text style={styles.label}>Job Title *</Text>
-        <TextInput style={styles.input} value={jobTitle} onChangeText={setJobTitle} />
-
-        <Text style={styles.label}>Company *</Text>
-        <TextInput style={styles.input} value={company} onChangeText={setCompany} />
-
-        <Text style={styles.label}>Location</Text>
-        <TextInput style={styles.input} value={location} onChangeText={setLocation} />
-
-        <Text style={styles.label}>Start Date (YYYY-MM-DD) *</Text>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={{ padding: 16 }}
+      >
+        <Text style={[styles.label, { color: c.textMuted }]}>Job Title *</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
+          value={jobTitle}
+          onChangeText={setJobTitle}
+        />
+
+        <Text style={[styles.label, { color: c.textMuted }]}>Company *</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
+          value={company}
+          onChangeText={setCompany}
+        />
+
+        <Text style={[styles.label, { color: c.textMuted }]}>Location</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
+          value={location}
+          onChangeText={setLocation}
+        />
+
+        <Text style={[styles.label, { color: c.textMuted }]}>Start Date (YYYY-MM-DD) *</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
           value={startDate}
           onChangeText={setStartDate}
           placeholder="2023-06-01"
+          placeholderTextColor={c.placeholder}
         />
 
         <View style={styles.switchRow}>
-          <Text style={styles.label}>Current Job</Text>
-          <Switch value={isCurrentJob} onValueChange={setIsCurrentJob} />
+          <Text style={[styles.label, { color: c.text }]}>Current Job</Text>
+          <Switch
+            value={isCurrentJob}
+            onValueChange={setIsCurrentJob}
+            trackColor={{ true: c.primary }}
+          />
         </View>
 
         {!isCurrentJob && (
           <>
-            <Text style={styles.label}>End Date (YYYY-MM-DD)</Text>
+            <Text style={[styles.label, { color: c.textMuted }]}>End Date (YYYY-MM-DD)</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+              ]}
               value={endDate}
               onChangeText={setEndDate}
               placeholder="2024-01-01"
+              placeholderTextColor={c.placeholder}
             />
           </>
         )}
 
-        <Text style={styles.label}>Description</Text>
+        <Text style={[styles.label, { color: c.textMuted }]}>Description</Text>
         <TextInput
-          style={[styles.input, styles.multiline]}
+          style={[
+            styles.input,
+            styles.multiline,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
           value={description}
           onChangeText={setDescription}
           multiline
         />
 
-        <TouchableOpacity
-          style={styles.saveButton}
+        <PrimaryButton
+          title={isEditing ? 'Save Changes' : 'Add'}
           onPress={handleSave}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator />
-          ) : (
-            <Text style={styles.buttonText}>{isEditing ? 'Save Changes' : 'Add'}</Text>
-          )}
-        </TouchableOpacity>
+          loading={isSubmitting}
+          style={{ marginTop: 24 }}
+        />
 
         {isEditing && (
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-            <Text style={styles.buttonText}>Delete</Text>
+          <TouchableOpacity
+            style={[styles.deleteButton, { borderColor: c.border }]}
+            onPress={handleDelete}
+          >
+            <Text style={[styles.deleteButtonText, { color: c.danger }]}>Delete</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -163,6 +204,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, marginTop: 12, marginBottom: 4 },
   input: {
     borderWidth: 1,
+    borderRadius: 12,
     padding: 10,
   },
   multiline: {
@@ -175,17 +217,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  saveButton: {
-    marginTop: 24,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
   deleteButton: {
     marginTop: 12,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
+    borderRadius: 12,
   },
-  buttonText: { fontSize: 14 },
+  deleteButtonText: { fontSize: 14, fontWeight: '600' },
 });

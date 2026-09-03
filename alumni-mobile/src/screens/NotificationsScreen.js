@@ -11,8 +11,11 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function NotificationsScreen({ navigation }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -85,28 +88,37 @@ export default function NotificationsScreen({ navigation }) {
   function renderItem({ item }) {
     return (
       <TouchableOpacity
-        style={[styles.card, !item.isRead && styles.unreadCard]}
+        style={[
+          styles.card,
+          { backgroundColor: c.surface, borderColor: item.isRead ? c.border : c.primary },
+          !item.isRead && styles.unreadCard,
+        ]}
         onPress={() => handleTapNotification(item)}
       >
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.message}>{item.message}</Text>
-        <Text style={styles.meta}>{new Date(item.createdAt).toLocaleString()}</Text>
+        <Text style={[styles.title, { color: c.text }]}>{item.title}</Text>
+        <Text style={[styles.message, { color: c.text }]}>{item.message}</Text>
+        <Text style={[styles.meta, { color: c.textMuted }]}>
+          {new Date(item.createdAt).toLocaleString()}
+        </Text>
       </TouchableOpacity>
     );
   }
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllRead}>
-        <Text style={styles.buttonText}>Mark all as read</Text>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
+      <TouchableOpacity
+        style={[styles.markAllButton, { backgroundColor: c.primaryTint, borderColor: c.primary }]}
+        onPress={handleMarkAllRead}
+      >
+        <Text style={[styles.buttonText, { color: c.primary }]}>Mark all as read</Text>
       </TouchableOpacity>
 
       <FlatList
@@ -117,7 +129,9 @@ export default function NotificationsScreen({ navigation }) {
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
-        ListEmptyComponent={<Text style={styles.emptyText}>No notifications yet.</Text>}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: c.text }]}>No notifications yet.</Text>
+        }
       />
     </View>
   );

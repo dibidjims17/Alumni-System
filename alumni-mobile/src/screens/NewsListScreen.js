@@ -17,9 +17,7 @@ import apiClient from '../api/client';
 import { assetUrl } from '../utils/media';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
-
-const ACCENT = '#1a4fd8';
-const HEART_ACTIVE = '#e0245e';
+import { useTheme } from '../theme/ThemeContext';
 
 const COMMUNITY_TABS = [
   { key: 'News', label: 'News', screen: 'NewsList' },
@@ -28,6 +26,8 @@ const COMMUNITY_TABS = [
 ];
 
 export default function NewsListScreen({ navigation }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -90,13 +90,17 @@ export default function NewsListScreen({ navigation }) {
   function renderItem({ item }) {
     const imageUrl = assetUrl(item.imagePath);
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         {imageUrl && (
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
           >
-            <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
+            <Image
+              source={{ uri: imageUrl }}
+              style={[styles.cardImage, { backgroundColor: c.surfaceAlt }]}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -104,45 +108,47 @@ export default function NewsListScreen({ navigation }) {
           onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
         >
           <View style={styles.cardBody}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.preview} numberOfLines={2}>
+            <Text style={[styles.title, { color: c.text }]}>{item.title}</Text>
+            <Text style={[styles.preview, { color: c.textMuted }]} numberOfLines={2}>
               {item.content}
             </Text>
           </View>
         </TouchableOpacity>
 
-        <View style={styles.actions}>
+        <View style={[styles.actions, { borderColor: c.border }]}>
           <View style={styles.actionMeta}>
-            <Text style={styles.author}>{item.postedByAdminName}</Text>
-            <Text style={styles.date}>
+            <Text style={[styles.author, { color: c.text }]}>{item.postedByAdminName}</Text>
+            <Text style={[styles.date, { color: c.textMuted }]}>
               {item.postedAt ? new Date(item.postedAt).toLocaleDateString() : ''}
             </Text>
           </View>
 
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[styles.actionButton, { backgroundColor: c.background }]}
               onPress={() => toggleHeart(item)}
               disabled={heartingId === item.id}
               accessibilityLabel={item.isHearted ? 'Unlike' : 'Like'}
             >
               <Heart
                 size={18}
-                color={item.isHearted ? HEART_ACTIVE : '#777'}
-                fill={item.isHearted ? HEART_ACTIVE : 'none'}
+                color={item.isHearted ? c.heart : c.textMuted}
+                fill={item.isHearted ? c.heart : 'none'}
               />
-              <Text style={[styles.actionText, item.isHearted && styles.actionTextActive]}>
+              <Text
+                style={[styles.actionText, { color: item.isHearted ? c.heart : c.textMuted }]}
+              >
                 {item.heartCount}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[styles.actionButton, { backgroundColor: c.background }]}
               onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
               accessibilityLabel="Comments"
             >
-              <MessageCircle size={18} color="#777" />
-              <Text style={styles.actionText}>{item.commentCount}</Text>
+              <MessageCircle size={18} color={c.textMuted} />
+              <Text style={[styles.actionText, { color: c.textMuted }]}>{item.commentCount}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -151,9 +157,9 @@ export default function NewsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
       <SectionTabs items={COMMUNITY_TABS} active="NewsList" navigation={navigation} />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>}
       <View style={styles.searchRow}>
         <SearchBar
           placeholder="Search news"
@@ -164,7 +170,7 @@ export default function NewsListScreen({ navigation }) {
       </View>
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : (
         <FlatList
@@ -177,7 +183,7 @@ export default function NewsListScreen({ navigation }) {
             <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
           }
           ListEmptyComponent={
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: c.textMuted }]}>
               {search.trim() ? 'No posts match your search.' : 'No news posts yet.'}
             </Text>
           }
@@ -190,7 +196,6 @@ export default function NewsListScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f4f6',
   },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   searchRow: {
@@ -205,17 +210,14 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     marginBottom: 14,
     overflow: 'hidden',
   },
   cardImage: {
     width: '100%',
     height: 170,
-    backgroundColor: '#eee',
   },
   cardBody: {
     paddingHorizontal: 14,
@@ -224,13 +226,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1a1a1a',
     marginBottom: 6,
     lineHeight: 21,
   },
   preview: {
     fontSize: 13,
-    color: '#555',
     lineHeight: 19,
   },
   actions: {
@@ -241,7 +241,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: '#eee',
   },
   actionMeta: {
     flex: 1,
@@ -249,12 +248,10 @@ const styles = StyleSheet.create({
   },
   author: {
     fontSize: 12,
-    color: '#333',
     fontWeight: '500',
   },
   date: {
     fontSize: 11,
-    color: '#888',
     marginTop: 1,
   },
   actionButtons: {
@@ -267,25 +264,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: '#f4f4f6',
     marginLeft: 8,
   },
   actionText: {
     fontSize: 12,
     marginLeft: 4,
-    color: '#777',
-  },
-  actionTextActive: {
-    color: HEART_ACTIVE,
   },
   errorText: {
     textAlign: 'center',
     padding: 8,
-    color: '#cc0000',
   },
   emptyText: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#888',
   },
 });

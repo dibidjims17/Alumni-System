@@ -8,17 +8,20 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 export default function EditEducationScreen({ route, navigation }) {
   const existing = route.params?.education || null;
   const isEditing = !!existing;
+  const { theme } = useTheme();
+  const c = theme.colors;
 
   const [degree, setDegree] = useState(existing?.degree || '');
   const [fieldOfStudy, setFieldOfStudy] = useState(existing?.fieldOfStudy || '');
@@ -92,58 +95,92 @@ export default function EditEducationScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-        <Text style={styles.label}>Degree *</Text>
-        <TextInput style={styles.input} value={degree} onChangeText={setDegree} />
-
-        <Text style={styles.label}>Field of Study</Text>
-        <TextInput style={styles.input} value={fieldOfStudy} onChangeText={setFieldOfStudy} />
-
-        <Text style={styles.label}>School *</Text>
-        <TextInput style={styles.input} value={school} onChangeText={setSchool} />
-
-        <Text style={styles.label}>Start Year *</Text>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={{ padding: 16 }}
+      >
+        <Text style={[styles.label, { color: c.textMuted }]}>Degree *</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
+          value={degree}
+          onChangeText={setDegree}
+        />
+
+        <Text style={[styles.label, { color: c.textMuted }]}>Field of Study</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
+          value={fieldOfStudy}
+          onChangeText={setFieldOfStudy}
+        />
+
+        <Text style={[styles.label, { color: c.textMuted }]}>School *</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
+          value={school}
+          onChangeText={setSchool}
+        />
+
+        <Text style={[styles.label, { color: c.textMuted }]}>Start Year *</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          ]}
           value={startYear}
           onChangeText={setStartYear}
           keyboardType="number-pad"
           placeholder="2022"
+          placeholderTextColor={c.placeholder}
         />
 
         <View style={styles.switchRow}>
-          <Text style={styles.label}>Currently Studying</Text>
-          <Switch value={isCurrentlyStudying} onValueChange={setIsCurrentlyStudying} />
+          <Text style={[styles.label, { color: c.text }]}>Currently Studying</Text>
+          <Switch
+            value={isCurrentlyStudying}
+            onValueChange={setIsCurrentlyStudying}
+            trackColor={{ true: c.primary }}
+          />
         </View>
 
         {!isCurrentlyStudying && (
           <>
-            <Text style={styles.label}>End Year</Text>
+            <Text style={[styles.label, { color: c.textMuted }]}>End Year</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+              ]}
               value={endYear}
               onChangeText={setEndYear}
               keyboardType="number-pad"
               placeholder="2024"
+              placeholderTextColor={c.placeholder}
             />
           </>
         )}
 
-        <TouchableOpacity
-          style={styles.saveButton}
+        <PrimaryButton
+          title={isEditing ? 'Save Changes' : 'Add'}
           onPress={handleSave}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator />
-          ) : (
-            <Text style={styles.buttonText}>{isEditing ? 'Save Changes' : 'Add'}</Text>
-          )}
-        </TouchableOpacity>
+          loading={isSubmitting}
+          style={{ marginTop: 24 }}
+        />
 
         {isEditing && (
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-            <Text style={styles.buttonText}>Delete</Text>
+          <TouchableOpacity
+            style={[styles.deleteButton, { borderColor: c.border }]}
+            onPress={handleDelete}
+          >
+            <Text style={[styles.deleteButtonText, { color: c.danger }]}>Delete</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -156,6 +193,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, marginTop: 12, marginBottom: 4 },
   input: {
     borderWidth: 1,
+    borderRadius: 12,
     padding: 10,
   },
   switchRow: {
@@ -164,17 +202,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  saveButton: {
-    marginTop: 24,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
   deleteButton: {
     marginTop: 12,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
+    borderRadius: 12,
   },
-  buttonText: { fontSize: 14 },
+  deleteButtonText: { fontSize: 14, fontWeight: '600' },
 });

@@ -7,16 +7,19 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 export default function EditSkillsScreen({ route, navigation }) {
   const { skills: initialSkills } = route.params;
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [skills, setSkills] = useState(initialSkills || []);
   const [newSkill, setNewSkill] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,49 +60,57 @@ export default function EditSkillsScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-        <Text style={styles.label}>Add a skill</Text>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={{ padding: 16 }}
+      >
+        <Text style={[styles.label, { color: c.textMuted }]}>Add a skill</Text>
         <View style={styles.addRow}>
           <TextInput
-            style={styles.addInput}
+            style={[
+              styles.addInput,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
             value={newSkill}
             onChangeText={setNewSkill}
             placeholder="e.g. React Native"
+            placeholderTextColor={c.placeholder}
             onSubmitEditing={handleAddSkill}
             returnKeyType="done"
           />
-          <TouchableOpacity style={styles.addButton} onPress={handleAddSkill}>
-            <Text style={styles.buttonText}>Add</Text>
+          <TouchableOpacity
+            style={[styles.addButton, { borderColor: c.primary }]}
+            onPress={handleAddSkill}
+          >
+            <Text style={[styles.addButtonText, { color: c.primary }]}>Add</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Your skills</Text>
+        <Text style={[styles.label, { color: c.textMuted }]}>Your skills</Text>
         {skills.length === 0 ? (
-          <Text style={styles.emptyText}>No skills added yet.</Text>
+          <Text style={[styles.emptyText, { color: c.textMuted }]}>No skills added yet.</Text>
         ) : (
           <View style={styles.tagWrap}>
             {skills.map((skill) => (
-              <View key={skill} style={styles.tag}>
-                <Text style={styles.tagText}>{skill}</Text>
+              <View
+                key={skill}
+                style={[styles.tag, { backgroundColor: c.surface, borderColor: c.border }]}
+              >
+                <Text style={[styles.tagText, { color: c.text }]}>{skill}</Text>
                 <TouchableOpacity onPress={() => handleRemoveSkill(skill)}>
-                  <Text style={styles.tagRemove}> x</Text>
+                  <Text style={[styles.tagRemove, { color: c.danger }]}> x</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         )}
 
-        <TouchableOpacity
-          style={styles.saveButton}
+        <PrimaryButton
+          title="Save"
           onPress={handleSave}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator />
-          ) : (
-            <Text style={styles.buttonText}>Save</Text>
-          )}
-        </TouchableOpacity>
+          loading={isSubmitting}
+          style={{ marginTop: 24 }}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -112,14 +123,17 @@ const styles = StyleSheet.create({
   addInput: {
     flex: 1,
     borderWidth: 1,
+    borderRadius: 12,
     padding: 10,
     marginRight: 8,
   },
   addButton: {
     borderWidth: 1,
+    borderRadius: 12,
     paddingHorizontal: 16,
     justifyContent: 'center',
   },
+  addButtonText: { fontSize: 14, fontWeight: '600' },
   tagWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -136,11 +150,4 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 13 },
   tagRemove: { fontSize: 13 },
   emptyText: { fontSize: 13 },
-  saveButton: {
-    marginTop: 24,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  buttonText: { fontSize: 14 },
 });

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -15,12 +14,14 @@ import {
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
-const ACCENT = '#1a4fd8';
 
 export default function EditProfileScreen({ route, navigation }) {
   const { profile } = route.params;
+  const { theme } = useTheme();
+  const c = theme.colors;
 
   const [headline, setHeadline] = useState(profile.headline || '');
   const [bio, setBio] = useState(profile.bio || '');
@@ -67,47 +68,85 @@ export default function EditProfileScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Basic info</Text>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={styles.content}
+      >
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Text style={[styles.cardTitle, { color: c.text }]}>Basic info</Text>
 
-          <Text style={styles.label}>Headline</Text>
-          <TextInput style={styles.input} value={headline} onChangeText={setHeadline} />
-
-          <Text style={styles.label}>Bio</Text>
+          <Text style={[styles.label, { color: c.textMuted }]}>Headline</Text>
           <TextInput
-            style={[styles.input, styles.multiline]}
+            style={[
+              styles.input,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
+            value={headline}
+            onChangeText={setHeadline}
+          />
+
+          <Text style={[styles.label, { color: c.textMuted }]}>Bio</Text>
+          <TextInput
+            style={[
+              styles.input,
+              styles.multiline,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
             value={bio}
             onChangeText={setBio}
             multiline
           />
 
-          <Text style={styles.label}>Location</Text>
-          <TextInput style={styles.input} value={location} onChangeText={setLocation} />
+          <Text style={[styles.label, { color: c.textMuted }]}>Location</Text>
+          <TextInput
+            style={[
+              styles.input,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
+            value={location}
+            onChangeText={setLocation}
+          />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Contact</Text>
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Text style={[styles.cardTitle, { color: c.text }]}>Contact</Text>
 
-          <Text style={styles.label}>LinkedIn URL</Text>
+          <Text style={[styles.label, { color: c.textMuted }]}>LinkedIn URL</Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
             value={linkedInUrl}
             onChangeText={setLinkedInUrl}
             autoCapitalize="none"
           />
 
-          <Text style={styles.label}>Phone</Text>
+          <Text style={[styles.label, { color: c.textMuted }]}>Phone</Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
           />
 
-          <Text style={styles.label}>Date of Birth</Text>
-          <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
-            <Text style={dateOfBirth ? styles.inputText : styles.inputPlaceholder}>
+          <Text style={[styles.label, { color: c.textMuted }]}>Date of Birth</Text>
+          <TouchableOpacity
+            style={[
+              styles.input,
+              { backgroundColor: c.surface, borderColor: c.border },
+            ]}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text
+              style={[
+                dateOfBirth ? styles.inputText : styles.inputPlaceholder,
+                { color: dateOfBirth ? c.text : c.placeholder },
+              ]}
+            >
               {dateOfBirth ? dateOfBirth.toLocaleDateString() : 'Select date'}
             </Text>
           </TouchableOpacity>
@@ -126,64 +165,67 @@ export default function EditProfileScreen({ route, navigation }) {
             />
           )}
 
-          <Text style={styles.label}>Address</Text>
+          <Text style={[styles.label, { color: c.textMuted }]}>Address</Text>
           <TextInput
-            style={[styles.input, styles.multiline]}
+            style={[
+              styles.input,
+              styles.multiline,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
             value={address}
             onChangeText={setAddress}
             multiline
           />
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
           <View style={styles.switchRow}>
             <View style={styles.switchText}>
-              <Text style={styles.switchLabel}>Show me in the alumni directory</Text>
-              <Text style={styles.switchHint}>Other graduates can find you by name</Text>
+              <Text style={[styles.switchLabel, { color: c.text }]}>
+                Show me in the alumni directory
+              </Text>
+              <Text style={[styles.switchHint, { color: c.textMuted }]}>
+                Other graduates can find you by name
+              </Text>
             </View>
-            <Switch value={showInDirectory} onValueChange={setShowInDirectory} />
+            <Switch
+              value={showInDirectory}
+              onValueChange={setShowInDirectory}
+              trackColor={{ true: c.primary }}
+            />
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[styles.saveButton, isSubmitting && styles.saveButtonDisabled]}
+        <PrimaryButton
+          title="Save"
           onPress={handleSave}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
-          )}
-        </TouchableOpacity>
+          loading={isSubmitting}
+          style={{ marginTop: 4 }}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  container: { flex: 1 },
   content: { padding: 16, paddingBottom: 24 },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     padding: 14,
     marginBottom: 12,
   },
-  cardTitle: { fontSize: 15, fontWeight: '600', color: '#1a1a1a', marginBottom: 4 },
-  label: { fontSize: 12, fontWeight: '600', color: '#555', marginTop: 12, marginBottom: 4 },
+  cardTitle: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
+  label: { fontSize: 12, fontWeight: '600', marginTop: 12, marginBottom: 4 },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 12,
     fontSize: 14,
   },
-  inputText: { fontSize: 14, color: '#1a1a1a' },
-  inputPlaceholder: { fontSize: 14, color: '#999' },
+  inputText: { fontSize: 14 },
+  inputPlaceholder: { fontSize: 14 },
   multiline: {
     minHeight: 70,
     textAlignVertical: 'top',
@@ -194,17 +236,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   switchText: { flex: 1, marginRight: 12 },
-  switchLabel: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
-  switchHint: { fontSize: 12, color: '#777', marginTop: 2 },
-  saveButton: {
-    marginTop: 4,
-    padding: 14,
-    alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: ACCENT,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#b3c4ea',
-  },
-  saveButtonText: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  switchLabel: { fontSize: 14, fontWeight: '600' },
+  switchHint: { fontSize: 12, marginTop: 2 },
 });

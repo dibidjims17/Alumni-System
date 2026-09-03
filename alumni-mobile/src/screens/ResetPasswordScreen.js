@@ -5,15 +5,18 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import apiClient from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 export default function ResetPasswordScreen({ route, navigation }) {
   const { identifier } = route.params;
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -87,11 +90,11 @@ export default function ResetPasswordScreen({ route, navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Reset Password</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, { color: c.text }]}>Reset Password</Text>
+      <Text style={[styles.subtitle, { color: c.textMuted }]}>
         Enter the 6-digit code sent to your email, along with your new
         password.
       </Text>
@@ -101,7 +104,10 @@ export default function ResetPasswordScreen({ route, navigation }) {
           <TextInput
             key={index}
             ref={(ref) => (inputRefs.current[index] = ref)}
-            style={styles.codeBox}
+            style={[
+              styles.codeBox,
+              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+            ]}
             value={digit}
             onChangeText={(text) => handleDigitChange(text, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}
@@ -114,8 +120,12 @@ export default function ResetPasswordScreen({ route, navigation }) {
       </View>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+        ]}
         placeholder="New Password"
+        placeholderTextColor={c.placeholder}
         value={newPassword}
         onChangeText={setNewPassword}
         secureTextEntry
@@ -123,38 +133,37 @@ export default function ResetPasswordScreen({ route, navigation }) {
       />
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+        ]}
         placeholder="Confirm New Password"
+        placeholderTextColor={c.placeholder}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
         autoCapitalize="none"
       />
 
-      <TouchableOpacity
-        style={styles.button}
+      <PrimaryButton
+        title="Reset Password"
         onPress={handleSubmit}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Reset Password</Text>
-        )}
-      </TouchableOpacity>
+        loading={isSubmitting}
+        style={{ marginTop: 8 }}
+      />
 
       <TouchableOpacity
         style={styles.linkButton}
         onPress={() => navigation.navigate('ForgotPassword')}
       >
-        <Text style={styles.linkText}>Didn't get a code? Try again</Text>
+        <Text style={[styles.linkText, { color: c.primary }]}>Didn't get a code? Try again</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.linkButton}
         onPress={() => navigation.navigate('Login')}
       >
-        <Text style={styles.linkText}>Back to Login</Text>
+        <Text style={[styles.linkText, { color: c.primary }]}>Back to Login</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -174,14 +183,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#555',
     textAlign: 'center',
     marginBottom: 24,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
@@ -194,29 +201,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 52,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderRadius: 12,
     fontSize: 20,
     fontWeight: '600',
-  },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
   },
   linkButton: {
     marginTop: 16,
     alignItems: 'center',
   },
   linkText: {
-    color: '#2563eb',
     fontSize: 14,
     fontWeight: '500',
   },

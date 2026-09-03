@@ -3,7 +3,6 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
@@ -16,12 +15,16 @@ import RNBlobUtil from 'react-native-blob-util';
 import Pdf from 'react-native-pdf';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 import { API_BASE_URL } from '../config';
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB, matches backend rule
 
 export default function ResumeScreen() {
   const { student } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [activeResume, setActiveResume] = useState(null);
   const [localPdfPath, setLocalPdfPath] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,8 +108,8 @@ export default function ResumeScreen() {
 
   if (!isGraduate) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.infoText}>
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
+        <Text style={[styles.infoText, { color: c.textMuted }]}>
           Resume upload is available for Graduate students only.
         </Text>
       </View>
@@ -115,22 +118,22 @@ export default function ResumeScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       {activeResume ? (
         <>
-          <Text style={styles.fieldValue}>{activeResume.fileName}</Text>
-          <Text style={styles.fieldLabel}>
+          <Text style={[styles.fieldValue, { color: c.text }]}>{activeResume.fileName}</Text>
+          <Text style={[styles.fieldLabel, { color: c.textMuted }]}>
             Uploaded {new Date(activeResume.uploadedAt).toLocaleDateString()}
           </Text>
 
-          <View style={styles.pdfContainer}>
+          <View style={[styles.pdfContainer, { backgroundColor: c.surface, borderColor: c.border }]}>
             {isDownloading ? (
               <ActivityIndicator size="large" />
             ) : localPdfPath ? (
@@ -140,29 +143,22 @@ export default function ResumeScreen() {
                 onError={(err) => console.log('PDF RENDER ERROR:', err)}
               />
             ) : (
-              <Text style={styles.infoText}>Could not load PDF preview.</Text>
+              <Text style={[styles.infoText, { color: c.textMuted }]}>Could not load PDF preview.</Text>
             )}
           </View>
         </>
       ) : (
-        <Text style={styles.fieldValue}>No resume uploaded yet.</Text>
+        <Text style={[styles.fieldValue, { color: c.text }]}>No resume uploaded yet.</Text>
       )}
 
-      <TouchableOpacity
-        style={styles.uploadButton}
+      <PrimaryButton
+        title={activeResume ? 'Replace Resume' : 'Upload Resume'}
         onPress={handlePickAndUpload}
-        disabled={isUploading}
-      >
-        {isUploading ? (
-          <ActivityIndicator />
-        ) : (
-          <Text style={styles.buttonText}>
-            {activeResume ? 'Replace Resume' : 'Upload Resume'}
-          </Text>
-        )}
-      </TouchableOpacity>
+        loading={isUploading}
+        style={{ marginTop: 8 }}
+      />
 
-      <Text style={styles.hintText}>PDF only, max 5MB.</Text>
+      <Text style={[styles.hintText, { color: c.textMuted }]}>PDF only, max 5MB.</Text>
     </View>
   );
 }
@@ -180,13 +176,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   pdf: { flex: 1 },
-  uploadButton: {
-    marginTop: 8,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  buttonText: { fontSize: 14 },
   hintText: { fontSize: 11, marginTop: 8, textAlign: 'center' },
   infoText: { fontSize: 13, textAlign: 'center' },
 });

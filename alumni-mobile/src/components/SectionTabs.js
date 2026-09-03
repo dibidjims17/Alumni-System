@@ -1,12 +1,14 @@
 // src/components/SectionTabs.js
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-
-const ACCENT = '#1a4fd8';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function SectionTabs({ items, active, navigation }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -17,14 +19,19 @@ export default function SectionTabs({ items, active, navigation }) {
           return (
             <TouchableOpacity
               key={item.key}
-              style={[styles.chip, isActive && styles.chipActive]}
+              style={[styles.chip, isActive && { borderBottomColor: c.primary }]}
               onPress={() => {
                 if (item.screen !== active && navigation) {
                   navigation.navigate(item.screen);
                 }
               }}
             >
-              <Text style={[styles.label, isActive && styles.labelActive]}>
+              <Text
+                style={[
+                  styles.label,
+                  isActive ? { color: c.primary } : { color: c.textMuted },
+                ]}
+              >
                 {item.label}
               </Text>
             </TouchableOpacity>
@@ -38,8 +45,6 @@ export default function SectionTabs({ items, active, navigation }) {
 const styles = StyleSheet.create({
   wrap: {
     borderBottomWidth: 1,
-    borderColor: '#eee',
-    backgroundColor: '#fff',
   },
   row: {
     flexDirection: 'row',
@@ -51,15 +56,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  chipActive: {
-    borderBottomColor: ACCENT,
-  },
   label: {
     fontSize: 13,
-    color: '#666',
-  },
-  labelActive: {
-    color: ACCENT,
     fontWeight: '600',
   },
 });

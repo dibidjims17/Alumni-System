@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
+import { useTheme } from '../theme/ThemeContext';
 
 const COMMUNITY_TABS = [
   { key: 'News', label: 'News', screen: 'NewsList' },
@@ -14,6 +15,8 @@ const COMMUNITY_TABS = [
 ];
 
 export default function EventsListScreen({ navigation }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState(null);
@@ -76,29 +79,33 @@ export default function EventsListScreen({ navigation }) {
       ? new Date(item.eventDate).toLocaleString()
       : '';
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
         >
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.detail}>{dateText}</Text>
-          <Text style={styles.detail}>Location: {item.location}</Text>
-          <Text style={styles.description} numberOfLines={3}>
+          <Text style={[styles.title, { color: c.text }]}>{item.title}</Text>
+          <Text style={[styles.detail, { color: c.textMuted }]}>{dateText}</Text>
+          <Text style={[styles.detail, { color: c.textMuted }]}>Location: {item.location}</Text>
+          <Text style={[styles.description, { color: c.text }]} numberOfLines={3}>
             {item.description}
           </Text>
         </TouchableOpacity>
         <View style={styles.footer}>
-          <Text style={styles.count}>{item.attendeeCount || 0} going</Text>
+          <Text style={[styles.count, { color: c.textMuted }]}>{item.attendeeCount || 0} going</Text>
           <TouchableOpacity
-            style={[styles.rsvpButton, item.isRsvped && styles.rsvpButtonActive]}
+            style={[
+              styles.rsvpButton,
+              { borderColor: c.border },
+              item.isRsvped && { backgroundColor: c.border },
+            ]}
             onPress={() => toggleRsvp(item)}
             disabled={togglingId === item.id}
           >
             {togglingId === item.id ? (
-              <ActivityIndicator size="small" />
+              <ActivityIndicator size="small" color={c.primary} />
             ) : (
-              <Text style={styles.rsvpText}>
+              <Text style={[styles.rsvpText, { color: c.text }]}>
                 {item.isRsvped ? 'Cancel RSVP' : "I'm Going"}
               </Text>
             )}
@@ -109,7 +116,7 @@ export default function EventsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
       <SectionTabs items={COMMUNITY_TABS} active="EventsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <SearchBar
@@ -121,7 +128,7 @@ export default function EventsListScreen({ navigation }) {
       </View>
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : (
         <FlatList
@@ -130,7 +137,7 @@ export default function EventsListScreen({ navigation }) {
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           ListEmptyComponent={
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoText, { color: c.textMuted }]}>
               {search.trim() ? 'No events match your search.' : 'No upcoming events.'}
             </Text>
           }
@@ -141,7 +148,7 @@ export default function EventsListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  container: { flex: 1 },
   searchRow: {
     margin: 16,
     marginBottom: 8,
@@ -149,16 +156,14 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     marginHorizontal: 16,
     marginBottom: 10,
     padding: 12,
   },
   title: { fontSize: 16, fontWeight: 'bold' },
-  detail: { fontSize: 12, marginTop: 4, color: '#444' },
+  detail: { fontSize: 12, marginTop: 4 },
   description: { fontSize: 13, marginTop: 8 },
   footer: {
     flexDirection: 'row',
@@ -166,14 +171,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 12,
   },
-  count: { fontSize: 12, color: '#555' },
+  count: { fontSize: 12 },
   rsvpButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderWidth: 1,
-  },
-  rsvpButtonActive: {
-    backgroundColor: '#ddd',
   },
   rsvpText: { fontSize: 13 },
   infoText: { fontSize: 13, textAlign: 'center' },

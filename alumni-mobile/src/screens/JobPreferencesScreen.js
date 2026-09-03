@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   Switch,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
@@ -14,10 +13,14 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 import AutocompleteInput from '../components/AutocompleteInput';
 import { JOB_TITLE_SUGGESTIONS, INDUSTRY_SUGGESTIONS } from '../data/suggestionLists';
 
 export default function JobPreferencesScreen({ navigation }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preferredJobTitle, setPreferredJobTitle] = useState('');
@@ -82,57 +85,63 @@ export default function JobPreferencesScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: c.background }]}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={[styles.container, { backgroundColor: c.background }]}
+      contentContainerStyle={{ padding: 16 }}
+      keyboardShouldPersistTaps="handled"
+    >
       {!hasSetPreferencesBefore && (
-        <Text style={styles.noticeText}>
+        <Text style={[styles.noticeText, { color: c.textMuted }]}>
           You haven't set job preferences yet.
         </Text>
       )}
 
-      <Text style={styles.label}>Preferred Job Title</Text>
+      <Text style={[styles.label, { color: c.textMuted }]}>Preferred Job Title</Text>
       <AutocompleteInput
         value={preferredJobTitle}
         onChangeText={setPreferredJobTitle}
         suggestions={JOB_TITLE_SUGGESTIONS}
       />
 
-      <Text style={styles.label}>Preferred Industry</Text>
+      <Text style={[styles.label, { color: c.textMuted }]}>Preferred Industry</Text>
       <AutocompleteInput
         value={preferredIndustry}
         onChangeText={setPreferredIndustry}
         suggestions={INDUSTRY_SUGGESTIONS}
       />
 
-      <Text style={styles.label}>Preferred Location</Text>
+      <Text style={[styles.label, { color: c.textMuted }]}>Preferred Location</Text>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+        ]}
         value={preferredLocation}
         onChangeText={setPreferredLocation}
       />
 
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Open to Work</Text>
-        <Switch value={isOpenToWork} onValueChange={setIsOpenToWork} />
+        <Text style={[styles.label, { color: c.text }]}>Open to Work</Text>
+        <Switch
+          value={isOpenToWork}
+          onValueChange={setIsOpenToWork}
+          trackColor={{ true: c.primary }}
+        />
       </View>
 
-      <TouchableOpacity
-        style={styles.saveButton}
+      <PrimaryButton
+        title="Save"
         onPress={handleSave}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <ActivityIndicator />
-        ) : (
-          <Text style={styles.buttonText}>Save</Text>
-        )}
-      </TouchableOpacity>
+        loading={isSubmitting}
+        style={{ marginTop: 24 }}
+      />
     </ScrollView>
   );
 }
@@ -144,6 +153,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, marginTop: 12, marginBottom: 4 },
   input: {
     borderWidth: 1,
+    borderRadius: 12,
     padding: 10,
   },
   switchRow: {
@@ -152,11 +162,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  saveButton: {
-    marginTop: 24,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  buttonText: { fontSize: 14 },
 });

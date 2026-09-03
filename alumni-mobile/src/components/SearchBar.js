@@ -2,23 +2,30 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Search, X } from 'lucide-react-native';
-
-const ACCENT = '#1a4fd8';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function SearchBar({ placeholder, value, onChangeText, onSubmit }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: c.surface, borderColor: c.border },
+      ]}
+    >
       <TouchableOpacity
         style={styles.iconButton}
         onPress={onSubmit}
         accessibilityLabel="Search"
       >
-        <Search size={18} color={ACCENT} />
+        <Search size={18} color={c.primary} />
       </TouchableOpacity>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: c.text }]}
         placeholder={placeholder}
-        placeholderTextColor="#999"
+        placeholderTextColor={c.placeholder}
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmit}
@@ -34,7 +41,7 @@ export default function SearchBar({ placeholder, value, onChangeText, onSubmit }
           }}
           accessibilityLabel="Clear search"
         >
-          <X size={18} color="#888" />
+          <X size={18} color={c.textMuted} />
         </TouchableOpacity>
       )}
     </View>
@@ -46,8 +53,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
+    borderRadius: 12,
   },
   iconButton: {
     padding: 10,

@@ -17,9 +17,9 @@ import apiClient from '../api/client';
 import { API_BASE_URL } from '../config';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
+import { useTheme } from '../theme/ThemeContext';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
-const ACCENT = '#1a4fd8';
 
 const COMMUNITY_TABS = [
   { key: 'News', label: 'News', screen: 'NewsList' },
@@ -36,6 +36,8 @@ function buildQuery(search, program, page) {
 }
 
 export default function DirectoryScreen({ navigation }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [search, setSearch] = useState('');
   const [program, setProgram] = useState('');
   const [programs, setPrograms] = useState([]);
@@ -106,7 +108,7 @@ export default function DirectoryScreen({ navigation }) {
 
   function renderItem({ item }) {
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         <View style={styles.cardRow}>
           <Image
             source={
@@ -117,18 +119,18 @@ export default function DirectoryScreen({ navigation }) {
             style={styles.avatar}
           />
           <View style={styles.cardText}>
-            <Text style={styles.name}>{item.fullName}</Text>
-            <Text style={styles.meta}>{item.program}</Text>
+            <Text style={[styles.name, { color: c.text }]}>{item.fullName}</Text>
+            <Text style={[styles.meta, { color: c.textMuted }]}>{item.program}</Text>
           </View>
         </View>
-        {item.headline ? <Text style={styles.headline}>{item.headline}</Text> : null}
-        {item.location ? <Text style={styles.meta}>{item.location}</Text> : null}
+        {item.headline ? <Text style={[styles.headline, { color: c.text }]}>{item.headline}</Text> : null}
+        {item.location ? <Text style={[styles.meta, { color: c.textMuted }]}>{item.location}</Text> : null}
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
       <SectionTabs items={COMMUNITY_TABS} active="Directory" navigation={navigation} />
       <View style={styles.content}>
       <SearchBar
@@ -138,29 +140,42 @@ export default function DirectoryScreen({ navigation }) {
         onSubmit={submitSearch}
       />
 
-      <Text style={styles.filterLabel}>Program</Text>
-      <TouchableOpacity style={styles.dropdown} onPress={() => setPickerOpen((v) => !v)}>
-        <Text style={[styles.dropdownText, program === '' && styles.dropdownPlaceholder]}>
+      <Text style={[styles.filterLabel, { color: c.textMuted }]}>Program</Text>
+      <TouchableOpacity
+        style={[styles.dropdown, { borderColor: c.border, backgroundColor: c.surface }]}
+        onPress={() => setPickerOpen((v) => !v)}
+      >
+        <Text
+          style={[
+            styles.dropdownText,
+            { color: program === '' ? c.placeholder : c.text },
+          ]}
+        >
           {program || 'All programs'}
         </Text>
         {pickerOpen ? (
-          <ChevronUp size={16} color="#555" />
+          <ChevronUp size={16} color={c.textMuted} />
         ) : (
-          <ChevronDown size={16} color="#555" />
+          <ChevronDown size={16} color={c.textMuted} />
         )}
       </TouchableOpacity>
 
       {pickerOpen && (
-        <View style={styles.dropdownList}>
+        <View style={[styles.dropdownList, { borderColor: c.border, backgroundColor: c.surface }]}>
           {['', ...programs].map((value, index) => {
             const isSelected = value === program;
             return (
               <TouchableOpacity
                 key={`${value}-${index}`}
-                style={[styles.option, isSelected && styles.optionActive]}
+                style={[styles.option, isSelected && { backgroundColor: c.surfaceAlt }]}
                 onPress={() => applyProgram(value)}
               >
-                <Text style={[styles.optionText, isSelected && styles.optionTextActive]}>
+                <Text
+                  style={[
+                    styles.optionText,
+                    { color: isSelected ? c.primary : c.text, fontWeight: isSelected ? '600' : '400' },
+                  ]}
+                >
                   {value || 'All programs'}
                 </Text>
               </TouchableOpacity>
@@ -170,7 +185,7 @@ export default function DirectoryScreen({ navigation }) {
       )}
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 24 }} size="large" />
+        <ActivityIndicator style={{ marginTop: 24 }} size="large" color={c.primary} />
       ) : (
         <FlatList
           data={items}
@@ -178,7 +193,7 @@ export default function DirectoryScreen({ navigation }) {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: c.text }]}>
               {search.trim() || program
                 ? 'No alumni match your filters.'
                 : 'No alumni found yet.'}
@@ -187,14 +202,14 @@ export default function DirectoryScreen({ navigation }) {
           ListFooterComponent={
             items.length > 0 && items.length < total ? (
               <TouchableOpacity
-                style={styles.loadMoreButton}
+                style={[styles.loadMoreButton, { borderColor: c.border }]}
                 onPress={() => loadDirectory(false, search, program)}
                 disabled={isLoadingMore}
               >
                 {isLoadingMore ? (
-                  <ActivityIndicator size="small" />
+                  <ActivityIndicator size="small" color={c.primary} />
                 ) : (
-                  <Text style={styles.loadMoreText}>
+                  <Text style={[styles.loadMoreText, { color: c.text }]}>
                     Load more ({items.length} of {total})
                   </Text>
                 )}
@@ -209,36 +224,27 @@ export default function DirectoryScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f4f4f6' },
+  safe: { flex: 1 },
   content: { flex: 1, padding: 16 },
-  filterLabel: { fontSize: 12, marginTop: 12, marginBottom: 4, color: '#555' },
+  filterLabel: { fontSize: 12, marginTop: 12, marginBottom: 4 },
   dropdown: {
     borderWidth: 1,
-    borderColor: '#ccc',
     padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   dropdownText: { fontSize: 14 },
-  dropdownPlaceholder: { color: '#999' },
   dropdownList: {
     borderWidth: 1,
     borderTopWidth: 0,
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
   },
   option: { padding: 12 },
-  optionActive: { backgroundColor: '#eee' },
-  optionText: { fontSize: 14, color: '#333' },
-  optionTextActive: { color: ACCENT, fontWeight: '600' },
+  optionText: { fontSize: 14 },
   listContent: { paddingTop: 12, paddingBottom: 24 },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
     padding: 12,
     marginBottom: 12,
   },
@@ -254,7 +260,7 @@ const styles = StyleSheet.create({
   },
   cardText: { flex: 1 },
   name: { fontSize: 15, fontWeight: '600' },
-  meta: { fontSize: 12, color: '#555', marginTop: 2 },
+  meta: { fontSize: 12, marginTop: 2 },
   headline: { fontSize: 13, marginTop: 6 },
   emptyText: { textAlign: 'center', marginTop: 40, fontSize: 13 },
   loadMoreButton: { padding: 12, alignItems: 'center', borderWidth: 1, marginTop: 4 },

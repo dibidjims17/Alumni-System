@@ -5,14 +5,17 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import apiClient from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 export default function ForgotPasswordScreen({ navigation }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [identifier, setIdentifier] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -43,27 +46,26 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   if (submitted) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Check Your Email</Text>
-        <Text style={styles.subtitle}>
+      <View style={[styles.container, { backgroundColor: c.background }]}>
+        <Text style={[styles.title, { color: c.text }]}>Check Your Email</Text>
+        <Text style={[styles.subtitle, { color: c.textMuted }]}>
           If an account exists for "{identifier.trim()}", a 6-digit reset
           code has been sent. The code expires in 15 minutes.
         </Text>
 
-        <TouchableOpacity
-          style={styles.button}
+        <PrimaryButton
+          title="Enter Code"
           onPress={() =>
             navigation.navigate('ResetPassword', { identifier: identifier.trim() })
           }
-        >
-          <Text style={styles.buttonText}>Enter Code</Text>
-        </TouchableOpacity>
+          style={{ marginTop: 8 }}
+        />
 
         <TouchableOpacity
           style={styles.linkButton}
           onPress={() => navigation.navigate('Login')}
         >
-          <Text style={styles.linkText}>Back to Login</Text>
+          <Text style={[styles.linkText, { color: c.primary }]}>Back to Login</Text>
         </TouchableOpacity>
       </View>
     );
@@ -71,40 +73,39 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Forgot Password</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, { color: c.text }]}>Forgot Password</Text>
+      <Text style={[styles.subtitle, { color: c.textMuted }]}>
         Enter your student number or email and we'll send you a reset code.
       </Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+        ]}
         placeholder="Student Number or Email"
+        placeholderTextColor={c.placeholder}
         value={identifier}
         onChangeText={setIdentifier}
         autoCapitalize="none"
         autoCorrect={false}
       />
 
-      <TouchableOpacity
-        style={styles.button}
+      <PrimaryButton
+        title="Send Reset Code"
         onPress={handleSubmit}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Send Reset Code</Text>
-        )}
-      </TouchableOpacity>
+        loading={isSubmitting}
+        style={{ marginTop: 8 }}
+      />
 
       <TouchableOpacity
         style={styles.linkButton}
         onPress={() => navigation.navigate('Login')}
       >
-        <Text style={styles.linkText}>Back to Login</Text>
+        <Text style={[styles.linkText, { color: c.primary }]}>Back to Login</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -124,35 +125,20 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#555',
     textAlign: 'center',
     marginBottom: 24,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     marginBottom: 16,
-  },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
   },
   linkButton: {
     marginTop: 16,
     alignItems: 'center',
   },
   linkText: {
-    color: '#2563eb',
     fontSize: 14,
     fontWeight: '500',
   },
