@@ -14,11 +14,12 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Heart } from 'lucide-react-native';
+import { Heart, Send } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
 
+const ACCENT = '#1a4fd8';
 const HEART_ACTIVE = '#e0245e';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
@@ -183,30 +184,32 @@ export default function NewsDetailScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-        <Text style={styles.title}>{news.title}</Text>
-        <Text style={styles.meta}>
-          {news.postedByAdminName} - {new Date(news.postedAt).toLocaleDateString()}
-        </Text>
-        {assetUrl(news.imagePath) && (
-          <Image
-            source={{ uri: assetUrl(news.imagePath) }}
-            style={styles.image}
-            resizeMode="cover"
-          />
-        )}
-        <Text style={styles.content}>{news.content}</Text>
-
-        <TouchableOpacity style={styles.heartRow} onPress={handleHeart}>
-          <Heart
-            size={20}
-            color={news.isHearted ? HEART_ACTIVE : '#777'}
-            fill={news.isHearted ? HEART_ACTIVE : 'none'}
-          />
-          <Text style={[styles.heartText, news.isHearted && styles.heartTextActive]}>
-            {news.heartCount}
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.postCard}>
+          <Text style={styles.title}>{news.title}</Text>
+          <Text style={styles.meta}>
+            {news.postedByAdminName} - {new Date(news.postedAt).toLocaleDateString()}
           </Text>
-        </TouchableOpacity>
+          {assetUrl(news.imagePath) && (
+            <Image
+              source={{ uri: assetUrl(news.imagePath) }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          )}
+          <Text style={styles.content}>{news.content}</Text>
+
+          <TouchableOpacity style={styles.heartRow} onPress={handleHeart}>
+            <Heart
+              size={20}
+              color={news.isHearted ? HEART_ACTIVE : '#777'}
+              fill={news.isHearted ? HEART_ACTIVE : 'none'}
+            />
+            <Text style={[styles.heartText, news.isHearted && styles.heartTextActive]}>
+              {news.heartCount}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.commentsHeader}>Comments</Text>
         {(news.comments || []).map((comment) => (
@@ -269,7 +272,7 @@ export default function NewsDetailScreen({ route, navigation }) {
                 : `Replying to ${replyTarget.mentionedStudentName}`}
             </Text>
             <TouchableOpacity onPress={cancelComposer}>
-              <Text style={styles.composerBannerText}>Cancel</Text>
+              <Text style={styles.composerBannerCancel}>Cancel</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -277,16 +280,24 @@ export default function NewsDetailScreen({ route, navigation }) {
           <TextInput
             style={styles.composerInput}
             placeholder="Write a comment..."
+            placeholderTextColor="#999"
             value={commentText}
             onChangeText={setCommentText}
-            multiline
+            onSubmitEditing={handleSubmitComment}
+            returnKeyType="send"
+            blurOnSubmit={false}
+            editable={!isSubmitting}
           />
           <TouchableOpacity
-            style={styles.sendButton}
+            style={[
+              styles.sendButton,
+              (!commentText.trim() || isSubmitting) && styles.sendButtonDisabled,
+            ]}
             onPress={handleSubmitComment}
             disabled={isSubmitting || !commentText.trim()}
+            accessibilityLabel="Send comment"
           >
-            <Text style={styles.buttonText}>Send</Text>
+            <Send size={18} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -295,79 +306,115 @@ export default function NewsDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  content: { padding: 16, paddingBottom: 24 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 18, marginBottom: 4 },
-  meta: { fontSize: 12, marginBottom: 12 },
+  postCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
+    padding: 14,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  title: { fontSize: 18, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
+  meta: { fontSize: 12, color: '#777', marginBottom: 12 },
   image: {
     width: '100%',
     height: 200,
     marginBottom: 12,
     borderRadius: 8,
+    backgroundColor: '#eee',
   },
-  content: { fontSize: 14, marginBottom: 16 },
+  content: { fontSize: 14, lineHeight: 21, color: '#333' },
   heartRow: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    marginBottom: 20,
+    marginTop: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#f4f4f6',
   },
-  heartText: { fontSize: 14, marginLeft: 6, color: '#777' },
+  heartText: { fontSize: 13, marginLeft: 6, color: '#777' },
   heartTextActive: { color: HEART_ACTIVE },
-  commentsHeader: { fontSize: 15, marginBottom: 10 },
+  commentsHeader: { fontSize: 15, fontWeight: '600', marginBottom: 10, color: '#1a1a1a' },
 
   threadBlock: {
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
+    padding: 12,
+    marginBottom: 10,
   },
   topCommentRow: {
     marginBottom: 4,
   },
   replyGroup: {
-    marginLeft: 16,
+    marginLeft: 8,
     marginTop: 8,
-    paddingLeft: 12,
+    paddingLeft: 10,
     borderLeftWidth: 2,
-    borderLeftColor: '#ccc',
+    borderLeftColor: '#e0e0e0',
   },
   replyRow: {
     marginBottom: 10,
   },
 
-  commentAuthor: { fontSize: 13, fontWeight: '600' },
-  commentText: { fontSize: 13, marginTop: 2 },
+  commentAuthor: { fontSize: 13, fontWeight: '600', color: '#1a1a1a' },
+  commentText: { fontSize: 13, marginTop: 2, color: '#333', lineHeight: 18 },
   commentActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 16,
-    marginTop: 6,
+    marginTop: 8,
   },
-  actionText: { fontSize: 12, marginLeft: 3 },
+  actionText: { fontSize: 12, marginLeft: 3, color: '#777' },
   actionTextActive: { color: HEART_ACTIVE },
   commentLikeBtn: { flexDirection: 'row', alignItems: 'center' },
-  emptyText: { textAlign: 'center', marginTop: 20 },
+  emptyText: { textAlign: 'center', marginTop: 20, color: '#888' },
   composer: {
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
     padding: 10,
   },
   composerBanner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
-    paddingBottom: 6,
+    alignItems: 'center',
+    backgroundColor: '#e8eefc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
   },
-  composerBannerText: { fontSize: 12 },
-  composerRow: { flexDirection: 'row', alignItems: 'flex-end' },
+  composerBannerText: { fontSize: 12, color: ACCENT },
+  composerBannerCancel: { fontSize: 12, color: ACCENT, fontWeight: '600' },
+  composerRow: { flexDirection: 'row', alignItems: 'center' },
   composerInput: {
     flex: 1,
     borderWidth: 1,
-    padding: 10,
-    maxHeight: 100,
+    borderColor: '#ddd',
+    backgroundColor: '#f4f4f6',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
     marginRight: 8,
   },
   sendButton: {
-    padding: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: ACCENT,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonText: { fontSize: 14 },
+  sendButtonDisabled: {
+    backgroundColor: '#b3c4ea',
+  },
 });
