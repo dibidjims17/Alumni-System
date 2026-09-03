@@ -269,11 +269,25 @@ namespace MyApp.Application.Services
             var application = await _jobRepository.GetApplicationByIdAsync(applicationId);
             if (application == null) return false;
 
+            var previousStatus = application.Status;
+
             application.Status = request.Status;
-            application.AdminNotes = request.AdminNotes;
+            application.AdminNotes = request.AdminNotes ?? string.Empty;
             application.UpdatedAt = DateTime.UtcNow;
 
             await _jobRepository.UpdateApplicationAsync(application);
+
+            // Record the change so students/admins can see the application timeline
+            await _jobRepository.AddApplicationHistoryAsync(new JobApplicationHistory
+            {
+                JobApplicationId = applicationId,
+                FromStatus = previousStatus,
+                ToStatus = request.Status,
+                AdminNotes = request.AdminNotes ?? string.Empty,
+                UpdatedByAdminId = adminId,
+                CreatedAt = DateTime.UtcNow
+            });
+
             await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_APPLICATION_STATUS",
                 $"Updated application #{applicationId} to {request.Status}", "system");
 
@@ -286,6 +300,37 @@ namespace MyApp.Application.Services
                 applicationId);
 
             return true;
+        }
+
+        public async Task<List<JobApplicationHistoryDto>?> GetApplicationHistoryAsync(int applicationId)
+        {
+            var application = await _jobRepository.GetApplicationByIdAsync(applicationId);
+            if (application == null) return null;
+
+            return await GetHistoryDtosAsync(applicationId);
+        }
+
+        public async Task<List<JobApplicationHistoryDto>?> GetMyApplicationHistoryAsync(int applicationId, int studentId)
+        {
+            var application = await _jobRepository.GetApplicationByIdAsync(applicationId);
+            if (application == null || application.StudentId != studentId) return null;
+
+            return await GetHistoryDtosAsync(applicationId);
+        }
+
+        private async Task<List<JobApplicationHistoryDto>> GetHistoryDtosAsync(int applicationId)
+        {
+            var history = await _jobRepository.GetHistoryByApplicationIdAsync(applicationId);
+            return history.Select(h => new JobApplicationHistoryDto
+            {
+                Id = h.Id,
+                JobApplicationId = h.JobApplicationId,
+                FromStatus = h.FromStatus,
+                ToStatus = h.ToStatus,
+                AdminNotes = h.AdminNotes,
+                UpdatedByAdminName = h.UpdatedByAdmin?.FullName ?? string.Empty,
+                CreatedAt = h.CreatedAt
+            }).ToList();
         }
 
         public async Task<List<ApplicantDto>?> GetApplicantsForExportAsync(int jobId, List<string>? statuses)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants } from "../services/jobsApi";
+import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
@@ -13,6 +13,9 @@ export default function JobApplicants() {
   const [job, setJob] = useState(null);
   const [exportStatuses, setExportStatuses] = useState([]);
   const [exporting, setExporting] = useState(false);
+  const [historyFor, setHistoryFor] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   async function loadApplicants() {
     setLoading(true);
@@ -92,6 +95,20 @@ export default function JobApplicants() {
     }
   }
 
+  async function openHistory(a) {
+    setHistoryFor(a);
+    setHistory([]);
+    setLoadingHistory(true);
+    try {
+      const data = await getApplicationHistory(a.applicationId);
+      setHistory(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }
+
   return (
     <div>
       <Link to="/jobs">← Back to Jobs</Link>
@@ -156,6 +173,7 @@ export default function JobApplicants() {
               <th>Resume</th>
               <th>Status</th>
               <th>Admin Notes</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -195,10 +213,78 @@ export default function JobApplicants() {
                     style={{ width: "100%" }}
                   />
                 </td>
+                <td>
+                  <button onClick={() => openHistory(a)}>History</button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {historyFor && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setHistoryFor(null)}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: 24,
+              borderRadius: 8,
+              maxWidth: 560,
+              width: "90%",
+              maxHeight: "85vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0 }}>History — {historyFor.fullName}</h3>
+              <button onClick={() => setHistoryFor(null)}>✕</button>
+            </div>
+
+            {loadingHistory ? (
+              <p>Loading history...</p>
+            ) : history.length === 0 ? (
+              <p>No updates recorded yet.</p>
+            ) : (
+              <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%", marginTop: 12 }}>
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Change</th>
+                    <th>By</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((h) => (
+                    <tr key={h.id}>
+                      <td>{new Date(h.createdAt).toLocaleString()}</td>
+                      <td>
+                        {h.fromStatus} → {h.toStatus}
+                      </td>
+                      <td>{h.updatedByAdminName || "System"}</td>
+                      <td>{h.adminNotes || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

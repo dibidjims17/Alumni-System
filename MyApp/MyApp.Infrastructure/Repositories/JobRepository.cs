@@ -122,6 +122,21 @@ namespace MyApp.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddApplicationHistoryAsync(JobApplicationHistory history)
+        {
+            await _context.JobApplicationHistory.AddAsync(history);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<JobApplicationHistory>> GetHistoryByApplicationIdAsync(int applicationId)
+        {
+            return await _context.JobApplicationHistory
+                .Where(h => h.JobApplicationId == applicationId)
+                .Include(h => h.UpdatedByAdmin)
+                .OrderByDescending(h => h.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<int> GetActiveCountAsync()
         {
             return await _context.Jobs.CountAsync(j => j.IsActive);

@@ -15,5 +15,6 @@ namespace MyApp.Domain.Entities
         public Job Job { get; set; } = null!;
         public Student Student { get; set; } = null!;
         public Resume? Resume { get; set; }
+        public ICollection<JobApplicationHistory> History { get; set; } = new List<JobApplicationHistory>();
     }
 }

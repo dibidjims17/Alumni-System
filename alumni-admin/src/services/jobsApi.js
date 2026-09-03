@@ -79,6 +79,14 @@ export async function updateApplicationStatus(applicationId, status, adminNotes)
   return response.json();
 }
 
+export async function getApplicationHistory(applicationId) {
+  const response = await fetch(`${API_BASE_URL}/Jobs/applications/${applicationId}/history`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch application history");
+  return response.json();
+}
+
 export async function downloadResume(resumeId) {
     const token = localStorage.getItem("adminToken");
     const response = await fetch(`${API_BASE_URL.replace("/api", "")}/api/Resume/${resumeId}/download`, {

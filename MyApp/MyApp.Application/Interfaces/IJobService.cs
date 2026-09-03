@@ -14,6 +14,8 @@ namespace MyApp.Application.Interfaces
         Task<List<JobApplicationDto>> GetMyApplicationsAsync(int studentId);
         Task<List<ApplicantDto>?> GetApplicantsAsync(int jobId);
         Task<bool> UpdateApplicationStatusAsync(int applicationId, UpdateApplicationStatusRequest request, int adminId);
+        Task<List<JobApplicationHistoryDto>?> GetApplicationHistoryAsync(int applicationId);
+        Task<List<JobApplicationHistoryDto>?> GetMyApplicationHistoryAsync(int applicationId, int studentId);
 
         Task<bool> SoftDeleteJobAsync(int id);
         Task<bool> RestoreJobAsync(int id);

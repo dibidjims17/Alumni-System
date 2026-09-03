@@ -211,5 +211,23 @@ namespace MyApp.API.Controllers
             if (!success) return NotFound();
             return Ok(new { message = "Application status updated successfully." });
         }
+
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpGet("applications/{applicationId}/history")]
+        public async Task<IActionResult> GetApplicationHistory(int applicationId)
+        {
+            var history = await _jobService.GetApplicationHistoryAsync(applicationId);
+            if (history == null) return NotFound();
+            return Ok(history);
+        }
+
+        [Authorize(Roles = "Student")]
+        [HttpGet("my-applications/{applicationId}/history")]
+        public async Task<IActionResult> GetMyApplicationHistory(int applicationId)
+        {
+            var history = await _jobService.GetMyApplicationHistoryAsync(applicationId, GetUserId());
+            if (history == null) return Forbid();
+            return Ok(history);
+        }
     }
 }

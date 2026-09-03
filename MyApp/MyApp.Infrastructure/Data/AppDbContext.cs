@@ -28,6 +28,7 @@ namespace MyApp.Infrastructure.Data
         public DbSet<NewsCommentLike> NewsCommentLikes { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<EventRsvp> EventRsvps { get; set; }
+        public DbSet<JobApplicationHistory> JobApplicationHistory { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
