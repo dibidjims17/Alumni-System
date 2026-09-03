@@ -19,6 +19,17 @@ const CAREER_TABS = [
   { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
 ];
 
+const STATUS_STYLES = {
+  Pending: { backgroundColor: '#eee', color: '#555' },
+  Reviewed: { backgroundColor: '#e8eefc', color: '#1a4fd8' },
+  Shortlisted: { backgroundColor: '#e6f4ea', color: '#1e7e34' },
+  Rejected: { backgroundColor: '#fdecea', color: '#cc0000' },
+};
+
+function statusStyle(status) {
+  return STATUS_STYLES[status] || STATUS_STYLES.Pending;
+}
+
 export default function MyApplicationsScreen({ navigation }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,13 +69,16 @@ export default function MyApplicationsScreen({ navigation }) {
   }
 
   function renderItem({ item }) {
+    const pill = statusStyle(item.status);
     return (
       <View style={styles.card}>
         <TouchableOpacity onPress={() => navigation.navigate('JobDetail', { jobId: item.jobId })}>
           <Text style={styles.title}>{item.jobTitle}</Text>
           <Text style={styles.company}>{item.company}</Text>
           <Text style={styles.meta}>Applied {new Date(item.appliedAt).toLocaleDateString()}</Text>
-          <Text style={styles.status}>Status: {item.status}</Text>
+          <View style={[styles.statusPill, { backgroundColor: pill.backgroundColor }]}>
+            <Text style={[styles.statusPillText, { color: pill.color }]}>{item.status}</Text>
+          </View>
           <Text style={styles.meta}>Resume attached: {item.attachResume ? 'Yes' : 'No'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.timelineButton} onPress={() => openHistory(item)}>
@@ -150,9 +164,18 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
   },
-  title: { fontSize: 15, marginBottom: 4 },  company: { fontSize: 13, marginBottom: 4 },
-  meta: { fontSize: 11, marginBottom: 2 },
-  status: { fontSize: 12, marginTop: 4, marginBottom: 2 },
+  title: { fontSize: 15, fontWeight: '600', color: '#1a1a1a', marginBottom: 4 },
+  company: { fontSize: 13, marginBottom: 4, color: '#333' },
+  meta: { fontSize: 11, marginBottom: 2, color: '#777' },
+  statusPill: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    marginBottom: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  statusPillText: { fontSize: 11, fontWeight: '600' },
   timelineButton: { marginTop: 8, alignSelf: 'flex-start' },
   timelineText: { fontSize: 12, textDecorationLine: 'underline', color: '#1a4fd8' },
   emptyText: { textAlign: 'center', marginTop: 40, fontSize: 13 },

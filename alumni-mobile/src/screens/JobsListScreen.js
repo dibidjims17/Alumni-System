@@ -74,7 +74,11 @@ export default function JobsListScreen({ navigation }) {
         <Text style={styles.title}>{item.jobTitle}</Text>
         <Text style={styles.company}>{item.company} - {item.location}</Text>
         <Text style={styles.meta}>{item.employmentType} - {item.industry}</Text>
-        {item.hasApplied && <Text style={styles.appliedTag}>Applied</Text>}
+        {item.hasApplied && (
+          <View style={styles.appliedPill}>
+            <Text style={styles.appliedPillText}>Applied</Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   }
@@ -143,10 +147,18 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
   },
-  title: { fontSize: 16, marginBottom: 4 },
-  company: { fontSize: 13, marginBottom: 4 },
-  meta: { fontSize: 11 },
-  appliedTag: { fontSize: 11, marginTop: 6 },
+  title: { fontSize: 16, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
+  company: { fontSize: 13, marginBottom: 4, color: '#333' },
+  meta: { fontSize: 11, color: '#777' },
+  appliedPill: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: '#e8eefc',
+  },
+  appliedPillText: { fontSize: 11, color: '#1a4fd8', fontWeight: '600' },
   emptyText: { textAlign: 'center', marginTop: 40 },
   infoText: { fontSize: 13, textAlign: 'center' },
 });

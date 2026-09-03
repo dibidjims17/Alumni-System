@@ -85,37 +85,41 @@ export default function JobDetailScreen({ route, navigation }) {
   const deadlinePassed = job.deadline && new Date(job.deadline) < new Date();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-      <Text style={styles.title}>{job.jobTitle}</Text>
-      <Text style={styles.company}>{job.company}</Text>
-      <Text style={styles.meta}>{job.location}</Text>
-      <Text style={styles.meta}>{job.employmentType} - {job.industry}</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.card}>
+        <Text style={styles.title}>{job.jobTitle}</Text>
+        <Text style={styles.company}>{job.company}</Text>
+        <Text style={styles.meta}>{job.location}</Text>
+        <Text style={styles.meta}>{job.employmentType} - {job.industry}</Text>
 
-      {(job.salaryMin || job.salaryMax) && (
-        <Text style={styles.meta}>
-          Salary: {job.salaryMin ? `₱${job.salaryMin.toLocaleString()}` : '?'} - {job.salaryMax ? `₱${job.salaryMax.toLocaleString()}` : '?'}
-        </Text>
-      )}
+        {(job.salaryMin || job.salaryMax) && (
+          <Text style={styles.meta}>
+            Salary: {job.salaryMin ? `₱${job.salaryMin.toLocaleString()}` : '?'} - {job.salaryMax ? `₱${job.salaryMax.toLocaleString()}` : '?'}
+          </Text>
+        )}
 
-      {job.deadline && (
-        <Text style={styles.meta}>
-          Deadline: {new Date(job.deadline).toLocaleDateString()}
-          {deadlinePassed ? ' (Closed)' : ''}
-        </Text>
-      )}
+        {job.deadline && (
+          <Text style={styles.meta}>
+            Deadline: {new Date(job.deadline).toLocaleDateString()}
+            {new Date(job.deadline) < new Date() ? ' (Closed)' : ''}
+          </Text>
+        )}
+      </View>
 
-      <Text style={styles.sectionTitle}>Description</Text>
-      <Text style={styles.description}>{job.description}</Text>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Description</Text>
+        <Text style={styles.description}>{job.description}</Text>
+      </View>
 
       {job.hasApplied ? (
-        <View style={styles.appliedBanner}>
-          <Text style={styles.buttonText}>
+        <View style={styles.statusCard}>
+          <Text style={styles.statusText}>
             You applied to this job.
             {myApplication ? ` Status: ${myApplication.status}` : ''}
           </Text>
         </View>
-      ) : job.isActive && !deadlinePassed ? (
-        <View style={styles.applySection}>
+      ) : job.isActive && !(job.deadline && new Date(job.deadline) < new Date()) ? (
+        <View style={styles.card}>
           <View style={styles.switchRow}>
             <Text style={styles.label}>Attach my resume</Text>
             <Switch value={attachResume} onValueChange={setAttachResume} />
@@ -133,8 +137,8 @@ export default function JobDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.appliedBanner}>
-          <Text style={styles.buttonText}>This job is no longer accepting applications.</Text>
+        <View style={styles.statusCard}>
+          <Text style={styles.statusText}>This job is no longer accepting applications.</Text>
         </View>
       )}
     </ScrollView>
@@ -142,13 +146,22 @@ export default function JobDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f4f4f6' },
+  content: { padding: 16, paddingBottom: 24 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 18, marginBottom: 4 },
-  company: { fontSize: 14, marginBottom: 8 },
-  meta: { fontSize: 12, marginBottom: 4 },
-  sectionTitle: { fontSize: 14, marginTop: 16, marginBottom: 6 },
-  description: { fontSize: 13, lineHeight: 20, marginBottom: 16 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
+    padding: 14,
+    marginBottom: 12,
+  },
+  title: { fontSize: 18, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
+  company: { fontSize: 14, marginBottom: 8, color: '#333' },
+  meta: { fontSize: 12, marginBottom: 4, color: '#555' },
+  sectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
+  description: { fontSize: 13, lineHeight: 20, color: '#333' },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -156,21 +169,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: { fontSize: 13 },
-  applySection: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-  },
   applyButton: {
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginTop: 4,
   },
-  appliedBanner: {
-    marginTop: 16,
-    padding: 12,
+  statusCard: {
+    backgroundColor: '#e8eefc',
+    borderRadius: 12,
+    padding: 14,
     alignItems: 'center',
-    borderWidth: 1,
   },
+  statusText: { fontSize: 14, color: '#1a4fd8', textAlign: 'center' },
   buttonText: { fontSize: 14 },
 });
