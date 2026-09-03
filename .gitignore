@@ -17,5 +17,9 @@ appsettings.Development.json
 .DS_Store
 Thumbs.db
 
+# Opencode
+opencode.jsonc
+opencode.json
+
 MyApp/MyApp.API/appsettings.json
 MyApp/MyApp.API/Uploads/
