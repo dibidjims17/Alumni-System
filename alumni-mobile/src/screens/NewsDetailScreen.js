@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Heart, Send, ChevronDown, ChevronUp } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -59,6 +60,7 @@ function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, current
 export default function NewsDetailScreen({ route, navigation }) {
   const { newsId } = route.params;
   const { student } = useAuth();
+  const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const c = theme.colors;
   const [news, setNews] = useState(null);
@@ -232,7 +234,8 @@ export default function NewsDetailScreen({ route, navigation }) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={headerHeight}
     >
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
