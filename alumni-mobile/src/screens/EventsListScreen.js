@@ -158,13 +158,15 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   card: {
+    backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
     marginHorizontal: 16,
     marginBottom: 10,
     padding: 12,
   },
-  title: { fontSize: 16, fontWeight: 'bold' },
+  title: { fontSize: 16, fontWeight: '700' },
   detail: { fontSize: 12, marginTop: 4 },
   description: { fontSize: 13, marginTop: 8 },
   footer: {
@@ -173,12 +175,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 12,
   },
-  count: { fontSize: 12 },
+  count: { fontSize: 12, fontWeight: '600' },
   rsvpButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderWidth: 1,
   },
   rsvpText: { fontSize: 13 },
-  infoText: { fontSize: 13, textAlign: 'center' },
+  infoText: { fontSize: 14, textAlign: 'center' },
 });

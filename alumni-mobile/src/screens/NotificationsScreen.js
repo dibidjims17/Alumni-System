@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
@@ -19,6 +20,7 @@ export default function NotificationsScreen({ navigation }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
 
   async function fetchNotifications() {
     try {
@@ -43,11 +45,15 @@ export default function NotificationsScreen({ navigation }) {
   }
 
   async function handleMarkAllRead() {
+    if (isMarkingAllRead) return;
+    setIsMarkingAllRead(true);
     try {
       await apiClient.put('/Notification/read-all');
-      fetchNotifications();
+      await fetchNotifications();
     } catch (err) {
-      // silent
+      Alert.alert('Error', 'Could not mark notifications as read.');
+    } finally {
+      setIsMarkingAllRead(false);
     }
   }
 
@@ -117,8 +123,13 @@ export default function NotificationsScreen({ navigation }) {
       <TouchableOpacity
         style={[styles.markAllButton, { backgroundColor: c.primaryTint, borderColor: c.primary }]}
         onPress={handleMarkAllRead}
+        disabled={isMarkingAllRead}
       >
-        <Text style={[styles.buttonText, { color: c.primary }]}>Mark all as read</Text>
+        {isMarkingAllRead ? (
+          <ActivityIndicator size="small" color={c.primary} />
+        ) : (
+          <Text style={[styles.buttonText, { color: c.primary }]}>Mark all as read</Text>
+        )}
       </TouchableOpacity>
 
       <FlatList
@@ -157,7 +168,7 @@ const styles = StyleSheet.create({
   unreadCard: {
     borderWidth: 2,
   },
-  title: { fontSize: 14, marginBottom: 4 },
+  title: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
   message: { fontSize: 13, marginBottom: 4 },
   meta: { fontSize: 11 },
   emptyText: { textAlign: 'center', marginTop: 40 },

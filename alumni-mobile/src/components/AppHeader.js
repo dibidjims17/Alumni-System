@@ -1,5 +1,5 @@
 // src/components/AppHeader.js
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Menu, X, Moon, Sun, KeyRound, LogOut } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
