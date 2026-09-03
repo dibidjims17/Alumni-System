@@ -128,8 +128,9 @@ export default function DirectoryScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <SectionTabs items={COMMUNITY_TABS} active="Directory" navigation={navigation} />
+      <View style={styles.content}>
       <SearchBar
         placeholder="Search alumni by name"
         value={search}
@@ -202,12 +203,14 @@ export default function DirectoryScreen({ navigation }) {
           }
         />
       )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f4f4f6' },
+  safe: { flex: 1, backgroundColor: '#f4f4f6' },
+  content: { flex: 1, padding: 16 },
   filterLabel: { fontSize: 12, marginTop: 12, marginBottom: 4, color: '#555' },
   dropdown: {
     borderWidth: 1,
