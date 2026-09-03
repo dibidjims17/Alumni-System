@@ -14,7 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Heart, Send } from 'lucide-react-native';
+import { Heart, Send, ChevronDown, ChevronUp } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
@@ -66,6 +66,11 @@ export default function NewsDetailScreen({ route, navigation }) {
   const [replyTarget, setReplyTarget] = useState(null);
   const [editingComment, setEditingComment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedThreads, setExpandedThreads] = useState({});
+
+  function toggleThread(commentId) {
+    setExpandedThreads((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
+  }
 
   async function fetchDetail() {
     try {
@@ -224,6 +229,23 @@ export default function NewsDetailScreen({ route, navigation }) {
               currentStudentId={student?.id}
             />
             {(comment.replies || []).length > 0 && (
+              <TouchableOpacity
+                style={styles.repliesToggle}
+                onPress={() => toggleThread(comment.id)}
+              >
+                {expandedThreads[comment.id] ? (
+                  <ChevronUp size={14} color="#1a4fd8" />
+                ) : (
+                  <ChevronDown size={14} color="#1a4fd8" />
+                )}
+                <Text style={styles.repliesToggleText}>
+                  {expandedThreads[comment.id]
+                    ? 'Hide replies'
+                    : `View ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {expandedThreads[comment.id] && (comment.replies || []).length > 0 && (
               <View style={styles.replyGroup}>
                 {comment.replies.map((reply) => (
                   <View key={reply.id}>
@@ -359,6 +381,20 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     borderLeftWidth: 2,
     borderLeftColor: '#e0e0e0',
+  },
+  repliesToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingRight: 8,
+  },
+  repliesToggleText: {
+    fontSize: 12,
+    color: '#1a4fd8',
+    fontWeight: '600',
+    marginLeft: 2,
   },
   replyRow: {
     backgroundColor: '#f4f4f6',
