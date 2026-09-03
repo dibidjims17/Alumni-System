@@ -14,11 +14,10 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 
-function buildQuery(search, program, schoolYear, page) {
+function buildQuery(search, program, page) {
   const params = new URLSearchParams();
   if (search.trim()) params.append('search', search.trim());
   if (program) params.append('program', program);
-  if (schoolYear) params.append('schoolYear', schoolYear);
   params.append('page', String(page));
   return `/Directory?${params.toString()}`;
 }
@@ -26,8 +25,7 @@ function buildQuery(search, program, schoolYear, page) {
 export default function DirectoryScreen() {
   const [search, setSearch] = useState('');
   const [program, setProgram] = useState('');
-  const [schoolYear, setSchoolYear] = useState('');
-  const [filters, setFilters] = useState({ programs: [], schoolYears: [] });
+  const [programs, setPrograms] = useState([]);
 
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -38,16 +36,13 @@ export default function DirectoryScreen() {
   async function loadFilters() {
     try {
       const res = await apiClient.get('/Directory/filters');
-      setFilters({
-        programs: res.data.programs || [],
-        schoolYears: res.data.schoolYears || [],
-      });
+      setPrograms(res.data.programs || []);
     } catch (err) {
       // filters are a nicety — search still works without them
     }
   }
 
-  async function loadDirectory(resetPage, activeSearch, activeProgram, activeYear) {
+  async function loadDirectory(resetPage, activeSearch, activeProgram) {
     if (isLoadingMore) return;
     const targetPage = resetPage ? 1 : pageRef.current + 1;
     if (resetPage) {
@@ -56,7 +51,7 @@ export default function DirectoryScreen() {
       setIsLoadingMore(true);
     }
     try {
-      const res = await apiClient.get(buildQuery(activeSearch, activeProgram, activeYear, targetPage));
+      const res = await apiClient.get(buildQuery(activeSearch, activeProgram, targetPage));
       const newItems = res.data.items || [];
       if (resetPage) {
         setItems(newItems);
@@ -77,21 +72,23 @@ export default function DirectoryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadFilters();
-      setSearch('');
-      setProgram('');
-      setSchoolYear('');
-      loadDirectory(true, '', '', '');
+      resetFilters();
     }, [])
   );
 
-  function applyFilters(nextProgram, nextYear) {
+  function applyProgram(nextProgram) {
     setProgram(nextProgram);
-    setSchoolYear(nextYear);
-    loadDirectory(true, search, nextProgram, nextYear);
+    loadDirectory(true, search, nextProgram);
   }
 
   function submitSearch() {
-    loadDirectory(true, search, program, schoolYear);
+    loadDirectory(true, search, program);
+  }
+
+  function resetFilters() {
+    setSearch('');
+    setProgram('');
+    loadDirectory(true, '', '');
   }
 
   function renderChips(values, selected, onSelect) {
@@ -120,9 +117,7 @@ export default function DirectoryScreen() {
     return (
       <View style={styles.card}>
         <Text style={styles.name}>{item.fullName}</Text>
-        <Text style={styles.meta}>
-          {item.program}{item.schoolYear ? ` • ${item.schoolYear}` : ''}
-        </Text>
+        <Text style={styles.meta}>{item.program}</Text>
         {item.headline ? <Text style={styles.headline}>{item.headline}</Text> : null}
         {item.location ? <Text style={styles.meta}>{item.location}</Text> : null}
       </View>
@@ -141,10 +136,16 @@ export default function DirectoryScreen() {
       />
 
       <Text style={styles.filterLabel}>Program</Text>
-      {renderChips(filters.programs, program, (value) => applyFilters(value, schoolYear))}
+      {renderChips(programs, program, applyProgram)}
 
-      <Text style={styles.filterLabel}>Batch</Text>
-      {renderChips(filters.schoolYears, schoolYear, (value) => applyFilters(program, value))}
+      <View style={styles.actionsRow}>
+        <TouchableOpacity style={styles.searchButton} onPress={submitSearch}>
+          <Text style={styles.buttonText}>Search</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
+          <Text style={styles.buttonText}>Reset filter</Text>
+        </TouchableOpacity>
+      </View>
 
       {isLoading ? (
         <ActivityIndicator style={{ marginTop: 24 }} size="large" />
@@ -161,7 +162,7 @@ export default function DirectoryScreen() {
             items.length > 0 && items.length < total ? (
               <TouchableOpacity
                 style={styles.loadMoreButton}
-                onPress={() => loadDirectory(false, search, program, schoolYear)}
+                onPress={() => loadDirectory(false, search, program)}
                 disabled={isLoadingMore}
               >
                 {isLoadingMore ? (
@@ -187,6 +188,24 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   filterLabel: { fontSize: 12, marginTop: 12, marginBottom: 4 },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  searchButton: {
+    flex: 1,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  resetButton: {
+    flex: 1,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  buttonText: { fontSize: 13 },
   chipRow: { flexGrow: 0, marginBottom: 4 },
   chip: {
     borderWidth: 1,
