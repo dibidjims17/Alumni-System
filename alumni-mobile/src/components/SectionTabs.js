@@ -1,6 +1,6 @@
 // src/components/SectionTabs.js
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
 export default function SectionTabs({ items, active, navigation }) {
@@ -8,23 +8,23 @@ export default function SectionTabs({ items, active, navigation }) {
   const c = theme.colors;
 
   return (
-    <View style={[styles.wrap, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
-      >
+    <View style={styles.wrap}>
+      <View style={[styles.group, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}>
         {items.map((item) => {
           const isActive = item.screen === active;
           return (
             <TouchableOpacity
               key={item.key}
-              style={[styles.chip, isActive && { borderBottomColor: c.primary }]}
+              style={[
+                styles.segment,
+                isActive && { backgroundColor: c.surface, borderColor: c.border },
+              ]}
               onPress={() => {
                 if (item.screen !== active && navigation) {
                   navigation.navigate(item.screen);
                 }
               }}
+              activeOpacity={0.8}
             >
               <Text
                 style={[
@@ -37,26 +37,29 @@ export default function SectionTabs({ items, active, navigation }) {
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    borderBottomWidth: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
   },
-  row: {
+  group: {
     flexDirection: 'row',
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    padding: 4,
+    gap: 4,
   },
-  chip: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+  segment: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   label: {
     fontSize: 13,
