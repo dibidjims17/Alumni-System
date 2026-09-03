@@ -5,6 +5,7 @@ import {
   Text,
   ScrollView,
   Switch,
+  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
