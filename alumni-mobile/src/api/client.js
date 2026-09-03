@@ -2,6 +2,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../config';
 
+// Tiny event bus so the auth context can react to expired/invalid tokens.
+const unauthorizedListeners = new Set();
+export function onUnauthorized(callback) {
+  unauthorizedListeners.add(callback);
+  return () => unauthorizedListeners.delete(callback);
+}
+
+async function clearSession() {
+  await AsyncStorage.removeItem('authToken');
+  await AsyncStorage.removeItem('studentData');
+  unauthorizedListeners.forEach((cb) => {
+    try { cb(); } catch {}
+  });
+}
+
 async function request(method, path, body) {
   const token = await AsyncStorage.getItem('authToken');
 
@@ -17,6 +32,13 @@ async function request(method, path, body) {
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+
+  // Only treat 401 as an expired session when we actually sent a token;
+  // a failed login also returns 401 and must surface the server message.
+  if (res.status === 401 && token) {
+    await clearSession();
+    throw new Error('Your session has expired. Please log in again.');
+  }
 
   let data = null;
   const text = await res.text();
@@ -64,6 +86,11 @@ async function uploadFile(path, fileUri, fileName, mimeType) {
     body: formData,
   });
 
+  if (res.status === 401 && token) {
+    await clearSession();
+    throw new Error('Your session has expired. Please log in again.');
+  }
+
   let data = null;
   const text = await res.text();
   if (text) {
@@ -85,34 +112,12 @@ async function uploadFile(path, fileUri, fileName, mimeType) {
   return { data, status: res.status };
 }
 
-async function downloadFile(path) {
-  const token = await AsyncStorage.getItem('authToken');
-
-  const headers = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    method: 'GET',
-    headers,
-  });
-
-  if (!res.ok) {
-    throw new Error(`Download failed with status ${res.status}`);
-  }
-
-  // Return the raw response so the caller can handle it as a blob
-  return res;
-}
-
 const apiClient = {
   get: (path) => request('GET', path),
   post: (path, body) => request('POST', path, body),
   put: (path, body) => request('PUT', path, body),
   delete: (path) => request('DELETE', path),
   uploadFile: (path, fileUri, fileName, mimeType) => uploadFile(path, fileUri, fileName, mimeType),
-  downloadFile: (path) => downloadFile(path),
 };
 
 export default apiClient;

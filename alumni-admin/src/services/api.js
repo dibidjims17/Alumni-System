@@ -28,7 +28,14 @@ export function getSession() {
   const token = localStorage.getItem("adminToken");
   const infoRaw = localStorage.getItem("adminInfo");
   if (!token || !infoRaw) return null;
-  return { token, ...JSON.parse(infoRaw) };
+
+  try {
+    return { token, ...JSON.parse(infoRaw) };
+  } catch {
+    // Corrupted stored session — treat as logged out.
+    clearSession();
+    return null;
+  }
 }
 
 export function clearSession() {

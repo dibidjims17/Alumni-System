@@ -1,7 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import apiClient from '../api/client';
+import apiClient, { onUnauthorized } from '../api/client';
 
 const AuthContext = createContext(null);
 
@@ -12,6 +12,10 @@ export function AuthProvider({ children }) {
   // On app start, check if we have a saved session
   useEffect(() => {
     loadStoredSession();
+
+    // Any API 401 (expired/invalid token) clears the session and logs out.
+    const unsubscribe = onUnauthorized(() => setStudent(null));
+    return unsubscribe;
   }, []);
 
   async function loadStoredSession() {
