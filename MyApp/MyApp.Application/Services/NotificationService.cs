@@ -9,15 +9,21 @@ namespace MyApp.Application.Services
         private readonly INotificationRepository _notificationRepository;
         private readonly IEmailService _emailService;
         private readonly IStudentRepository _studentRepository;
+        private readonly IPushTokenRepository _pushTokenRepository;
+        private readonly IPushService _pushService;
 
         public NotificationService(
             INotificationRepository notificationRepository,
             IEmailService emailService,
-            IStudentRepository studentRepository)
+            IStudentRepository studentRepository,
+            IPushTokenRepository pushTokenRepository,
+            IPushService pushService)
         {
             _notificationRepository = notificationRepository;
             _emailService = emailService;
             _studentRepository = studentRepository;
+            _pushTokenRepository = pushTokenRepository;
+            _pushService = pushService;
         }
 
         public async Task<List<NotificationDto>> GetMyNotificationsAsync(int studentId)
@@ -55,6 +61,16 @@ namespace MyApp.Application.Services
             await _notificationRepository.MarkAllAsReadAsync(studentId);
         }
 
+        public async Task RegisterPushTokenAsync(int studentId, string token, string platform)
+        {
+            await _pushTokenRepository.UpsertAsync(studentId, token, platform);
+        }
+
+        public async Task UnregisterPushTokenAsync(string token)
+        {
+            await _pushTokenRepository.DeleteByTokenAsync(token);
+        }
+
         public async Task NotifyApplicationStatusChangeAsync(int studentId, string studentEmail, string jobTitle,
             string status, int applicationId)
         {
@@ -76,13 +92,18 @@ namespace MyApp.Application.Services
                        $"Please check the alumni app for more details.\n\nThank you.";
 
             await _emailService.SendEmailAsync(studentEmail, subject, body);
+
+            // 3. Send device push
+            var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(studentId);
+            await _pushService.SendAsync(tokens, notification.Title, notification.Message,
+                notification.Type, notification.RelatedId);
         }
 
         public async Task NotifyCommentReplyAsync(int parentAuthorStudentId, string parentAuthorEmail,
             string replierName, string newsTitle, int newsId)
         {
             // In-app notification
-            await _notificationRepository.CreateAsync(new Notification
+            var notification = new Notification
             {
                 StudentId = parentAuthorStudentId,
                 Title = "New Reply",
@@ -90,18 +111,24 @@ namespace MyApp.Application.Services
                 Type = "COMMENT_REPLY",
                 RelatedId = newsId,
                 CreatedAt = DateTime.UtcNow
-            });
+            };
+            await _notificationRepository.CreateAsync(notification);
 
             // Email
             await _emailService.SendEmailAsync(parentAuthorEmail,
                 $"New reply on \"{newsTitle}\"",
                 $"{replierName} replied to your comment on \"{newsTitle}\".\n\nCheck the alumni app for details.");
+
+            // Device push
+            var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(parentAuthorStudentId);
+            await _pushService.SendAsync(tokens, notification.Title, notification.Message,
+                notification.Type, notification.RelatedId);
         }
 
         public async Task NotifyMentionAsync(int mentionedStudentId, string mentionedStudentEmail,
             string mentionerName, string newsTitle, int newsId)
         {
-            await _notificationRepository.CreateAsync(new Notification
+            var notification = new Notification
             {
                 StudentId = mentionedStudentId,
                 Title = "You were mentioned",
@@ -109,17 +136,24 @@ namespace MyApp.Application.Services
                 Type = "MENTION",
                 RelatedId = newsId,
                 CreatedAt = DateTime.UtcNow
-            });
+            };
+            await _notificationRepository.CreateAsync(notification);
 
             await _emailService.SendEmailAsync(mentionedStudentEmail,
                 $"You were mentioned in \"{newsTitle}\"",
                 $"{mentionerName} mentioned you in a comment on \"{newsTitle}\".\n\nCheck the alumni app for details.");
+
+            var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(mentionedStudentId);
+            await _pushService.SendAsync(tokens, notification.Title, notification.Message,
+                notification.Type, notification.RelatedId);
         }
 
         public async Task NotifyNewsPostedAsync(string newsTitle, int newsId)
         {
             var allStudents = await _studentRepository.GetAllAsync();
-            foreach (var student in allStudents.Where(s => s.IsActive))
+            var targets = allStudents.Where(s => s.IsActive).ToList();
+
+            foreach (var student in targets)
             {
                 await _notificationRepository.CreateAsync(new Notification
                 {
@@ -131,13 +165,18 @@ namespace MyApp.Application.Services
                     CreatedAt = DateTime.UtcNow
                 });
             }
+
+            var tokens = await _pushTokenRepository.GetTokensForActiveStudentsAsync(graduatesOnly: false);
+            await _pushService.SendAsync(tokens, "New Post", $"New news post: \"{newsTitle}\"", "NEWS", newsId);
         }
 
         public async Task NotifyJobPostedAsync(string jobTitle, int jobId)
         {
             var allStudents = await _studentRepository.GetAllAsync();
-            foreach (var student in allStudents.Where(s => s.IsActive &&
-                s.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase)))
+            var targets = allStudents.Where(s => s.IsActive &&
+                s.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            foreach (var student in targets)
             {
                 await _notificationRepository.CreateAsync(new Notification
                 {
@@ -149,12 +188,17 @@ namespace MyApp.Application.Services
                     CreatedAt = DateTime.UtcNow
                 });
             }
+
+            var tokens = await _pushTokenRepository.GetTokensForActiveStudentsAsync(graduatesOnly: true);
+            await _pushService.SendAsync(tokens, "New Job", $"New job listing: \"{jobTitle}\"", "JOB", jobId);
         }
 
         public async Task NotifyEventPostedAsync(string eventTitle, int eventId)
         {
             var allStudents = await _studentRepository.GetAllAsync();
-            foreach (var student in allStudents.Where(s => s.IsActive))
+            var targets = allStudents.Where(s => s.IsActive).ToList();
+
+            foreach (var student in targets)
             {
                 await _notificationRepository.CreateAsync(new Notification
                 {
@@ -166,6 +210,9 @@ namespace MyApp.Application.Services
                     CreatedAt = DateTime.UtcNow
                 });
             }
+
+            var tokens = await _pushTokenRepository.GetTokensForActiveStudentsAsync(graduatesOnly: false);
+            await _pushService.SendAsync(tokens, "New Event", $"New alumni event: \"{eventTitle}\"", "EVENT", eventId);
         }
     }
 }

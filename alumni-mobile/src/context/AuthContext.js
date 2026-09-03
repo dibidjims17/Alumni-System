@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient, { onUnauthorized } from '../api/client';
+import { registerDevicePushToken, unregisterDevicePushToken } from '../notifications/push';
 
 const AuthContext = createContext(null);
 
@@ -24,6 +25,7 @@ export function AuthProvider({ children }) {
       const studentJson = await AsyncStorage.getItem('studentData');
       if (token && studentJson) {
         setStudent(JSON.parse(studentJson));
+        registerDevicePushToken();
       }
     } catch (err) {
       console.error('Failed to load stored session:', err);
@@ -44,10 +46,12 @@ export function AuthProvider({ children }) {
     await AsyncStorage.setItem('studentData', JSON.stringify(studentData));
 
     setStudent(studentData);
+    registerDevicePushToken();
     return studentData;
   }
 
   async function logout() {
+    await unregisterDevicePushToken();
     await AsyncStorage.removeItem('authToken');
     await AsyncStorage.removeItem('studentData');
     setStudent(null);

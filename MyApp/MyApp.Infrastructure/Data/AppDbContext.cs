@@ -29,6 +29,7 @@ namespace MyApp.Infrastructure.Data
         public DbSet<Event> Events { get; set; }
         public DbSet<EventRsvp> EventRsvps { get; set; }
         public DbSet<JobApplicationHistory> JobApplicationHistory { get; set; }
+        public DbSet<PushToken> PushTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,6 +43,11 @@ namespace MyApp.Infrastructure.Data
             // A student can RSVP to a given event only once.
             modelBuilder.Entity<EventRsvp>()
                 .HasIndex(r => new { r.EventId, r.StudentId })
+                .IsUnique();
+
+            // One row per device push token.
+            modelBuilder.Entity<PushToken>()
+                .HasIndex(p => p.Token)
                 .IsUnique();
         }
     }

@@ -31,6 +31,7 @@ builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAlumniDocumentRepository, AlumniDocumentRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IPushTokenRepository, PushTokenRepository>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -45,6 +46,9 @@ builder.Services.AddScoped<IEmailService, MyApp.Infrastructure.Notifications.Ema
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAlumniDocumentService, AlumniDocumentService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddHttpClient<MyApp.Infrastructure.Services.PushService>();
+builder.Services.AddScoped<IPushService>(sp =>
+    sp.GetRequiredService<MyApp.Infrastructure.Services.PushService>());
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"];

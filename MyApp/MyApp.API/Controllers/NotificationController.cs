@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.Application.Interfaces;
+using MyApp.Shared.DTOs;
 
 namespace MyApp.API.Controllers
 {
@@ -47,6 +48,21 @@ namespace MyApp.API.Controllers
         {
             await _notificationService.MarkAllAsReadAsync(GetStudentId());
             return Ok(new { message = "All notifications marked as read." });
+        }
+
+        // Registers this device's Expo push token for the logged-in student.
+        [HttpPut("push-token")]
+        public async Task<IActionResult> RegisterPushToken([FromBody] RegisterPushTokenRequest request)
+        {
+            await _notificationService.RegisterPushTokenAsync(GetStudentId(), request.Token, request.Platform);
+            return Ok(new { message = "Push token registered." });
+        }
+
+        [HttpPost("push-token/unregister")]
+        public async Task<IActionResult> UnregisterPushToken([FromBody] RegisterPushTokenRequest request)
+        {
+            await _notificationService.UnregisterPushTokenAsync(request.Token);
+            return Ok(new { message = "Push token removed." });
         }
     }
 }
