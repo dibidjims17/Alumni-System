@@ -1,5 +1,19 @@
 import { API_BASE_URL } from "../config";
 
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
+
+// Turns a stored image path (relative "Uploads/News/x" or a legacy
+// absolute server path) into a browser-loadable URL.
+export function newsImageUrl(path) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalized = String(path).replace(/\\/g, "/");
+  const marker = "Uploads/";
+  const index = normalized.indexOf(marker);
+  const relative = index >= 0 ? normalized.slice(index) : normalized.replace(/^\//, "");
+  return `${FILE_ROOT}/${relative}`;
+}
+
 function authHeader() {
   const token = localStorage.getItem("adminToken");
   return { Authorization: `Bearer ${token}` };

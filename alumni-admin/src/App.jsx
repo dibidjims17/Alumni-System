@@ -5,6 +5,7 @@ import Students from "./pages/Students";
 import StudentDocuments from "./pages/StudentDocuments";
 import Documents from "./pages/Documents";
 import News from "./pages/News";
+import NewsDetail from "./pages/NewsDetail";
 import Layout from "./components/Layout";
 import { getSession } from "./services/api";
 import Jobs from "./pages/Jobs";
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/documents" element={<Documents />} />
           <Route path="/students/:id/documents" element={<StudentDocuments />} />
           <Route path="/news" element={<News />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id/applicants" element={<JobApplicants />} />
           <Route path="/events" element={<Events />} />

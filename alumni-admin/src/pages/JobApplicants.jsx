@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { FileText, History, Download } from "lucide-react";
 import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
+import { cardGrid, card, cardTitle, cardMeta, ModalShell } from "../components/kit";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
+
+const STATUS_STYLES = {
+  Pending: { background: "#eee", color: "#555" },
+  Reviewed: { background: "#e8eefc", color: "#1a4fd8" },
+  Shortlisted: { background: "#e6f4ea", color: "#1e7e34" },
+  Rejected: { background: "#fdecea", color: "#cc0000" },
+};
 
 export default function JobApplicants() {
   const { id } = useParams();
@@ -152,6 +161,7 @@ export default function JobApplicants() {
         ))}
         <div style={{ marginTop: 10 }}>
           <button onClick={handleExport} disabled={exporting}>
+            <Download size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
             {exporting ? "Preparing export..." : "Export to ZIP (CSV + Resumes)"}
           </button>
         </div>
@@ -162,129 +172,109 @@ export default function JobApplicants() {
       ) : applicants.length === 0 ? (
         <p>No applicants yet.</p>
       ) : (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Student Number</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Program</th>
-              <th>Applied At</th>
-              <th>Resume</th>
-              <th>Status</th>
-              <th>Admin Notes</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applicants.map((a) => (
-              <tr key={a.applicationId}>
-                <td>{a.studentNumber}</td>
-                <td>{a.fullName}</td>
-                <td>{a.email}</td>
-                <td>{a.program}</td>
-                <td>{new Date(a.appliedAt).toLocaleString()}</td>
-                <td>
+        <div style={cardGrid}>
+          {applicants.map((a) => {
+            const pill = STATUS_STYLES[a.status] || STATUS_STYLES.Pending;
+            return (
+              <div key={a.applicationId} style={card}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%", background: "#eef3ec",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 700, color: "#1B5E20", flexShrink: 0,
+                  }}>
+                    {(a.fullName || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <h4 style={{ ...cardTitle, margin: 0 }}>{a.fullName}</h4>
+                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>{a.studentNumber}</p>
+                  </div>
+                  <span style={{
+                    marginLeft: "auto", fontSize: 12, fontWeight: 600,
+                    padding: "2px 10px", borderRadius: 999, flexShrink: 0,
+                    background: pill.background, color: pill.color,
+                  }}>
+                    {a.status}
+                  </span>
+                </div>
+
+                <p style={{ ...cardMeta, margin: 0 }}>{a.email}</p>
+                <p style={{ ...cardMeta, margin: 0 }}>
+                  {a.program} • Applied {new Date(a.appliedAt).toLocaleString()}
+                </p>
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#555" }}>Status</label><br />
+                    <select
+                      value={a.status}
+                      onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes)}
+                      disabled={savingId === a.applicationId}
+                    >
+                      {STATUS_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 140 }}>
+                    <label style={{ fontSize: 12, color: "#555" }}>Admin Notes</label><br />
+                    <input
+                      type="text"
+                      defaultValue={a.adminNotes || ""}
+                      onBlur={(e) => handleNotesBlur(a.applicationId, a.status, e.target.value, a.adminNotes)}
+                      disabled={savingId === a.applicationId}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                   {a.attachResume && a.resumeId ? (
                     <button onClick={() => handleViewResume(a.resumeId)}>
+                      <FileText size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
                       {a.resumeFileName || "View Resume"}
                     </button>
                   ) : (
-                    "No"
+                    <span style={{ ...cardMeta, margin: 0 }}>No resume</span>
                   )}
-                </td>
-                <td>
-                  <select
-                    value={a.status}
-                    onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes)}
-                    disabled={savingId === a.applicationId}
-                  >
-                    {STATUS_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    defaultValue={a.adminNotes || ""}
-                    onBlur={(e) => handleNotesBlur(a.applicationId, a.status, e.target.value, a.adminNotes)}
-                    disabled={savingId === a.applicationId}
-                    style={{ width: "100%" }}
-                  />
-                </td>
-                <td>
-                  <button onClick={() => openHistory(a)}>History</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <button onClick={() => openHistory(a)}>
+                    <History size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                    History
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {historyFor && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={() => setHistoryFor(null)}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: 24,
-              borderRadius: 8,
-              maxWidth: 560,
-              width: "90%",
-              maxHeight: "85vh",
-              overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>History — {historyFor.fullName}</h3>
-              <button onClick={() => setHistoryFor(null)}>✕</button>
+        <ModalShell title={`History — ${historyFor.fullName}`} onClose={() => setHistoryFor(null)} width={600}>
+          {loadingHistory ? (
+            <p>Loading history...</p>
+          ) : history.length === 0 ? (
+            <p>No updates recorded yet.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
+              {history.map((h) => (
+                <div
+                  key={h.id}
+                  style={{ border: "1px solid #eee", borderRadius: 8, padding: "10px 12px" }}
+                >
+                  <p style={{ margin: 0, fontSize: 12, color: "#888" }}>
+                    {new Date(h.createdAt).toLocaleString()} • {h.updatedByAdminName || "System"}
+                  </p>
+                  <p style={{ margin: "4px 0 0", fontSize: 14 }}>
+                    <strong>{h.fromStatus} → {h.toStatus}</strong>
+                  </p>
+                  {h.adminNotes && (
+                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "#555" }}>{h.adminNotes}</p>
+                  )}
+                </div>
+              ))}
             </div>
-
-            {loadingHistory ? (
-              <p>Loading history...</p>
-            ) : history.length === 0 ? (
-              <p>No updates recorded yet.</p>
-            ) : (
-              <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%", marginTop: 12 }}>
-                <thead>
-                  <tr>
-                    <th>When</th>
-                    <th>Change</th>
-                    <th>By</th>
-                    <th>Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((h) => (
-                    <tr key={h.id}>
-                      <td>{new Date(h.createdAt).toLocaleString()}</td>
-                      <td>
-                        {h.fromStatus} → {h.toStatus}
-                      </td>
-                      <td>{h.updatedByAdminName || "System"}</td>
-                      <td>{h.adminNotes || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+          )}
+        </ModalShell>
       )}
     </div>
   );
