@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import DiscardDialog from '../components/DiscardDialog';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 
@@ -36,7 +37,7 @@ export default function EditWorkExperienceScreen({ route, navigation }) {
   const [description, setDescription] = useState(existing?.description || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { markSaved } = useUnsavedChangesGuard(navigation, [
+  const { markSaved, discardDialog } = useUnsavedChangesGuard(navigation, [
     jobTitle, company, location, startDate, endDate, isCurrentJob, description,
   ]);
 
@@ -96,6 +97,7 @@ export default function EditWorkExperienceScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <DiscardDialog {...discardDialog} />
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={{ padding: 16 }}

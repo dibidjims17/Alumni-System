@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import DiscardDialog from '../components/DiscardDialog';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -36,7 +37,7 @@ export default function EditProfileScreen({ route, navigation }) {
   const [showInDirectory, setShowInDirectory] = useState(profile.showInDirectory ?? true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { markSaved } = useUnsavedChangesGuard(navigation, [
+  const { markSaved, discardDialog } = useUnsavedChangesGuard(navigation, [
     headline, bio, location, linkedInUrl, phone, address, dateOfBirth, showInDirectory,
   ]);
 
@@ -68,6 +69,7 @@ export default function EditProfileScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <DiscardDialog {...discardDialog} />
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={styles.content}

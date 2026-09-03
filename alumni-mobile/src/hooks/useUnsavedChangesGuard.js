@@ -1,12 +1,18 @@
 // src/hooks/useUnsavedChangesGuard.js
-import { useState, useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // Call this inside any edit screen to get unsaved-changes protection.
 //
 // Usage:
-//   const { markSaved, resetDirty } = useUnsavedChangesGuard(navigation, [field1, field2, ...]);
+//   const { markSaved, resetDirty, discardDialog } = useUnsavedChangesGuard(navigation, [field1, field2, ...]);
 //   ...
+//   return (
+//     <View>
+//       ...screen content...
+//       <DiscardDialog {...discardDialog} />
+//     </View>
+//   );
+//
 //   // after an async fetch populates the form with existing data:
 //   useEffect(() => { resetDirty(); }, [dataLoadedFlag]);
 //   ...
@@ -17,9 +23,11 @@ import { Alert } from 'react-native';
 //   }
 export function useUnsavedChangesGuard(navigation, watchedValues) {
   const [isDirty, setIsDirty] = useState(false);
+  const [dialogVisible, setDialogVisible] = useState(false);
   const justSavedRef = useRef(false);
   const isFirstRender = useRef(true);
   const suppressNextChangeRef = useRef(false);
+  const pendingActionRef = useRef(null);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -39,21 +47,23 @@ export function useUnsavedChangesGuard(navigation, watchedValues) {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
       if (!isDirty || justSavedRef.current) return;
       e.preventDefault();
-      Alert.alert(
-        'Discard changes?',
-        'You have unsaved changes. Are you sure you want to leave without saving?',
-        [
-          { text: 'Keep Editing', style: 'cancel' },
-          {
-            text: 'Discard',
-            style: 'destructive',
-            onPress: () => navigation.dispatch(e.data.action),
-          },
-        ]
-      );
+      pendingActionRef.current = e.data.action;
+      setDialogVisible(true);
     });
     return unsubscribe;
   }, [navigation, isDirty]);
+
+  const confirmDiscard = useCallback(() => {
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+    setDialogVisible(false);
+    if (action) navigation.dispatch(action);
+  }, [navigation]);
+
+  const keepEditing = useCallback(() => {
+    pendingActionRef.current = null;
+    setDialogVisible(false);
+  }, []);
 
   function markSaved() {
     justSavedRef.current = true;
@@ -66,5 +76,14 @@ export function useUnsavedChangesGuard(navigation, watchedValues) {
     setIsDirty(false);
   }
 
-  return { isDirty, markSaved, resetDirty };
+  return {
+    isDirty,
+    markSaved,
+    resetDirty,
+    discardDialog: {
+      visible: dialogVisible,
+      onKeep: keepEditing,
+      onDiscard: confirmDiscard,
+    },
+  };
 }

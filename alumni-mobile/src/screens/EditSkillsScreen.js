@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import DiscardDialog from '../components/DiscardDialog';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 
@@ -24,7 +25,7 @@ export default function EditSkillsScreen({ route, navigation }) {
   const [newSkill, setNewSkill] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { markSaved } = useUnsavedChangesGuard(navigation, [skills, newSkill]);
+  const { markSaved, discardDialog } = useUnsavedChangesGuard(navigation, [skills, newSkill]);
 
   function handleAddSkill() {
     const trimmed = newSkill.trim();
@@ -60,6 +61,7 @@ export default function EditSkillsScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <DiscardDialog {...discardDialog} />
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={{ padding: 16 }}

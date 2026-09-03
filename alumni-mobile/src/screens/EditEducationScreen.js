@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import DiscardDialog from '../components/DiscardDialog';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 
@@ -36,7 +37,7 @@ export default function EditEducationScreen({ route, navigation }) {
     existing?.isCurrentlyStudying || false
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { markSaved } = useUnsavedChangesGuard(navigation, [
+  const { markSaved, discardDialog } = useUnsavedChangesGuard(navigation, [
     degree, fieldOfStudy, school, startYear, endYear, isCurrentlyStudying,
   ]);
 
@@ -95,6 +96,7 @@ export default function EditEducationScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <DiscardDialog {...discardDialog} />
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={{ padding: 16 }}

@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import Skeleton from '../components/ui/Skeleton';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
+import DiscardDialog from '../components/DiscardDialog';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import AutocompleteInput from '../components/AutocompleteInput';
@@ -29,7 +30,7 @@ export default function JobPreferencesScreen({ navigation }) {
   const [isOpenToWork, setIsOpenToWork] = useState(false);
   const [hasSetPreferencesBefore, setHasSetPreferencesBefore] = useState(true);
 
-  const { markSaved, resetDirty } = useUnsavedChangesGuard(navigation, [
+  const { markSaved, resetDirty, discardDialog } = useUnsavedChangesGuard(navigation, [
     preferredJobTitle, preferredIndustry, preferredLocation, isOpenToWork,
   ]);
 
@@ -103,11 +104,13 @@ export default function JobPreferencesScreen({ navigation }) {
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: c.background }]}
-      contentContainerStyle={{ padding: 16 }}
-      keyboardShouldPersistTaps="handled"
-    >
+    <>
+      <DiscardDialog {...discardDialog} />
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={{ padding: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
       {!hasSetPreferencesBefore && (
         <Text style={[styles.noticeText, { color: c.textMuted }]}>
           You haven't set job preferences yet.
@@ -154,6 +157,7 @@ export default function JobPreferencesScreen({ navigation }) {
         style={{ marginTop: 24 }}
       />
     </ScrollView>
+    </>
   );
 }
 
