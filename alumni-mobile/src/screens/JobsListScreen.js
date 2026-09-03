@@ -69,24 +69,82 @@ export default function JobsListScreen({ navigation }) {
     fetchJobs(search).finally(() => setIsLoading(false));
   }
 
+  function formatSalary(min, max) {
+    const peso = (v) => `₱${Number(v).toLocaleString()}`;
+    if (min && max) return `${peso(min)} – ${peso(max)}`;
+    if (min) return `${peso(min)}+`;
+    if (max) return `Up to ${peso(max)}`;
+    return null;
+  }
+
+  function deadlineInfo(deadline) {
+    if (!deadline) return null;
+    const days = Math.ceil((new Date(deadline) - Date.now()) / 86400000);
+    if (days < 0) return null;
+    if (days === 0) return { text: 'Closes today', urgent: true };
+    if (days === 1) return { text: 'Closes tomorrow', urgent: true };
+    if (days <= 7) return { text: `Closing in ${days}d`, urgent: true };
+    return {
+      text: `Apply by ${new Date(deadline).toLocaleDateString()}`,
+      urgent: false,
+    };
+  }
+
   function renderItem({ item }) {
+    const salary = formatSalary(item.salaryMin, item.salaryMax);
+    const deadline = deadlineInfo(item.deadline);
     return (
       <TouchableOpacity
         style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
         onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
+        activeOpacity={0.7}
       >
         <Text style={[styles.title, { color: c.text }]}>{item.jobTitle}</Text>
         <Text style={[styles.company, { color: c.text }]}>
-          {item.company} - {item.location}
+          {item.company}
+          {item.location ? (
+            <Text style={{ color: c.textMuted }}> • {item.location}</Text>
+          ) : null}
         </Text>
-        <Text style={[styles.meta, { color: c.textMuted }]}>
-          {item.employmentType} - {item.industry}
-        </Text>
-        {item.hasApplied && (
-          <View style={[styles.appliedPill, { backgroundColor: c.primaryTint }]}>
-            <Text style={[styles.appliedPillText, { color: c.primary }]}>Applied</Text>
-          </View>
+        {salary && (
+          <Text style={[styles.salary, { color: c.primary }]}>{salary}</Text>
         )}
+        <View style={styles.tagRow}>
+          {item.employmentType ? (
+            <View style={[styles.tag, { backgroundColor: c.surfaceAlt }]}>
+              <Text style={[styles.tagText, { color: c.textMuted }]}>
+                {item.employmentType}
+              </Text>
+            </View>
+          ) : null}
+          {deadline && (
+            <View
+              style={[
+                styles.tag,
+                deadline.urgent
+                  ? { backgroundColor: c.danger }
+                  : { backgroundColor: c.surfaceAlt },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tagText,
+                  { color: deadline.urgent ? '#fff' : c.textMuted },
+                ]}
+              >
+                {deadline.text}
+              </Text>
+            </View>
+          )}
+          {item.hasApplied && (
+            <View style={[styles.tag, { backgroundColor: c.primaryTint }]}>
+              <Text style={[styles.tagText, { color: c.primary }]}>Applied</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }
       </TouchableOpacity>
     );
   }
@@ -161,17 +219,21 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
   },
-  title: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  company: { fontSize: 13, marginBottom: 4 },
-  meta: { fontSize: 11 },
-  appliedPill: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    paddingVertical: 3,
-    paddingHorizontal: 10,
-    borderRadius: 10,
+  title: { fontSize: 17, fontWeight: '700', lineHeight: 22 },
+  company: { fontSize: 13, marginTop: 2 },
+  salary: { fontSize: 15, fontWeight: '800', marginTop: 6 },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 10,
   },
-  appliedPillText: { fontSize: 11, fontWeight: '600' },
+  tag: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+  },
+  tagText: { fontSize: 11, fontWeight: '600' },
   emptyText: { textAlign: 'center', marginTop: 40 },
   infoText: { fontSize: 13, textAlign: 'center' },
 });
