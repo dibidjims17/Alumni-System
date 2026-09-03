@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton, ModalShell, Field, textInput, selectStyle } from "../components/kit";
 
 const emptyForm = {
   jobTitle: "",
@@ -245,98 +245,81 @@ export default function Jobs() {
       )}
 
       {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={closeModalGuarded}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: 24,
-              borderRadius: 8,
-              maxWidth: 500,
-              width: "90%",
-              maxHeight: "85vh",
-              overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>{editingId ? "Edit Job" : "Post New Job"}</h3>
-              <button onClick={closeModalGuarded}>✕</button>
+        <ModalShell title={editingId ? "Edit Job" : "Post New Job"} onClose={closeModalGuarded} width={560}>
+          <form onSubmit={handleSubmit}>
+            <Field label="Job Title">
+              <input
+                type="text"
+                value={form.jobTitle}
+                onChange={(e) => updateField({ jobTitle: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Company">
+              <input
+                type="text"
+                value={form.company}
+                onChange={(e) => updateField({ company: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Field label="Location">
+                  <input
+                    type="text"
+                    value={form.location}
+                    onChange={(e) => updateField({ location: e.target.value })}
+                    style={textInput}
+                  />
+                </Field>
+              </div>
+              <div style={{ flex: 1 }}>
+                <Field label="Industry">
+                  <input
+                    type="text"
+                    value={form.industry}
+                    onChange={(e) => updateField({ industry: e.target.value })}
+                    style={textInput}
+                  />
+                </Field>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-              <div>
-                <label>Job Title</label><br />
-                <input
-                  type="text"
-                  value={form.jobTitle}
-                  onChange={(e) => updateField({ jobTitle: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Field label="Employment Type">
+                  <select
+                    value={form.employmentType}
+                    onChange={(e) => updateField({ employmentType: e.target.value })}
+                    style={selectStyle}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                  </select>
+                </Field>
               </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Company</label><br />
-                <input
-                  type="text"
-                  value={form.company}
-                  onChange={(e) => updateField({ company: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
+              <div style={{ flex: 1 }}>
+                <Field label="Application Deadline">
+                  <input
+                    type="date"
+                    value={form.deadline}
+                    onChange={(e) => updateField({ deadline: e.target.value })}
+                    style={textInput}
+                  />
+                </Field>
               </div>
+            </div>
 
-              <div style={{ marginTop: 10 }}>
-                <label>Location</label><br />
-                <input
-                  type="text"
-                  value={form.location}
-                  onChange={(e) => updateField({ location: e.target.value })}
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Industry</label><br />
-                <input
-                  type="text"
-                  value={form.industry}
-                  onChange={(e) => updateField({ industry: e.target.value })}
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Employment Type</label><br />
-                <select
-                  value={form.employmentType}
-                  onChange={(e) => updateField({ employmentType: e.target.value })}
-                  style={{ width: "100%" }}
-                >
-                  <option value="">Select...</option>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
-                </select>
-              </div>
-
-              <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <label>Salary Min — {formatPeso(form.salaryMin)}</label><br />
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Field label={`Salary Min — ${formatPeso(form.salaryMin)}`}>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <button type="button" onClick={() => stepSalary("salaryMin", -FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>−</button>
                     <input
@@ -355,11 +338,12 @@ export default function Jobs() {
                     value={form.salaryMin}
                     onChange={(e) => updateField({ salaryMin: e.target.value })}
                     placeholder="Undisclosed"
-                    style={{ width: "100%", marginTop: 4 }}
+                    style={{ ...textInput, marginTop: 6 }}
                   />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label>Salary Max — {formatPeso(form.salaryMax)}</label><br />
+                </Field>
+              </div>
+              <div style={{ flex: 1 }}>
+                <Field label={`Salary Max — ${formatPeso(form.salaryMax)}`}>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <button type="button" onClick={() => stepSalary("salaryMax", -FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>−</button>
                     <input
@@ -378,52 +362,46 @@ export default function Jobs() {
                     value={form.salaryMax}
                     onChange={(e) => updateField({ salaryMax: e.target.value })}
                     placeholder="Undisclosed"
-                    style={{ width: "100%", marginTop: 4 }}
+                    style={{ ...textInput, marginTop: 6 }}
                   />
-                </div>
+                </Field>
               </div>
+            </div>
 
-              <div style={{ marginTop: 10 }}>
-                <label>Description</label><br />
-                <textarea
-                  value={form.description}
-                  onChange={(e) => updateField({ description: e.target.value })}
-                  rows={5}
-                  style={{ width: "100%" }}
-                />
-              </div>
+            <Field label="Description">
+              <textarea
+                value={form.description}
+                onChange={(e) => updateField({ description: e.target.value })}
+                rows={5}
+                style={{ ...textInput, resize: "vertical" }}
+              />
+            </Field>
 
-              <div style={{ marginTop: 10 }}>
-                <label>Application Deadline</label><br />
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#333", cursor: "pointer" }}>
                 <input
-                  type="date"
-                  value={form.deadline}
-                  onChange={(e) => updateField({ deadline: e.target.value })}
-                />
-              </div>
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) => updateField({ isActive: e.target.checked })}
+                />{" "}
+                Active
+              </label>
+            </div>
 
-              <div style={{ marginTop: 10 }}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={form.isActive}
-                    onChange={(e) => updateField({ isActive: e.target.checked })}
-                  />{" "}
-                  Active
-                </label>
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <button type="submit" disabled={saving}>
-                  {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
-                </button>
-                <button type="button" onClick={closeModalGuarded} style={{ marginLeft: 8 }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button" onClick={closeModalGuarded} style={{ padding: "8px 14px", border: "1px solid #ccc", borderRadius: 8, background: "#fff", cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "#1B5E20", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+              >
+                {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
+              </button>
+            </div>
+          </form>
+        </ModalShell>
       )}
 
       <ConfirmDialog

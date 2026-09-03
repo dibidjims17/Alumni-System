@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, ModalShell, Field, textInput, selectStyle } from "../components/kit";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "1" };
@@ -509,182 +509,141 @@ export default function Students() {
       )}
 
       {editingStudent && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.5)", display: "flex",
-            alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={requestCloseEdit}
-        >
-          <div
-            style={{
-              background: "#fff", padding: 24, borderRadius: 8,
-              maxWidth: 480, width: "90%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>Edit Student — {editingStudent.studentNumber}</h3>
-              <button onClick={requestCloseEdit}>✕</button>
+        <ModalShell title={`Edit Student — ${editingStudent.studentNumber}`} onClose={requestCloseEdit} width={480}>
+          <form onSubmit={handleEditSave}>
+            <Field label="Full Name">
+              <input
+                type="text"
+                value={editForm.fullName}
+                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Email">
+              <input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Program">
+              <input
+                type="text"
+                value={editForm.program}
+                onChange={(e) => setEditForm({ ...editForm, program: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="School Year">
+              <select
+                value={editForm.schoolYear}
+                onChange={(e) => setEditForm({ ...editForm, schoolYear: e.target.value })}
+                required
+                style={selectStyle}
+              >
+                <option value="">Select...</option>
+                {YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </Field>
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button" onClick={requestCloseEdit} style={{ padding: "8px 14px", border: "1px solid #ccc", borderRadius: 8, background: "#fff", cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={savingEdit}
+                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "#1B5E20", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+              >
+                {savingEdit ? "Saving..." : "Save Changes"}
+              </button>
             </div>
-
-            <form onSubmit={handleEditSave} style={{ marginTop: 16 }}>
-              <div>
-                <label>Full Name</label><br />
-                <input
-                  type="text"
-                  value={editForm.fullName}
-                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Email</label><br />
-                <input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Program</label><br />
-                <input
-                  type="text"
-                  value={editForm.program}
-                  onChange={(e) => setEditForm({ ...editForm, program: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>School Year</label><br />
-                <select
-                  value={editForm.schoolYear}
-                  onChange={(e) => setEditForm({ ...editForm, schoolYear: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                >
-                  <option value="">Select...</option>
-                  {YEAR_OPTIONS.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <button type="submit" disabled={savingEdit}>
-                  {savingEdit ? "Saving..." : "Save Changes"}
-                </button>
-                <button type="button" onClick={requestCloseEdit} style={{ marginLeft: 8 }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </ModalShell>
       )}
 
       {showAddModal && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.5)", display: "flex",
-            alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={closeAddModal}
-        >
-          <div
-            style={{
-              background: "#fff", padding: 24, borderRadius: 8,
-              maxWidth: 480, width: "90%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>Add Student</h3>
-              <button onClick={closeAddModal}>✕</button>
+        <ModalShell title="Add Student" onClose={closeAddModal} width={480}>
+          <form onSubmit={handleAddSave}>
+            <Field label="Student Number">
+              <input
+                type="text"
+                value={addForm.studentNumber}
+                onChange={(e) => setAddForm({ ...addForm, studentNumber: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Full Name">
+              <input
+                type="text"
+                value={addForm.fullName}
+                onChange={(e) => setAddForm({ ...addForm, fullName: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Email">
+              <input
+                type="email"
+                value={addForm.email}
+                onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="Program">
+              <input
+                type="text"
+                value={addForm.program}
+                onChange={(e) => setAddForm({ ...addForm, program: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+
+            <Field label="School Year">
+              <select
+                value={addForm.schoolYear}
+                onChange={(e) => setAddForm({ ...addForm, schoolYear: e.target.value })}
+                style={selectStyle}
+              >
+                {YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </Field>
+
+            <p style={{ fontSize: 13, color: "#555", marginTop: 8 }}>
+              Default password is the student number; they must change it on first login.
+            </p>
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button" onClick={closeAddModal} style={{ padding: "8px 14px", border: "1px solid #ccc", borderRadius: 8, background: "#fff", cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={savingAdd}
+                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "#1B5E20", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+              >
+                {savingAdd ? "Saving..." : "Add Student"}
+              </button>
             </div>
-
-            <form onSubmit={handleAddSave} style={{ marginTop: 16 }}>
-              <div>
-                <label>Student Number</label><br />
-                <input
-                  type="text"
-                  value={addForm.studentNumber}
-                  onChange={(e) => setAddForm({ ...addForm, studentNumber: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Full Name</label><br />
-                <input
-                  type="text"
-                  value={addForm.fullName}
-                  onChange={(e) => setAddForm({ ...addForm, fullName: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Email</label><br />
-                <input
-                  type="email"
-                  value={addForm.email}
-                  onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>Program</label><br />
-                <input
-                  type="text"
-                  value={addForm.program}
-                  onChange={(e) => setAddForm({ ...addForm, program: e.target.value })}
-                  required
-                  style={{ width: "100%" }}
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <label>School Year</label><br />
-                <select
-                  value={addForm.schoolYear}
-                  onChange={(e) => setAddForm({ ...addForm, schoolYear: e.target.value })}
-                  style={{ width: "100%" }}
-                >
-                  {YEAR_OPTIONS.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-
-              <p style={{ fontSize: 13, color: "#555", marginTop: 8 }}>
-                Default password is the student number; they must change it on first login.
-              </p>
-
-              <div style={{ marginTop: 16 }}>
-                <button type="submit" disabled={savingAdd}>
-                  {savingAdd ? "Saving..." : "Add Student"}
-                </button>
-                <button type="button" onClick={closeAddModal} style={{ marginLeft: 8 }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </ModalShell>
       )}
 
       {resetResult && (
