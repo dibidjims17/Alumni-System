@@ -11,6 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from 'react-native';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
@@ -25,6 +26,7 @@ export default function EditProfileScreen({ route, navigation }) {
   const [linkedInUrl, setLinkedInUrl] = useState(profile.linkedInUrl || '');
   const [phone, setPhone] = useState(profile.phone || '');
   const [address, setAddress] = useState(profile.address || '');
+  const [showInDirectory, setShowInDirectory] = useState(profile.showInDirectory ?? true);
   const [dateOfBirth, setDateOfBirth] = useState(
     profile.dateOfBirth ? new Date(profile.dateOfBirth) : null
   );
@@ -32,7 +34,7 @@ export default function EditProfileScreen({ route, navigation }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { markSaved } = useUnsavedChangesGuard(navigation, [
-    headline, bio, location, linkedInUrl, phone, address, dateOfBirth,
+    headline, bio, location, linkedInUrl, phone, address, dateOfBirth, showInDirectory,
   ]);
 
   async function handleSave() {
@@ -46,6 +48,7 @@ export default function EditProfileScreen({ route, navigation }) {
         phone,
         dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : null,
         address,
+        showInDirectory,
       });
       markSaved();
       navigation.goBack();
@@ -120,6 +123,11 @@ export default function EditProfileScreen({ route, navigation }) {
           multiline
         />
 
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Show me in the alumni directory</Text>
+          <Switch value={showInDirectory} onValueChange={setShowInDirectory} />
+        </View>
+
         <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSave}
@@ -147,6 +155,13 @@ const styles = StyleSheet.create({
     minHeight: 70,
     textAlignVertical: 'top',
   },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  switchLabel: { fontSize: 12 },
   saveButton: {
     marginTop: 24,
     padding: 12,

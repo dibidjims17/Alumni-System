@@ -64,5 +64,63 @@ namespace MyApp.Infrastructure.Repositories
         {
             return await _context.Students.CountAsync(s => s.SchoolYear == "Graduate");
         }
+
+        private IQueryable<Student> DirectoryBaseQuery()
+        {
+            return _context.Students
+                .Where(s => s.IsActive && s.SchoolYear == "Graduate" && s.ShowInDirectory);
+        }
+
+        public async Task<(List<Student> Items, int Total)> SearchDirectoryAsync(
+            string? search, string? program, string? schoolYear, int page, int pageSize)
+        {
+            var query = DirectoryBaseQuery();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(s => s.FullName.Contains(term));
+            }
+
+            if (!string.IsNullOrWhiteSpace(program))
+            {
+                var programTerm = program.Trim();
+                query = query.Where(s => s.Program == programTerm);
+            }
+
+            if (!string.IsNullOrWhiteSpace(schoolYear))
+            {
+                var yearTerm = schoolYear.Trim();
+                query = query.Where(s => s.SchoolYear == yearTerm);
+            }
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderBy(s => s.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, total);
+        }
+
+        public async Task<(List<string> Programs, List<string> SchoolYears)> GetDirectoryFilterValuesAsync()
+        {
+            var baseQuery = DirectoryBaseQuery();
+
+            var programs = await baseQuery
+                .Select(s => s.Program)
+                .Distinct()
+                .OrderBy(p => p)
+                .ToListAsync();
+
+            var schoolYears = await baseQuery
+                .Select(s => s.SchoolYear)
+                .Distinct()
+                .OrderBy(y => y)
+                .ToListAsync();
+
+            return (programs, schoolYears);
+        }
     }
 }

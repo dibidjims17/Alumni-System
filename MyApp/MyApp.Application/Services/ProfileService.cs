@@ -55,6 +55,7 @@ namespace MyApp.Application.Services
                 Phone = profile?.Phone ?? string.Empty,
                 DateOfBirth = profile?.DateOfBirth,
                 Address = profile?.Address ?? string.Empty,
+                ShowInDirectory = student.ShowInDirectory,
                 WorkExperiences = workExperiences.Select(w => new WorkExperienceDto
                 {
                     Id = w.Id,
@@ -80,8 +81,14 @@ namespace MyApp.Application.Services
 
         public async Task<bool> UpdateProfileAsync(int studentId, UpdateProfileRequest request, string ipAddress)
         {
-            var profile = await _profileRepository.GetByStudentIdAsync(studentId);
+            var student = await _studentRepository.GetByIdAsync(studentId);
+            if (student != null && student.ShowInDirectory != request.ShowInDirectory)
+            {
+                student.ShowInDirectory = request.ShowInDirectory;
+                await _studentRepository.UpdateAsync(student);
+            }
 
+            var profile = await _profileRepository.GetByStudentIdAsync(studentId);
             if (profile == null)
             {
                 await _profileRepository.CreateAsync(new AlumniProfile

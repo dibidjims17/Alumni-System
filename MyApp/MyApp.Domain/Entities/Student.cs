@@ -11,6 +11,7 @@ namespace MyApp.Domain.Entities
         public string PasswordHash { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; } = true;
+        public bool ShowInDirectory { get; set; } = true; // alumni opted into the private directory
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? PasswordResetCode { get; set; }
         public DateTime? PasswordResetCodeExpiry { get; set; }

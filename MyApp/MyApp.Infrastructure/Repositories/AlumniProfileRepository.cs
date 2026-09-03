@@ -20,6 +20,16 @@ namespace MyApp.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.StudentId == studentId);
         }
 
+        public async Task<Dictionary<int, AlumniProfile>> GetByStudentIdsAsync(IEnumerable<int> studentIds)
+        {
+            var ids = studentIds.Distinct().ToList();
+            var profiles = await _context.AlumniProfiles
+                .Where(p => ids.Contains(p.StudentId))
+                .ToListAsync();
+
+            return profiles.ToDictionary(p => p.StudentId);
+        }
+
         public async Task CreateAsync(AlumniProfile profile)
         {
             await _context.AlumniProfiles.AddAsync(profile);

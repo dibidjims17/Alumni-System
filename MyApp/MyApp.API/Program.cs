@@ -46,6 +46,7 @@ builder.Services.AddScoped<IEmailService, MyApp.Infrastructure.Notifications.Ema
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAlumniDocumentService, AlumniDocumentService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IDirectoryService, DirectoryService>();
 builder.Services.AddHttpClient<MyApp.Infrastructure.Services.PushService>();
 builder.Services.AddScoped<IPushService>(sp =>
     sp.GetRequiredService<MyApp.Infrastructure.Services.PushService>());

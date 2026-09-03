@@ -13,5 +13,7 @@ namespace MyApp.Application.Interfaces
         Task<int> CountAllAsync();
         Task<int> CountActiveAsync();
         Task<int> CountGraduateAsync();
+        Task<(List<Student> Items, int Total)> SearchDirectoryAsync(string? search, string? program, string? schoolYear, int page, int pageSize);
+        Task<(List<string> Programs, List<string> SchoolYears)> GetDirectoryFilterValuesAsync();
     }
 }

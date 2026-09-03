@@ -48,6 +48,13 @@ export default function HomeScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.newsButton}
+        onPress={() => navigation.navigate('Directory')}
+      >
+        <Text style={styles.buttonText}>Find Alumni</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.newsButton}
         onPress={() => navigation.navigate('Notifications')}
       >
         <Text style={styles.buttonText}>
