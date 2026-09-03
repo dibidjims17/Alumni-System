@@ -184,7 +184,7 @@ export default function NewsDetailScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <View style={styles.postCard}>
           <Text style={styles.title}>{news.title}</Text>
           <Text style={styles.meta}>
@@ -307,7 +307,7 @@ export default function NewsDetailScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f4f6' },
-  content: { padding: 16, paddingBottom: 24 },
+  scrollContent: { padding: 16, paddingBottom: 24 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   postCard: {
     backgroundColor: '#fff',
