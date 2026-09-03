@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   actionCardText: { fontSize: 15, fontWeight: '600' },
-  sectionHeader: { fontSize: 15, fontWeight: '600', marginBottom: 8 },
+  sectionHeader: { fontSize: 13, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.8 },
   fieldLabel: { fontSize: 11, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.4 },
   fieldValue: { fontSize: 14, marginTop: 2 },
 });

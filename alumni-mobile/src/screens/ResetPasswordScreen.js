@@ -12,6 +12,7 @@ import {
 import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import PasswordField from '../components/ui/PasswordField';
 
 export default function ResetPasswordScreen({ route, navigation }) {
   const { identifier } = route.params;
@@ -119,30 +120,18 @@ export default function ResetPasswordScreen({ route, navigation }) {
         ))}
       </View>
 
-      <TextInput
-        style={[
-          styles.input,
-          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
-        ]}
+      <PasswordField
         placeholder="New Password"
-        placeholderTextColor={c.placeholder}
         value={newPassword}
         onChangeText={setNewPassword}
-        secureTextEntry
-        autoCapitalize="none"
+        style={styles.field}
       />
 
-      <TextInput
-        style={[
-          styles.input,
-          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
-        ]}
+      <PasswordField
         placeholder="Confirm New Password"
-        placeholderTextColor={c.placeholder}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
-        secureTextEntry
-        autoCapitalize="none"
+        style={styles.field}
       />
 
       <PrimaryButton
@@ -186,10 +175,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
+  field: {
     marginBottom: 16,
   },
   codeRow: {

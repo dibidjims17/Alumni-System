@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
-  cardTitle: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
+  cardTitle: { fontSize: 13, fontWeight: '700', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.8 },
   label: { fontSize: 12, fontWeight: '600', marginTop: 12, marginBottom: 4 },
   input: {
     borderWidth: 1,

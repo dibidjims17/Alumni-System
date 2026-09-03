@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import PasswordField from '../components/ui/PasswordField';
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('');
@@ -68,17 +69,11 @@ export default function LoginScreen({ navigation }) {
         autoCorrect={false}
       />
 
-      <TextInput
-        style={[
-          styles.input,
-          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
-        ]}
+      <PasswordField
         placeholder="Password"
-        placeholderTextColor={c.placeholder}
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
-        autoCapitalize="none"
+        style={{ marginBottom: 14 }}
       />
 
       <TouchableOpacity
