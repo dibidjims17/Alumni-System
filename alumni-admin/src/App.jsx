@@ -31,6 +31,17 @@ function SuperAdminRoute({ children }) {
   );
 }
 
+// An unmatched URL must NOT look like a logout: keep a valid session on the
+// dashboard, only send actually-logged-out users to Login.
+function NotFoundRedirect() {
+  const session = getSession();
+  return session ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -58,7 +69,7 @@ export default function App() {
           <Route path="/activity-log" element={<SuperAdminRoute><ActivityLog /></SuperAdminRoute>} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<NotFoundRedirect />} />
       </Routes>
     </BrowserRouter>
   );

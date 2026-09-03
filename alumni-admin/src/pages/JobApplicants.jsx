@@ -53,7 +53,10 @@ export default function JobApplicants() {
     loadApplicants();
   }, [id]);
 
-  async function handleStatusChange(applicationId, newStatus, currentNotes) {
+  async function handleStatusChange(applicationId, newStatus, currentNotes, applicantName, currentStatus) {
+    if (!window.confirm(
+      `Change ${applicantName}'s status from "${currentStatus}" to "${newStatus}"?`
+    )) return;
     setSavingId(applicationId);
     try {
       await updateApplicationStatus(applicationId, newStatus, currentNotes || "");
@@ -67,6 +70,7 @@ export default function JobApplicants() {
 
   async function handleNotesBlur(applicationId, status, newNotes, oldNotes) {
     if (newNotes === oldNotes) return;
+    if (!window.confirm("Save your admin notes for this applicant?")) return;
     setSavingId(applicationId);
     try {
       await updateApplicationStatus(applicationId, status, newNotes);
@@ -208,7 +212,7 @@ export default function JobApplicants() {
                     <label style={{ fontSize: 12, color: "#555" }}>Status</label><br />
                     <select
                       value={a.status}
-                      onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes)}
+                      onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes, a.fullName, a.status)}
                       disabled={savingId === a.applicationId}
                     >
                       {STATUS_OPTIONS.map((opt) => (
