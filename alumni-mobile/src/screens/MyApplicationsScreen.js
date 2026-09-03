@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import TopBar from '../components/TopBar';
 
 export default function MyApplicationsScreen({ navigation }) {
   const [items, setItems] = useState([]);
@@ -68,7 +69,8 @@ export default function MyApplicationsScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.outer}>
+      <TopBar active="MyApplications" navigation={navigation} />
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />
@@ -131,6 +133,7 @@ export default function MyApplicationsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  outer: { flex: 1 },
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { padding: 16 },
