@@ -354,14 +354,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   replyGroup: {
-    marginLeft: 8,
-    marginTop: 8,
+    marginLeft: 4,
+    marginTop: 10,
     paddingLeft: 10,
     borderLeftWidth: 2,
     borderLeftColor: '#e0e0e0',
   },
   replyRow: {
-    marginBottom: 10,
+    backgroundColor: '#f4f4f6',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
   },
 
   commentAuthor: { fontSize: 13, fontWeight: '600', color: '#1a1a1a' },
