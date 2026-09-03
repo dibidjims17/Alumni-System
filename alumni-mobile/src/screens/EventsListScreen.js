@@ -101,7 +101,7 @@ export default function EventsListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TopBar active="Events" navigation={navigation} />
+      <TopBar active="EventsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <TextInput
           style={styles.searchInput}

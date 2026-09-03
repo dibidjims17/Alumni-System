@@ -81,7 +81,7 @@ export default function NewsListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TopBar active="News" navigation={navigation} />
+      <TopBar active="NewsList" navigation={navigation} />
       {error && <Text style={styles.errorText}>{error}</Text>}
       <View style={styles.searchRow}>
         <TextInput

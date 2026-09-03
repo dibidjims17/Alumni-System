@@ -82,7 +82,7 @@ export default function JobsListScreen({ navigation }) {
   if (!isGraduate) {
     return (
       <View style={styles.container}>
-        <TopBar active="Jobs" navigation={navigation} />
+        <TopBar active="JobsList" navigation={navigation} />
         <View style={styles.centered}>
           <Text style={styles.infoText}>
             Job listings are available for Graduate students only.
@@ -94,7 +94,7 @@ export default function JobsListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TopBar active="Jobs" navigation={navigation} />
+      <TopBar active="JobsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <TextInput
           style={styles.searchInput}

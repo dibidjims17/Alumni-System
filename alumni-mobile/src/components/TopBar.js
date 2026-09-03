@@ -1,19 +1,52 @@
 // src/components/TopBar.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { House, Newspaper, Briefcase, CalendarDays, Users, User, Bell } from 'lucide-react-native';
+import { House, Users, Briefcase, User, Bell } from 'lucide-react-native';
 import apiClient from '../api/client';
 
 const ACCENT = '#1a4fd8';
 
-const TABS = [
-  { key: 'Home', screen: 'Home', Icon: House },
-  { key: 'News', screen: 'NewsList', Icon: Newspaper },
-  { key: 'Jobs', screen: 'JobsList', Icon: Briefcase },
-  { key: 'Events', screen: 'EventsList', Icon: CalendarDays },
-  { key: 'Directory', screen: 'Directory', Icon: Users },
-  { key: 'Profile', screen: 'Profile', Icon: User },
+const GROUPS = [
+  {
+    key: 'Home',
+    label: 'Home',
+    Icon: House,
+    defaultScreen: 'Home',
+    subs: [{ key: 'Home', label: 'Home', screen: 'Home' }],
+  },
+  {
+    key: 'Community',
+    label: 'Community',
+    Icon: Users,
+    defaultScreen: 'NewsList',
+    subs: [
+      { key: 'News', label: 'News', screen: 'NewsList' },
+      { key: 'Events', label: 'Events', screen: 'EventsList' },
+      { key: 'Directory', label: 'Directory', screen: 'Directory' },
+    ],
+  },
+  {
+    key: 'Career',
+    label: 'Career',
+    Icon: Briefcase,
+    defaultScreen: 'JobsList',
+    subs: [
+      { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
+      { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
+    ],
+  },
+  {
+    key: 'Account',
+    label: 'Account',
+    Icon: User,
+    defaultScreen: 'Profile',
+    subs: [{ key: 'Profile', label: 'Profile', screen: 'Profile' }],
+  },
 ];
+
+function findGroup(active) {
+  return GROUPS.find((group) => group.subs.some((sub) => sub.screen === active)) || null;
+}
 
 export default function TopBar({ active, navigation }) {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -24,6 +57,9 @@ export default function TopBar({ active, navigation }) {
       .then((res) => setUnreadCount(res.data.count || 0))
       .catch(() => {});
   }, []);
+
+  const activeGroup = findGroup(active);
+  const showSubs = activeGroup && activeGroup.subs.length > 1;
 
   function goTo(screen) {
     if (screen !== active) {
@@ -38,23 +74,25 @@ export default function TopBar({ active, navigation }) {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tabs}
       >
-        {TABS.map(({ key, screen, Icon }) => {
-          const isActive = key === active;
+        {GROUPS.map((group) => {
+          const isActive = activeGroup?.key === group.key;
           const color = isActive ? ACCENT : '#555';
           return (
             <TouchableOpacity
-              key={key}
+              key={group.key}
               style={[styles.tab, isActive && styles.tabActive]}
-              onPress={() => goTo(screen)}
+              onPress={() => goTo(group.defaultScreen)}
             >
-              <Icon size={20} color={color} />
-              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{key}</Text>
+              <group.Icon size={20} color={color} />
+              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                {group.label}
+              </Text>
             </TouchableOpacity>
           );
         })}
         <TouchableOpacity style={styles.tab} onPress={() => goTo('Notifications')}>
           <View>
-            <Bell size={20} color="#555" />
+            <Bell size={20} color={active === 'Notifications' ? ACCENT : '#555'} />
             {unreadCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
@@ -63,9 +101,36 @@ export default function TopBar({ active, navigation }) {
               </View>
             )}
           </View>
-          <Text style={styles.tabLabel}>Alerts</Text>
+          <Text
+            style={[styles.tabLabel, active === 'Notifications' && styles.tabLabelActive]}
+          >
+            Alerts
+          </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {showSubs && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.subs}
+        >
+          {activeGroup.subs.map((sub) => {
+            const isActive = sub.screen === active;
+            return (
+              <TouchableOpacity
+                key={sub.key}
+                style={[styles.sub, isActive && styles.subActive]}
+                onPress={() => goTo(sub.screen)}
+              >
+                <Text style={[styles.subLabel, isActive && styles.subLabelActive]}>
+                  {sub.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -85,7 +150,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
@@ -116,6 +181,31 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#fff',
     fontSize: 9,
+    fontWeight: '600',
+  },
+  subs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+  },
+  sub: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  subActive: {
+    borderColor: ACCENT,
+    backgroundColor: '#eee',
+  },
+  subLabel: {
+    fontSize: 12,
+    color: '#555',
+  },
+  subLabelActive: {
+    color: ACCENT,
     fontWeight: '600',
   },
 });

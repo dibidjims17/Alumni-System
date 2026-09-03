@@ -15,6 +15,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import TopBar from '../components/TopBar';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
   return (
@@ -45,7 +46,7 @@ function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, current
   );
 }
 
-export default function NewsDetailScreen({ route }) {
+export default function NewsDetailScreen({ route, navigation }) {
   const { newsId } = route.params;
   const { student } = useAuth();
   const [news, setNews] = useState(null);
@@ -160,15 +161,14 @@ export default function NewsDetailScreen({ route }) {
     }
   }
 
-  if (isLoading || !news) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
+    <View style={styles.outer}>
+      <TopBar active="NewsList" navigation={navigation} />
+      {isLoading || !news ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -269,10 +269,13 @@ export default function NewsDetailScreen({ route }) {
         </View>
       </View>
     </KeyboardAvoidingView>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outer: { flex: 1 },
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { fontSize: 18, marginBottom: 4 },
