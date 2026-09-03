@@ -1,8 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucide-react";
+import { API_BASE_URL } from "../config";
 import { getNews, createNews, updateNews, deleteNews, getNewsDetail, deleteCommentAsAdmin } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput } from "../components/kit";
+
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
+
+// Turns a stored image path (relative "Uploads/News/x" or a legacy
+// absolute server path) into a browser-loadable URL.
+function toImageUrl(path) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalized = String(path).replace(/\\/g, "/");
+  const marker = "Uploads/";
+  const index = normalized.indexOf(marker);
+  const relative = index >= 0 ? normalized.slice(index) : normalized.replace(/^\//, "");
+  return `${FILE_ROOT}/${relative}`;
+}
 
 const EditButton = iconButton("Edit", Pencil);
 const DeleteButton = iconButton("Delete", Trash2);
@@ -79,9 +94,8 @@ export default function News() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
 
-  const [expandedId, setExpandedId] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [viewingPost, setViewingPost] = useState(null);
+  const [loadingPost, setLoadingPost] = useState(false);
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
@@ -184,29 +198,29 @@ export default function News() {
     }
   }
 
-  async function toggleComments(newsId) {
-    if (expandedId === newsId) {
-      setExpandedId(null);
-      setComments([]);
-      return;
-    }
-    setExpandedId(newsId);
-    setCommentsLoading(true);
+  async function openPost(newsId) {
+    setViewingPost(null);
+    setLoadingPost(true);
     try {
       const detail = await getNewsDetail(newsId);
-      setComments(detail.comments || []);
+      setViewingPost(detail);
     } catch (err) {
       setError(err.message);
     } finally {
-      setCommentsLoading(false);
+      setLoadingPost(false);
     }
   }
 
-  async function handleDeleteComment(commentId, newsId) {
+  function closePost() {
+    setViewingPost(null);
+  }
+
+  async function handleDeleteComment(commentId) {
+    if (!viewingPost) return;
     try {
       await deleteCommentAsAdmin(commentId);
-      const detail = await getNewsDetail(newsId);
-      setComments(detail.comments || []);
+      const detail = await getNewsDetail(viewingPost.id);
+      setViewingPost(detail);
       loadNews(searchTerm);
     } catch (err) {
       setError(err.message);
@@ -246,12 +260,11 @@ export default function News() {
       ) : (
         <div style={cardGrid}>
           {newsList.map((item) => {
-            const isOpen = expandedId === item.id;
             return (
               <div
                 key={item.id}
                 style={{ ...card, cursor: "pointer", gap: 8 }}
-                onClick={() => toggleComments(item.id)}
+                onClick={() => openPost(item.id)}
               >
                 <h3 style={cardTitle}>{item.title}</h3>
                 <p style={cardMeta}>
@@ -282,47 +295,6 @@ export default function News() {
                     extra={{ color: "#c0392b", borderColor: "#e0b4b4" }}
                   />
                 </div>
-                {isOpen && (
-                  <div
-                    style={{ borderTop: "1px solid #eee", marginTop: 4, paddingTop: 12 }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {commentsLoading ? (
-                      <p style={{ ...cardMeta, textAlign: "center", padding: "4px 0" }}>Loading comments...</p>
-                    ) : comments.length === 0 ? (
-                      <p style={{ ...cardMeta, textAlign: "center", padding: "4px 0" }}>No comments yet.</p>
-                    ) : (
-                      <div>
-                        {comments.map((c) => (
-                          <div key={c.id} style={{ marginBottom: 14 }}>
-                            <CommentRow data={c} onDelete={(id) => handleDeleteComment(id, item.id)} />
-                            {c.replies?.length > 0 && (
-                              <div
-                                style={{
-                                  marginLeft: 20,
-                                  paddingLeft: 14,
-                                  borderLeft: "2px solid #eee",
-                                  marginTop: 10,
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 10,
-                                }}
-                              >
-                                {c.replies.map((r) => (
-                                  <CommentRow
-                                    key={r.id}
-                                    data={r}
-                                    onDelete={(id) => handleDeleteComment(id, item.id)}
-                                  />
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
                 <div
                   style={{
                     display: "flex",
@@ -338,12 +310,88 @@ export default function News() {
                   }}
                 >
                   <MessageSquare size={13} />
-                  {isOpen ? "Hide comments" : `View comments${item.commentCount ? ` (${item.commentCount})` : ""}`}
+                  {`View post${item.commentCount ? ` (${item.commentCount} comments)` : ""}`}
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {(loadingPost || viewingPost) && (
+        <ModalShell
+          title={viewingPost ? viewingPost.title : "Loading post..."}
+          onClose={closePost}
+          width={640}
+        >
+          {loadingPost && <p style={cardMeta}>Loading post...</p>}
+
+          {viewingPost && (
+            <div>
+              <p style={cardMeta}>
+                Posted by {viewingPost.postedByAdminName} •{" "}
+                {new Date(viewingPost.postedAt).toLocaleString()}
+              </p>
+
+              {toImageUrl(viewingPost.imagePath) && (
+                <img
+                  src={toImageUrl(viewingPost.imagePath)}
+                  alt=""
+                  style={{ width: "100%", borderRadius: 8, margin: "8px 0 12px", display: "block" }}
+                />
+              )}
+
+              <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.6, margin: "0 0 12px" }}>
+                {viewingPost.content}
+              </p>
+
+              <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <Heart size={14} color="#d64550" />
+                  {viewingPost.heartCount ?? 0}
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <MessageCircle size={14} color="#4574b8" />
+                  {(viewingPost.comments || []).length}
+                </span>
+              </p>
+
+              <h4 style={{ margin: "16px 0 8px" }}>Comments</h4>
+              {(viewingPost.comments || []).length === 0 ? (
+                <p style={cardMeta}>No comments yet.</p>
+              ) : (
+                <div>
+                  {(viewingPost.comments || []).map((c) => (
+                    <div key={c.id} style={{ marginBottom: 14 }}>
+                      <CommentRow data={c} onDelete={handleDeleteComment} />
+                      {c.replies?.length > 0 && (
+                        <div
+                          style={{
+                            marginLeft: 20,
+                            paddingLeft: 14,
+                            borderLeft: "2px solid #eee",
+                            marginTop: 10,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 10,
+                          }}
+                        >
+                          {c.replies.map((r) => (
+                            <CommentRow
+                              key={r.id}
+                              data={r}
+                              onDelete={handleDeleteComment}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </ModalShell>
       )}
 
       {showModal && (
