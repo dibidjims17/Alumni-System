@@ -19,47 +19,56 @@ export function setupNotificationHandler() {
 }
 
 async function obtainExpoPushToken() {
-  if (Platform.OS === 'android') {
-    // A channel must exist before the Android 13+ permission prompt will show.
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'Default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-    });
+  try {
+    if (Platform.OS === 'android') {
+      // A channel must exist before the Android 13+ permission prompt will show.
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'Default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+      });
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    console.log('[push] existing permission status:', existingStatus);
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+      console.log('[push] requested permission status:', finalStatus);
+    }
+    if (finalStatus !== 'granted') {
+      console.log('[push] permission not granted, skipping registration');
+      return null;
+    }
+
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+    console.log('[push] projectId found:', !!projectId);
+    if (!projectId) return null;
+
+    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+    console.log('[push] expo push token obtained:', token ? `${token.slice(0, 24)}...` : null);
+    return token;
+  } catch (err) {
+    console.log('[push] token fetch failed:', err?.message || err);
+    return null;
   }
-
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-  if (finalStatus !== 'granted') return null;
-
-  const projectId =
-    Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-  if (!projectId) return null;
-
-  const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-  return token;
 }
 
 // Fetches this device's Expo token and stores it on the backend for the
 // logged-in student. Returns null if permissions were denied.
 export async function registerDevicePushToken() {
+  const token = await obtainExpoPushToken();
+  if (!token) return null;
   try {
-    const token = await obtainExpoPushToken();
-    if (!token) return null;
-    try {
-      await apiClient.put('/Notification/push-token', { token, platform: Platform.OS });
-      currentPushToken = token;
-    } catch (err) {
-      // Backend unreachable — app still works, push just won't register now.
-    }
-    return token;
+    await apiClient.put('/Notification/push-token', { token, platform: Platform.OS });
+    console.log('[push] token registered on backend');
+    currentPushToken = token;
   } catch (err) {
-    return null;
+    console.log('[push] backend registration failed:', err?.response?.status, err?.message);
   }
+  return token;
 }
 
 export async function unregisterDevicePushToken() {
