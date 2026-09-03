@@ -25,6 +25,9 @@ import MyApplicationsScreen from '../screens/MyApplicationsScreen';
 
 import NotificationsScreen from '../screens/NotificationsScreen';
 
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
@@ -41,9 +44,13 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: true }}>
-        {!student ? (
+      {!student ? (
+        <>
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        ) : student.mustChangePassword ? (
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
+        </>
+      ) : student.mustChangePassword ? (
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
         ) : (
           <>

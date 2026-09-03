@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,6 +75,14 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Log In</Text>
         )}
       </TouchableOpacity>
+      
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ForgotPassword')}
+      >
+        <Text style={styles.forgotPassword}>
+          Forgot Password?
+        </Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
@@ -109,5 +117,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  forgotPassword: {
+    textAlign: 'center',
+    color: '#2563eb',
+    marginTop: 16,
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

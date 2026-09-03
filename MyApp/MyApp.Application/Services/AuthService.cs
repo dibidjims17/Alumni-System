@@ -144,10 +144,5 @@ namespace MyApp.Application.Services
 
             return true;
         }
-
-        public Task<Student?> DebugResetPasswordAsync(string studentNumber)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
