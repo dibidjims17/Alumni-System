@@ -77,10 +77,17 @@ export default function EventsListScreen({ navigation }) {
       : '';
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.detail}>{dateText}</Text>
-        <Text style={styles.detail}>Location: {item.location}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
+        >
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.detail}>{dateText}</Text>
+          <Text style={styles.detail}>Location: {item.location}</Text>
+          <Text style={styles.description} numberOfLines={3}>
+            {item.description}
+          </Text>
+        </TouchableOpacity>
         <View style={styles.footer}>
           <Text style={styles.count}>{item.attendeeCount || 0} going</Text>
           <TouchableOpacity

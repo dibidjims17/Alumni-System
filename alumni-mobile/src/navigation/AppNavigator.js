@@ -13,6 +13,7 @@ import HomeScreen from '../screens/HomeScreen';
 import NewsListScreen from '../screens/NewsListScreen';
 import NewsDetailScreen from '../screens/NewsDetailScreen';
 import EventsListScreen from '../screens/EventsListScreen';
+import EventDetailScreen from '../screens/EventDetailScreen';
 import DirectoryScreen from '../screens/DirectoryScreen';
 
 import ProfileScreen from '../screens/ProfileScreen';
@@ -59,6 +60,11 @@ function CommunityStack() {
       <CommunityStackNav.Screen name="NewsList" component={NewsListScreen} />
       <CommunityStackNav.Screen name="EventsList" component={EventsListScreen} />
       <CommunityStackNav.Screen name="Directory" component={DirectoryScreen} />
+      <CommunityStackNav.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
+        options={{ headerShown: true, title: 'Event Details' }}
+      />
       <CommunityStackNav.Screen
         name="NewsDetail"
         component={NewsDetailScreen}
