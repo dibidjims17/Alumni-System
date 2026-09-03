@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
@@ -11,9 +10,14 @@ import {
   Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
-export default function ChangePasswordScreen() {
+export default function ChangePasswordScreen({ navigation }) {
   const { student, changePassword, logout } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,7 +40,13 @@ export default function ChangePasswordScreen() {
     setIsSubmitting(true);
     try {
       await changePassword(currentPassword, newPassword);
-      // Navigation auto-redirects to Home once mustChangePassword flips to false
+      // Forced flow (first login) auto-redirects once mustChangePassword flips.
+      // Voluntary flow from Profile: confirm and go back.
+      if (!student.mustChangePassword) {
+        Alert.alert('Success', 'Your password has been changed.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (err) {
       const message =
         err.response?.data?.message ||
@@ -49,17 +59,20 @@ export default function ChangePasswordScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Change Password</Text>
-      <Text style={styles.subtitle}>
-        Welcome, {student?.fullName}. Please set a new password to continue.
-      </Text>
+      <Text style={[styles.title, { color: c.text }]}>Change Password</Text>
+      {student.mustChangePassword && (
+        <Text style={[styles.subtitle, { color: c.textMuted }]}>
+          Welcome, {student?.fullName}. Please set a new password to continue.
+        </Text>
+      )}
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.surface, borderColor: c.border, color: c.text }]}
         placeholder="Current Password"
+        placeholderTextColor={c.placeholder}
         value={currentPassword}
         onChangeText={setCurrentPassword}
         secureTextEntry
@@ -67,8 +80,9 @@ export default function ChangePasswordScreen() {
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.surface, borderColor: c.border, color: c.text }]}
         placeholder="New Password"
+        placeholderTextColor={c.placeholder}
         value={newPassword}
         onChangeText={setNewPassword}
         secureTextEntry
@@ -76,29 +90,21 @@ export default function ChangePasswordScreen() {
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.surface, borderColor: c.border, color: c.text }]}
         placeholder="Confirm New Password"
+        placeholderTextColor={c.placeholder}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
         autoCapitalize="none"
       />
 
-      <TouchableOpacity
-        style={styles.button}
+      <PrimaryButton
+        title="Change Password"
         onPress={handleSubmit}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Change Password</Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
+        loading={isSubmitting}
+        style={{ marginTop: 8 }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -107,7 +113,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
+    padding: 28,
   },
   title: {
     fontSize: 22,
@@ -117,34 +123,14 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#555',
     textAlign: 'center',
     marginBottom: 24,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  logoutButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: '#b91c1c',
+    marginBottom: 14,
+    fontSize: 15,
   },
 });

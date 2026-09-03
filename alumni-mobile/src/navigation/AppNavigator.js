@@ -90,14 +90,15 @@ function CareerStack() {
 
 function ProfileStack() {
   return (
-    <ProfileStackNav.Navigator>
-      <ProfileStackNav.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+      <ProfileStackNav.Navigator>
+      <ProfileStackNav.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
       <ProfileStackNav.Screen name="JobPreferences" component={JobPreferencesScreen} options={{ title: 'Job Preferences' }} />
       <ProfileStackNav.Screen name="EditSkills" component={EditSkillsScreen} options={{ title: 'Edit Skills' }} />
       <ProfileStackNav.Screen name="EditWorkExperience" component={EditWorkExperienceScreen} options={{ title: 'Work Experience' }} />
       <ProfileStackNav.Screen name="EditEducation" component={EditEducationScreen} options={{ title: 'Education' }} />
       <ProfileStackNav.Screen name="Resume" component={ResumeScreen} options={{ title: 'Resume' }} />
+      <ProfileStackNav.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
     </ProfileStackNav.Navigator>
   );
 }
