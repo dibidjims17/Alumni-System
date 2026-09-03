@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Keep the file watcher lean by ignoring generated artifacts, dependencies,
+  // and runtime data. These change constantly but contain nothing useful for
+  // agent work; skipping them makes file listing, git snapshots, and diffs faster.
+  "watcher": {
+    "ignore": [
+      // Version control / IDE / OS junk
+      "**/.git/**",
+      "**/.vs/**",
+      "**/.idea/**",
+      "**/.vscode/**",
+      "**/.DS_Store",
+      "**/Thumbs.db",
+      "**/*.log",
+
+      // Node / npm / Vite (alumni-admin)
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/out/**",
+      "**/coverage/**",
+      "**/package-lock.json",
+      "**/yarn.lock",
+      "**/pnpm-lock.yaml",
+
+      // Expo / React Native (alumni-mobile)
+      "**/.expo/**",
+      "**/.vite/**",
+      "**/web-build/**",
+
+      // .NET build output (MyApp)
+      "**/bin/**",
+      "**/obj/**",
+      "**/.vs/**",
+
+      // Electron packaging output
+      "alumni-admin/electron/dist/**",
+      "alumni-admin/electron/out/**",
+      "alumni-admin/electron/release/**",
+
+      // Runtime user data / secrets
+      "MyApp/MyApp.API/Uploads/**",
+      "**/appsettings.Development.json",
+      "**/.env"
+    ]
+  }
+}
