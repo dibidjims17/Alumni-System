@@ -6,7 +6,7 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
-  ScrollView,
+  Modal,
   StyleSheet,
   ActivityIndicator,
   Alert,
@@ -31,6 +31,7 @@ export default function DirectoryScreen() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [programPickerOpen, setProgramPickerOpen] = useState(false);
   const pageRef = useRef(1);
 
   async function loadFilters() {
@@ -78,6 +79,7 @@ export default function DirectoryScreen() {
 
   function applyProgram(nextProgram) {
     setProgram(nextProgram);
+    setProgramPickerOpen(false);
     loadDirectory(true, search, nextProgram);
   }
 
@@ -89,28 +91,6 @@ export default function DirectoryScreen() {
     setSearch('');
     setProgram('');
     loadDirectory(true, '', '');
-  }
-
-  function renderChips(values, selected, onSelect) {
-    return (
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-        <TouchableOpacity
-          style={[styles.chip, selected === '' && styles.chipActive]}
-          onPress={() => onSelect('')}
-        >
-          <Text style={styles.chipText}>All</Text>
-        </TouchableOpacity>
-        {values.map((value) => (
-          <TouchableOpacity
-            key={value}
-            style={[styles.chip, selected === value && styles.chipActive]}
-            onPress={() => onSelect(value)}
-          >
-            <Text style={styles.chipText}>{value}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    );
   }
 
   function renderItem({ item }) {
@@ -136,16 +116,42 @@ export default function DirectoryScreen() {
       />
 
       <Text style={styles.filterLabel}>Program</Text>
-      {renderChips(programs, program, applyProgram)}
+      <TouchableOpacity style={styles.dropdown} onPress={() => setProgramPickerOpen(true)}>
+        <Text style={styles.dropdownText}>{program || 'All programs'}</Text>
+        <Text style={styles.dropdownArrow}>▾</Text>
+      </TouchableOpacity>
 
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.searchButton} onPress={submitSearch}>
-          <Text style={styles.buttonText}>Search</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
-          <Text style={styles.buttonText}>Reset filter</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
+        <Text style={styles.buttonText}>Reset filter</Text>
+      </TouchableOpacity>
+
+      <Modal
+        visible={programPickerOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setProgramPickerOpen(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalBody}>
+            <Text style={styles.modalTitle}>Select program</Text>
+            <FlatList
+              data={['', ...programs]}
+              keyExtractor={(value, index) => `${value}-${index}`}
+              renderItem={({ item: value }) => (
+                <TouchableOpacity
+                  style={[styles.option, value === program && styles.optionActive]}
+                  onPress={() => applyProgram(value)}
+                >
+                  <Text style={styles.optionText}>{value || 'All programs'}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity style={styles.modalClose} onPress={() => setProgramPickerOpen(false)}>
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {isLoading ? (
         <ActivityIndicator style={{ marginTop: 24 }} size="large" />
@@ -188,35 +194,29 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   filterLabel: { fontSize: 12, marginTop: 12, marginBottom: 4 },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-  },
-  searchButton: {
-    flex: 1,
-    padding: 12,
-    alignItems: 'center',
+  dropdown: {
     borderWidth: 1,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
+  dropdownText: { fontSize: 13 },
+  dropdownArrow: { fontSize: 13 },
   resetButton: {
-    flex: 1,
+    marginTop: 12,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
   },
   buttonText: { fontSize: 13 },
-  chipRow: { flexGrow: 0, marginBottom: 4 },
-  chip: {
-    borderWidth: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8,
-  },
-  chipActive: {
-    backgroundColor: '#ddd',
-  },
-  chipText: { fontSize: 12 },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
+  modalBody: { backgroundColor: '#fff', padding: 16, maxHeight: '70%' },
+  modalTitle: { fontSize: 15, fontWeight: '600', marginBottom: 8 },
+  option: { paddingVertical: 12, borderBottomWidth: 1, borderColor: '#eee' },
+  optionActive: { backgroundColor: '#eee' },
+  optionText: { fontSize: 14 },
+  modalClose: { marginTop: 12, padding: 12, alignItems: 'center', borderWidth: 1 },
   listContent: { paddingTop: 12, paddingBottom: 24 },
   card: {
     padding: 12,
