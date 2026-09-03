@@ -12,6 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import ProfileCompleteness from '../components/ProfileCompleteness';
+import TopBar from '../components/TopBar';
 
 export default function ProfileScreen({ navigation }) {
     const [profile, setProfile] = useState(null);
@@ -57,15 +58,14 @@ export default function ProfileScreen({ navigation }) {
     }, [])
   );
 
-  if (isLoading || !profile) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
+    <View style={styles.outer}>
+      <TopBar active="Profile" navigation={navigation} />
+      {isLoading || !profile ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.name}>{profile.fullName}</Text>
       <Text style={styles.subtext}>{profile.studentNumber} - {profile.program}</Text>
@@ -108,6 +108,13 @@ export default function ProfileScreen({ navigation }) {
         onPress={() => navigation.navigate('Resume')}
       >
         <Text style={styles.buttonText}>Resume</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.editButton}
+        onPress={() => navigation.navigate('MyApplications')}
+      >
+        <Text style={styles.buttonText}>My Applications</Text>
       </TouchableOpacity>
 
       <View style={styles.section}>
@@ -205,10 +212,13 @@ export default function ProfileScreen({ navigation }) {
         )}
       </View>
     </ScrollView>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outer: { flex: 1 },
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   name: { fontSize: 20 },

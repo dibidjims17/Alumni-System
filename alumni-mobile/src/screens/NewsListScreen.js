@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import TopBar from '../components/TopBar';
 
 export default function NewsListScreen({ navigation }) {
   const [items, setItems] = useState([]);
@@ -78,16 +79,9 @@ export default function NewsListScreen({ navigation }) {
     );
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
+      <TopBar active="News" navigation={navigation} />
       {error && <Text style={styles.errorText}>{error}</Text>}
       <View style={styles.searchRow}>
         <TextInput
@@ -104,20 +98,26 @@ export default function NewsListScreen({ navigation }) {
           </TouchableOpacity>
         )}
       </View>
-      <FlatList
-        data={items}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            {search.trim() ? 'No posts match your search.' : 'No news posts yet.'}
-          </Text>
-        }
-      />
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              {search.trim() ? 'No posts match your search.' : 'No news posts yet.'}
+            </Text>
+          }
+        />
+      )}
     </View>
   );
 }

@@ -58,22 +58,22 @@ export default function AppNavigator() {
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
         ) : (
           <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="NewsList" component={NewsListScreen} options={{ title: 'News' }} />
+            <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="NewsList" component={NewsListScreen} options={{ title: 'News', headerShown: false }} />
             <Stack.Screen name="NewsDetail" component={NewsDetailScreen} options={{ title: 'Post' }} />
-            <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile', headerShown: false }} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
             <Stack.Screen name="JobPreferences" component={JobPreferencesScreen} options={{ title: 'Job Preferences' }} />
             <Stack.Screen name="EditSkills" component={EditSkillsScreen} options={{ title: 'Edit Skills' }} />
             <Stack.Screen name="EditWorkExperience" component={EditWorkExperienceScreen} options={{ title: 'Work Experience' }} />
             <Stack.Screen name="EditEducation" component={EditEducationScreen} options={{ title: 'Education' }} />
             <Stack.Screen name="Resume" component={ResumeScreen} options={{ title: 'Resume' }} />
-            <Stack.Screen name="JobsList" component={JobsListScreen} options={{ title: 'Jobs' }} />
+            <Stack.Screen name="JobsList" component={JobsListScreen} options={{ title: 'Jobs', headerShown: false }} />
             <Stack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Job Details' }} />
             <Stack.Screen name="MyApplications" component={MyApplicationsScreen} options={{ title: 'My Applications' }} />
-            <Stack.Screen name="EventsList" component={EventsListScreen} options={{ title: 'Events' }} />
-            <Stack.Screen name="Directory" component={DirectoryScreen} options={{ title: 'Alumni Directory' }} />
-            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
+            <Stack.Screen name="EventsList" component={EventsListScreen} options={{ title: 'Events', headerShown: false }} />
+            <Stack.Screen name="Directory" component={DirectoryScreen} options={{ title: 'Alumni Directory', headerShown: false }} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications', headerShown: false }} />
           </>
         )}
       </Stack.Navigator>

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import TopBar from '../components/TopBar';
 
 function buildQuery(search, program, page) {
   const params = new URLSearchParams();
@@ -22,7 +23,7 @@ function buildQuery(search, program, page) {
   return `/Directory?${params.toString()}`;
 }
 
-export default function DirectoryScreen() {
+export default function DirectoryScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [program, setProgram] = useState('');
   const [programs, setPrograms] = useState([]);
@@ -105,7 +106,9 @@ export default function DirectoryScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.outer}>
+      <TopBar active="Directory" navigation={navigation} />
+      <View style={styles.container}>
       <TextInput
         style={styles.searchInput}
         placeholder="Search by name"
@@ -183,11 +186,13 @@ export default function DirectoryScreen() {
           }
         />
       )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outer: { flex: 1 },
   container: { flex: 1, padding: 16 },
   searchInput: {
     borderWidth: 1,

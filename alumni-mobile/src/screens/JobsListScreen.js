@@ -13,6 +13,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import TopBar from '../components/TopBar';
 
 export default function JobsListScreen({ navigation }) {
   const { student } = useAuth();
@@ -80,31 +81,20 @@ export default function JobsListScreen({ navigation }) {
 
   if (!isGraduate) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.infoText}>
-          Job listings are available for Graduate students only.
-        </Text>
-      </View>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+      <View style={styles.container}>
+        <TopBar active="Jobs" navigation={navigation} />
+        <View style={styles.centered}>
+          <Text style={styles.infoText}>
+            Job listings are available for Graduate students only.
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.myAppsButton}
-        onPress={() => navigation.navigate('MyApplications')}
-      >
-        <Text style={styles.buttonText}>My Applications</Text>
-      </TouchableOpacity>
-
+      <TopBar active="Jobs" navigation={navigation} />
       <View style={styles.searchRow}>
         <TextInput
           style={styles.searchInput}
@@ -120,21 +110,26 @@ export default function JobsListScreen({ navigation }) {
           </TouchableOpacity>
         )}
       </View>
-
-      <FlatList
-        data={items}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            {search.trim() ? 'No jobs match your search.' : 'No jobs posted yet.'}
-          </Text>
-        }
-      />
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              {search.trim() ? 'No jobs match your search.' : 'No jobs posted yet.'}
+            </Text>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -143,13 +138,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   listContent: { padding: 16 },
-  myAppsButton: {
-    margin: 16,
-    marginBottom: 0,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -177,5 +165,4 @@ const styles = StyleSheet.create({
   appliedTag: { fontSize: 11, marginTop: 6 },
   emptyText: { textAlign: 'center', marginTop: 40 },
   infoText: { fontSize: 13, textAlign: 'center' },
-  buttonText: { fontSize: 14 },
 });

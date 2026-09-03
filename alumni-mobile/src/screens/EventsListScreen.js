@@ -3,8 +3,9 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import TopBar from '../components/TopBar';
 
-export default function EventsListScreen() {
+export default function EventsListScreen({ navigation }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState(null);
@@ -98,16 +99,9 @@ export default function EventsListScreen() {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
+      <TopBar active="Events" navigation={navigation} />
       <View style={styles.searchRow}>
         <TextInput
           style={styles.searchInput}
@@ -123,18 +117,23 @@ export default function EventsListScreen() {
           </TouchableOpacity>
         )}
       </View>
-      <FlatList
-        style={styles.list}
-        contentContainerStyle={events.length === 0 && styles.centered}
-        data={events}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <Text style={styles.infoText}>
-            {search.trim() ? 'No events match your search.' : 'No upcoming events.'}
-          </Text>
-        }
-      />
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <FlatList
+          style={styles.list}
+          data={events}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            <Text style={styles.infoText}>
+              {search.trim() ? 'No events match your search.' : 'No upcoming events.'}
+            </Text>
+          }
+        />
+      )}
     </View>
   );
 }
