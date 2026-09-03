@@ -10,14 +10,18 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
 
   async function handleLogin() {
     if (!identifier.trim() || !password) {
@@ -41,14 +45,23 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Alumni Login</Text>
+      <Image
+        source={require('../../assets/schoolLogo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+      <Text style={[styles.title, { color: c.text }]}>Alumni Login</Text>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+        ]}
         placeholder="Student Number or Email"
+        placeholderTextColor={c.placeholder}
         value={identifier}
         onChangeText={setIdentifier}
         autoCapitalize="none"
@@ -56,8 +69,12 @@ export default function LoginScreen({ navigation }) {
       />
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+        ]}
         placeholder="Password"
+        placeholderTextColor={c.placeholder}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -65,21 +82,20 @@ export default function LoginScreen({ navigation }) {
       />
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { backgroundColor: c.primary }]}
         onPress={handleLogin}
         disabled={isSubmitting}
+        activeOpacity={0.85}
       >
         {isSubmitting ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={c.onPrimary} />
         ) : (
-          <Text style={styles.buttonText}>Log In</Text>
+          <Text style={[styles.buttonText, { color: c.onPrimary }]}>Log In</Text>
         )}
       </TouchableOpacity>
-      
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ForgotPassword')}
-      >
-        <Text style={styles.forgotPassword}>
+
+      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+        <Text style={[styles.forgotPassword, { color: c.primary }]}>
           Forgot Password?
         </Text>
       </TouchableOpacity>
@@ -91,38 +107,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
+    padding: 28,
+  },
+  logo: {
+    width: 130,
+    height: 130,
+    alignSelf: 'center',
+    marginBottom: 8,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 32,
+    marginBottom: 28,
     textAlign: 'center',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 14,
+    fontSize: 15,
   },
   button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonText: {
-    color: '#fff',
     fontWeight: '600',
     fontSize: 16,
   },
   forgotPassword: {
     textAlign: 'center',
-    color: '#2563eb',
-    marginTop: 16,
+    marginTop: 18,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });
