@@ -47,25 +47,17 @@ export default function ResumeScreen() {
       const token = await AsyncStorage.getItem('authToken');
       const dest = `${RNBlobUtil.fs.dirs.CacheDir}/resume_${resumeId}.pdf`;
       const url = `${API_BASE_URL}/Resume/${resumeId}/download`;
-      console.log('PDF DOWNLOAD: url', url);
 
       const res = await RNBlobUtil.fetch('GET', url, {
         Authorization: `Bearer ${token}`,
       });
 
-      console.log('PDF DOWNLOAD: status', res.info().status);
-      console.log('PDF DOWNLOAD: headers', JSON.stringify(res.info().headers));
-
       const base64Data = res.base64();
-      console.log('PDF DOWNLOAD: base64 length', base64Data ? base64Data.length : 'null');
 
       await RNBlobUtil.fs.writeFile(dest, base64Data, 'base64');
-      console.log('PDF DOWNLOAD: file written to', dest);
 
       setLocalPdfPath(dest);
     } catch (err) {
-      console.log('PDF DOWNLOAD ERROR:', err.message);
-      console.log('PDF DOWNLOAD ERROR FULL:', JSON.stringify(err));
       setLocalPdfPath(null);
     } finally {
       setIsDownloading(false);

@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -116,8 +117,8 @@ namespace MyApp.Application.Services
             if (student == null || !student.IsActive)
                 return;
 
-            var code = new Random().Next(100000, 999999).ToString();
-            student.PasswordResetCode = code;
+            var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+            student.PasswordResetCode = HashResetCode(code);
             student.PasswordResetCodeExpiry = DateTime.UtcNow.AddMinutes(15);
             await _studentRepository.UpdateAsync(student);
 
@@ -131,7 +132,9 @@ namespace MyApp.Application.Services
             if (student == null || !student.IsActive)
                 return false;
 
-            if (student.PasswordResetCode == null || student.PasswordResetCode != request.Code)
+            if (student.PasswordResetCode == null
+                || string.IsNullOrWhiteSpace(request.Code)
+                || !VerifyResetCode(request.Code, student.PasswordResetCode))
                 return false;
 
             if (student.PasswordResetCodeExpiry == null || student.PasswordResetCodeExpiry < DateTime.UtcNow)
@@ -144,6 +147,22 @@ namespace MyApp.Application.Services
             await _studentRepository.UpdateAsync(student);
 
             return true;
+        }
+
+        // Only the SHA-256 hash of the code is stored, so a database leak never
+        // exposes usable reset codes.
+        private static string HashResetCode(string code)
+        {
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(code));
+            return Convert.ToHexString(hash);
+        }
+
+        private static bool VerifyResetCode(string code, string storedHash)
+        {
+            var candidate = HashResetCode(code);
+            return CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(candidate),
+                Encoding.UTF8.GetBytes(storedHash));
         }
     }
 }

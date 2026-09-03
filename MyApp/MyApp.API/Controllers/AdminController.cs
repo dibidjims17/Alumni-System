@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MyApp.Application.Interfaces;
 using MyApp.Shared.DTOs;
 using System.Security.Claims;
@@ -22,6 +23,7 @@ namespace MyApp.API.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login([FromBody] AdminLoginRequest request)
         {
             var result = await _adminAuthService.LoginAsync(request);

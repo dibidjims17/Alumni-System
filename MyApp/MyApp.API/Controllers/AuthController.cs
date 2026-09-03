@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MyApp.Application.Interfaces;
 using MyApp.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MyApp.API.Controllers
 {
@@ -17,6 +18,7 @@ namespace MyApp.API.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -46,6 +48,7 @@ namespace MyApp.API.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             await _authService.ForgotPasswordAsync(request);
@@ -53,6 +56,7 @@ namespace MyApp.API.Controllers
         }
 
         [HttpPost("reset-password")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             var success = await _authService.ResetPasswordAsync(request);

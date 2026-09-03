@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../config';
 
 async function request(method, path, body) {
-  console.log('CLIENT REQUEST:', method, `${API_BASE_URL}${path}`);
   const token = await AsyncStorage.getItem('authToken');
 
   const headers = {
@@ -43,7 +42,6 @@ async function request(method, path, body) {
 }
 
 async function uploadFile(path, fileUri, fileName, mimeType) {
-  console.log('CLIENT UPLOAD:', `${API_BASE_URL}${path}`);
   const token = await AsyncStorage.getItem('authToken');
 
   const formData = new FormData();
@@ -88,7 +86,6 @@ async function uploadFile(path, fileUri, fileName, mimeType) {
 }
 
 async function downloadFile(path) {
-  console.log('CLIENT DOWNLOAD:', `${API_BASE_URL}${path}`);
   const token = await AsyncStorage.getItem('authToken');
 
   const headers = {};
