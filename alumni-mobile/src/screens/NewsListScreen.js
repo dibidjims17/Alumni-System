@@ -17,6 +17,7 @@ import { assetUrl } from '../utils/media';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import ImageViewer from '../components/ImageViewer';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -35,6 +36,7 @@ export default function NewsListScreen({ navigation }) {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [heartingId, setHeartingId] = useState(null);
+  const [viewerImage, setViewerImage] = useState(null);
 
   async function fetchNews(activeSearch = '') {
     try {
@@ -95,7 +97,7 @@ export default function NewsListScreen({ navigation }) {
         {imageUrl && (
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
+            onPress={() => setViewerImage(imageUrl)}
           >
             <Image
               source={{ uri: imageUrl }}
@@ -206,6 +208,7 @@ export default function NewsListScreen({ navigation }) {
           }
         />
       )}
+      <ImageViewer imageUrl={viewerImage} onClose={() => setViewerImage(null)} />
     </SafeAreaView>
   );
 }

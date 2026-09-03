@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
@@ -22,10 +23,17 @@ export default function JobDetailScreen({ route, navigation }) {
   const c = theme.colors;
   const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [attachResume, setAttachResume] = useState(true);
   const [myApplication, setMyApplication] = useState(null);
   const [notFound, setNotFound] = useState(false);
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await fetchJob();
+    setIsRefreshing(false);
+  }
 
   async function fetchJob() {
     try {
@@ -135,6 +143,14 @@ export default function JobDetailScreen({ route, navigation }) {
     <ScrollView
       style={[styles.container, { backgroundColor: c.background }]}
       contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          colors={[c.primary]}
+          tintColor={c.primary}
+        />
+      }
     >
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         <Text style={[styles.title, { color: c.text }]}>{job.jobTitle}</Text>

@@ -13,6 +13,7 @@ import {
   Keyboard,
   Platform,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -21,6 +22,7 @@ import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
 import Skeleton from '../components/ui/Skeleton';
+import ImageViewer from '../components/ImageViewer';
 import { useTheme } from '../theme/ThemeContext';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
@@ -74,6 +76,8 @@ export default function NewsDetailScreen({ route, navigation }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedThreads, setExpandedThreads] = useState({});
   const [notFound, setNotFound] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [viewerImage, setViewerImage] = useState(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const baseWindowHeight = useRef(Dimensions.get('window').height);
 
@@ -103,6 +107,12 @@ export default function NewsDetailScreen({ route, navigation }) {
 
   function toggleThread(commentId) {
     setExpandedThreads((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
+  }
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await fetchDetail();
+    setIsRefreshing(false);
   }
 
   async function fetchDetail() {
@@ -219,6 +229,14 @@ export default function NewsDetailScreen({ route, navigation }) {
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[c.primary]}
+            tintColor={c.primary}
+          />
+        }
       >
         <View style={[styles.postCard, { backgroundColor: c.surface, borderColor: c.border }]}>
           <Skeleton width="80%" height={20} style={{ marginBottom: 8 }} />
@@ -272,11 +290,16 @@ export default function NewsDetailScreen({ route, navigation }) {
             {news.postedByAdminName} - {new Date(news.postedAt).toLocaleDateString()}
           </Text>
           {assetUrl(news.imagePath) && (
-            <Image
-              source={{ uri: assetUrl(news.imagePath) }}
-              style={[styles.image, { backgroundColor: c.surfaceAlt }]}
-              resizeMode="cover"
-            />
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setViewerImage(assetUrl(news.imagePath))}
+            >
+              <Image
+                source={{ uri: assetUrl(news.imagePath) }}
+                style={[styles.image, { backgroundColor: c.surfaceAlt }]}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
           )}
           <Text style={[styles.content, { color: c.text }]}>{news.content}</Text>
 
@@ -411,6 +434,7 @@ export default function NewsDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      <ImageViewer imageUrl={viewerImage} onClose={() => setViewerImage(null)} />
       </>
     );
   }

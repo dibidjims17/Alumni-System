@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -20,6 +21,7 @@ export default function EventDetailScreen({ route, navigation }) {
   const c = theme.colors;
   const [event, setEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
@@ -65,6 +67,12 @@ export default function EventDetailScreen({ route, navigation }) {
     } finally {
       setIsToggling(false);
     }
+  }
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await fetchEvent();
+    setIsRefreshing(false);
   }
 
   if (isLoading) {
@@ -113,6 +121,14 @@ export default function EventDetailScreen({ route, navigation }) {
     <ScrollView
       style={[styles.container, { backgroundColor: c.background }]}
       contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          colors={[c.primary]}
+          tintColor={c.primary}
+        />
+      }
     >
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         <Text style={[styles.title, { color: c.text }]}>{event.title}</Text>
