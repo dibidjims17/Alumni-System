@@ -9,30 +9,40 @@ namespace MyApp.Application.Services
         private readonly IStudentRepository _studentRepository;
         private readonly IActivityLogRepository _activityLogRepository;
         private readonly IAlumniDocumentService _documentService;
+        private readonly IAlumniProfileRepository _profileRepository;
 
         public StudentService(
             IStudentRepository studentRepository,
             IActivityLogRepository activityLogRepository,
-            IAlumniDocumentService documentService)
+            IAlumniDocumentService documentService,
+            IAlumniProfileRepository profileRepository)
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
             _documentService = documentService;
+            _profileRepository = profileRepository;
         }
 
         public async Task<List<StudentDto>> GetAllStudentsAsync()
         {
             var students = await _studentRepository.GetAllAsync();
-            return students.Select(s => new StudentDto
+            var profiles = await _profileRepository.GetByStudentIdsAsync(students.Select(s => s.Id));
+
+            return students.Select(s =>
             {
-                Id = s.Id,
-                StudentNumber = s.StudentNumber,
-                FullName = s.FullName,
-                Email = s.Email,
-                Program = s.Program,
-                SchoolYear = s.SchoolYear,
-                IsActive = s.IsActive,
-                CreatedAt = s.CreatedAt
+                profiles.TryGetValue(s.Id, out var profile);
+                return new StudentDto
+                {
+                    Id = s.Id,
+                    StudentNumber = s.StudentNumber,
+                    FullName = s.FullName,
+                    Email = s.Email,
+                    Program = s.Program,
+                    SchoolYear = s.SchoolYear,
+                    IsActive = s.IsActive,
+                    CreatedAt = s.CreatedAt,
+                    ProfilePicturePath = profile?.ProfilePicturePath
+                };
             }).ToList();
         }
 

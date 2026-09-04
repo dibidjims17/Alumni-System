@@ -7,6 +7,7 @@ import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, up
 import ConfirmDialog from "../components/ConfirmDialog";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
+import { askConfirm } from "../components/confirmBus";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "1" };
@@ -155,13 +156,13 @@ export default function Students() {
     setEditingStudent(null);
   }
 
-  function requestCloseEdit() {
+  async function requestCloseEdit() {
     const changed =
       editForm.fullName !== editingStudent?.fullName ||
       editForm.email !== editingStudent?.email ||
       editForm.program !== editingStudent?.program ||
       editForm.schoolYear !== editingStudent?.schoolYear;
-    if (changed && !window.confirm("You have unsaved changes. Discard them?")) return;
+    if (changed && !(await askConfirm("You have unsaved changes. Discard them?"))) return;
     closeEditModal();
   }
 
@@ -271,13 +272,21 @@ export default function Students() {
             {filteredStudents.map((s) => (
               <div key={s.id} style={card}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: "50%", background: "#eef3ec",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, color: "var(--primary)", flexShrink: 0,
-                  }}>
-                    {(s.fullName || "?").charAt(0).toUpperCase()}
-                  </div>
+                  {s.profilePicturePath ? (
+                    <img
+                      src={`${FILE_ROOT}/${s.profilePicturePath}`}
+                      alt=""
+                      style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 44, height: 44, borderRadius: "50%", background: "var(--surface-alt)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 700, color: "var(--primary)", flexShrink: 0,
+                    }}>
+                      {(s.fullName || "?").charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div style={{ minWidth: 0 }}>
                     <h4 style={{ ...cardTitle, margin: 0 }}>{s.fullName}</h4>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.studentNumber}</p>
@@ -299,14 +308,17 @@ export default function Students() {
                   <button type="button" title="View" aria-label="View" style={{ ...btn, padding: "6px 9px" }} onClick={() => openViewProfile(s)}><Eye size={15} /></button>
                   <button type="button" title="Edit" aria-label="Edit" style={{ ...btn, padding: "6px 9px" }} onClick={() => openEditModal(s)}><Pencil size={15} /></button>
                   <button type="button" title="Reset password" aria-label="Reset password" style={{ ...btn, padding: "6px 9px" }} onClick={() => setConfirmResetId(s.id)}><KeyRound size={15} /></button>
-                  <Link to={`/students/${s.id}/documents`} title="Documents" style={{ ...btn, padding: "6px 9px", textDecoration: "none" }}><FileText size={15} /></Link>
+                  <Link to={`/documents/${s.id}`} title="Documents" style={{ ...btn, padding: "6px 9px", textDecoration: "none" }}><FileText size={15} /></Link>
                   <button
                     type="button"
                     title={s.isActive ? "Deactivate" : "Activate"}
                     aria-label={s.isActive ? "Deactivate" : "Activate"}
                     style={{ ...btn, padding: "6px 9px", color: s.isActive ? "var(--danger)" : "var(--success)", borderColor: "var(--border)" }}
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`)) {
+                    onClick={async () => {
+                      if (await askConfirm(
+                        `Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`,
+                        { confirmLabel: s.isActive ? "Deactivate" : "Activate", danger: s.isActive }
+                      )) {
                         handleToggleStatus(s.id);
                       }
                     }}
@@ -349,99 +361,125 @@ export default function Students() {
       )}
 
       {(loadingProfile || viewingProfile) && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.5)", display: "flex",
-            alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={() => { if (!loadingProfile) setViewingProfile(null); }}
+        <ModalShell
+          title="Alumni Profile"
+          onClose={() => setViewingProfile(null)}
+          width={680}
         >
-          <div
-            style={{
-              background: "var(--surface)", padding: 24, borderRadius: 10,
-              maxWidth: 640, width: "92%", maxHeight: "85vh", overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>Alumni Profile</h3>
-              <button onClick={() => setViewingProfile(null)} disabled={loadingProfile}>✕</button>
-            </div>
+          {loadingProfile && <p style={{ color: "var(--muted)" }}>Loading profile...</p>}
 
-            {loadingProfile && <p>Loading profile...</p>}
-
-            {viewingProfile && (() => {
-              const { student, profile, jobPreferences } = viewingProfile;
-              return (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                    {profile.profilePictureUrl ? (
-                      <img
-                        src={`${FILE_ROOT}/${profile.profilePictureUrl}`}
-                        alt="Profile"
-                        width={96}
-                        height={96}
-                        style={{ borderRadius: "50%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: 96, height: 96, borderRadius: "50%",
-                        background: "#ddd", display: "flex",
-                        alignItems: "center", justifyContent: "center",
-                        fontSize: 32, fontWeight: "bold", color: "#555",
-                      }}>
-                        {(student.fullName || "?").charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <h4 style={{ margin: "0 0 4px" }}>{student.fullName}</h4>
-                      <p style={{ margin: 0, fontSize: 13, color: "#555" }}>
-                        {student.studentNumber} • {student.program} • {student.schoolYear}
-                      </p>
-                      <p style={{ margin: "4px 0 0", fontSize: 13, color: "#555" }}>
-                        {student.email} • {student.isActive ? "Active" : "Inactive"}
-                      </p>
-                      {profile.headline && <p><em>{profile.headline}</em></p>}
-                    </div>
-                  </div>
-
-                  <hr style={{ margin: "16px 0" }} />
-
-                  <p><strong>Bio:</strong> {profile.bio || "—"}</p>
-                  <p><strong>Location:</strong> {profile.location || "—"}</p>
-                  <p><strong>Phone:</strong> {profile.phone || "—"}</p>
-                  <p><strong>LinkedIn:</strong> {profile.linkedInUrl || "—"}</p>
-                  <p><strong>Address:</strong> {profile.address || "—"}</p>
-                  <p><strong>Date of Birth:</strong> {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : "—"}</p>
-                  <p><strong>Visible in directory:</strong> {profile.showInDirectory ? "Yes" : "No"}</p>
-
-                  <p><strong>Skills:</strong> {(profile.skills || []).join(", ") || "—"}</p>
-
-                  <p><strong>Work Experience:</strong></p>
-                  {(profile.workExperiences || []).length === 0 && <p>—</p>}
-                  <ul>
-                    {(profile.workExperiences || []).map((w) => (
-                      <li key={w.id}>{w.jobTitle} — {w.company} ({w.location || "—"})</li>
-                    ))}
-                  </ul>
-
-                  <p><strong>Education:</strong></p>
-                  {(profile.educations || []).length === 0 && <p>—</p>}
-                  <ul>
-                    {(profile.educations || []).map((e) => (
-                      <li key={e.id}>{e.degree} in {e.fieldOfStudy} — {e.school} ({e.startYear || "?"}–{e.endYear || "present"})</li>
-                    ))}
-                  </ul>
-
-                  <p><strong>Job Preferences:</strong> {jobPreferences
-                    ? `${jobPreferences.preferredJobTitle || "—"} / ${jobPreferences.preferredIndustry || "—"} / ${jobPreferences.preferredLocation || "—"} (Open to work: ${jobPreferences.isOpenToWork ? "Yes" : "No"})`
-                    : "Not set"}</p>
+          {viewingProfile && (() => {
+            const { student, profile, jobPreferences } = viewingProfile;
+            const row = (label, value) => (
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "5px 0" }}>
+                <span style={{ color: "var(--muted)", fontSize: 13 }}>{label}</span>
+                <span style={{ color: "var(--text)", fontSize: 13, textAlign: "right" }}>{value || "—"}</span>
+              </div>
+            );
+            const section = (title, children) => (
+              <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px", marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--muted)", marginBottom: 6 }}>
+                  {title}
                 </div>
-              );
-            })()}
-          </div>
-        </div>
+                {children}
+              </div>
+            );
+
+            return (
+              <div>
+                <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 14 }}>
+                  {profile.profilePictureUrl ? (
+                    <img
+                      src={`${FILE_ROOT}/${profile.profilePictureUrl}`}
+                      alt="Profile"
+                      width={88}
+                      height={88}
+                      style={{ borderRadius: "50%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 88, height: 88, borderRadius: "50%",
+                      background: "var(--surface-alt)", display: "flex",
+                      alignItems: "center", justifyContent: "center",
+                      fontSize: 32, fontWeight: "bold", color: "var(--primary)",
+                    }}>
+                      {(student.fullName || "?").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <h3 style={{ margin: 0, fontSize: 18 }}>{student.fullName}</h3>
+                    <p style={{ margin: "4px 0", color: "var(--muted)", fontSize: 13 }}>
+                      {student.studentNumber} • {student.program} • {student.schoolYear}
+                    </p>
+                    <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>{student.email}</p>
+                  </div>
+                  <span style={{
+                    marginLeft: "auto", padding: "3px 10px", borderRadius: 999, fontSize: 12, fontWeight: 600,
+                    background: student.isActive ? "var(--surface-alt)" : "var(--surface-alt)",
+                    color: student.isActive ? "var(--success)" : "var(--danger)",
+                  }}>
+                    {student.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                {section("About", (
+                  <>
+                    {row("Headline", profile.headline)}
+                    {row("Bio", profile.bio)}
+                    {row("Location", profile.location)}
+                    {row("Phone", profile.phone)}
+                    {row("LinkedIn", profile.linkedInUrl)}
+                    {row("Address", profile.address)}
+                    {row("Date of Birth", profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : "")}
+                    {row("Visible in directory", profile.showInDirectory ? "Yes" : "No")}
+                    {row("Skills", (profile.skills || []).join(", "))}
+                  </>
+                ))}
+
+                {section("Work Experience", (
+                  (profile.workExperiences || []).length === 0 ? (
+                    <p style={{ color: "var(--muted)", fontSize: 13, margin: 0 }}>None</p>
+                  ) : (
+                    (profile.workExperiences || []).map((w) => (
+                      <div key={w.id} style={{ marginBottom: 8 }}>
+                        <div style={{ color: "var(--text)", fontSize: 14 }}>{w.jobTitle} — {w.company}</div>
+                        <div style={{ color: "var(--muted)", fontSize: 12 }}>{w.location || ""}</div>
+                      </div>
+                    ))
+                  )
+                ))}
+
+                {section("Education", (
+                  (profile.educations || []).length === 0 ? (
+                    <p style={{ color: "var(--muted)", fontSize: 13, margin: 0 }}>None</p>
+                  ) : (
+                    (profile.educations || []).map((e) => (
+                      <div key={e.id} style={{ marginBottom: 8 }}>
+                        <div style={{ color: "var(--text)", fontSize: 14 }}>{e.degree} in {e.fieldOfStudy}</div>
+                        <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                          {e.school} ({e.startYear || "?"} – {e.endYear || "present"})
+                        </div>
+                      </div>
+                    ))
+                  )
+                ))}
+
+                {section("Job Preferences", (
+                  jobPreferences ? (
+                    <>
+                      {row("Preferred Job Title", jobPreferences.preferredJobTitle)}
+                      {row("Preferred Industry", jobPreferences.preferredIndustry)}
+                      {row("Preferred Location", jobPreferences.preferredLocation)}
+                      {row("Open to work", jobPreferences.isOpenToWork ? "Yes" : "No")}
+                    </>
+                  ) : (
+                    <p style={{ color: "var(--muted)", fontSize: 13, margin: 0 }}>Not set</p>
+                  )
+                ))}
+              </div>
+            );
+          })()}
+        </ModalShell>
       )}
 
       {editingStudent && (

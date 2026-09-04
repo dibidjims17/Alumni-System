@@ -4,6 +4,7 @@ import { FileText, History, Download } from "lucide-react";
 import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
 import { cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary, textInput, selectStyle } from "../components/kit";
 import { notifyError } from "../components/toastBus";
+import { askConfirm } from "../components/confirmBus";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
@@ -55,9 +56,9 @@ export default function JobApplicants() {
   }, [id]);
 
   async function handleStatusChange(applicationId, newStatus, currentNotes, applicantName, currentStatus) {
-    if (!window.confirm(
+    if (!(await askConfirm(
       `Change ${applicantName}'s status from "${currentStatus}" to "${newStatus}"?`
-    )) return;
+    ))) return;
     setSavingId(applicationId);
     try {
       await updateApplicationStatus(applicationId, newStatus, currentNotes || "");
@@ -71,7 +72,7 @@ export default function JobApplicants() {
 
   async function handleNotesBlur(applicationId, status, newNotes, oldNotes) {
     if (newNotes === oldNotes) return;
-    if (!window.confirm("Save your admin notes for this applicant?")) return;
+    if (!(await askConfirm("Save your admin notes for this applicant?"))) return;
     setSavingId(applicationId);
     try {
       await updateApplicationStatus(applicationId, status, newNotes);

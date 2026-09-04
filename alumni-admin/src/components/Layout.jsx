@@ -7,6 +7,8 @@ import { getSession, clearSession } from "../services/api";
 import { useAdminTheme } from "../theme";
 import ToastHost from "./ToastHost";
 import DiscardHost from "./DiscardHost";
+import ConfirmHost from "./ConfirmHost";
+import { askConfirm } from "./confirmBus";
 
 const TITLES = {
   "/dashboard": "Dashboard",
@@ -68,8 +70,8 @@ export default function Layout() {
   const session = getSession();
   const { isDark, toggle } = useAdminTheme();
 
-  function handleLogout() {
-    if (!window.confirm("Are you sure you want to sign out?")) return;
+  async function handleLogout() {
+    if (!(await askConfirm("Are you sure you want to sign out?"))) return;
     clearSession();
     navigate("/login");
   }
@@ -96,6 +98,7 @@ export default function Layout() {
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", color: "var(--text)" }}>
       <ToastHost />
       <DiscardHost />
+      <ConfirmHost />
       {/* Sidebar — always dark evergreen */}
       <aside
         style={{

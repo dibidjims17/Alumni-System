@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
 import { Upload, FileText, RotateCcw } from "lucide-react";
+import { API_BASE_URL } from "../config";
 import { getStudents } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary } from "../components/kit";
+
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
 export default function Documents() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,13 +99,21 @@ export default function Documents() {
           {filteredStudents.map((s) => (
             <div key={s.id} style={card}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%", background: "var(--surface-alt)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 700, color: "var(--primary)", flexShrink: 0,
-                }}>
-                  {(s.fullName || "?").charAt(0).toUpperCase()}
-                </div>
+                {s.profilePicturePath ? (
+                  <img
+                    src={`${FILE_ROOT}/${s.profilePicturePath}`}
+                    alt=""
+                    style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%", background: "var(--surface-alt)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 700, color: "var(--primary)", flexShrink: 0,
+                  }}>
+                    {(s.fullName || "?").charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div style={{ minWidth: 0 }}>
                   <h4 style={{ ...cardTitle, margin: 0 }}>{s.fullName}</h4>
                   <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.studentNumber}</p>
@@ -110,7 +121,7 @@ export default function Documents() {
               </div>
               <p style={{ ...cardMeta, margin: 0 }}>{s.program} • {s.schoolYear}</p>
               <Link
-                to={`/students/${s.id}/documents`}
+                to={`/documents/${s.id}`}
                 style={{ ...btn, textDecoration: "none", alignSelf: "flex-start" }}
               >
                 <FileText size={15} />

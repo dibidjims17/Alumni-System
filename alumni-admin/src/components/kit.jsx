@@ -74,6 +74,7 @@ export const cardGrid = {
   gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
   gap: 18,
   marginTop: 16,
+  alignItems: "start", // don't stretch short cards to the tallest sibling
 };
 
 export const card = {

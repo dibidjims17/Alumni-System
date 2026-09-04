@@ -10,5 +10,6 @@ namespace MyApp.Shared.DTOs
         public string SchoolYear { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? ProfilePicturePath { get; set; }
     }
 }
