@@ -23,7 +23,7 @@ export default function DiscardHost() {
   if (!request) return null;
 
   return (
-    <ModalShell title="Unsaved changes" onClose={close} width={380}>
+    <ModalShell title="Unsaved changes" onClose={close} width={380} zIndex={3000}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <TriangleAlert size={20} color="var(--danger)" style={{ marginTop: 2, flexShrink: 0 }} />
         <p style={{ margin: 0, color: "var(--text)", lineHeight: 1.5 }}>
