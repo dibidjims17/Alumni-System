@@ -3,27 +3,6 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 
 const THEME_KEY = "adminThemeMode"; // "light" | "dark"
 
-const CSS_VARS = {
-  "--primary": null,
-  "--primary-strong": null,
-  "--on-primary": null,
-  "--bg": null,
-  "--surface": null,
-  "--surface-alt": null,
-  "--border": null,
-  "--text": null,
-  "--muted": null,
-  "--placeholder": null,
-  "--danger": null,
-  "--success": null,
-  "--sidebar": null,
-  "--sidebar-item": null,
-  "--sidebar-border": null,
-  "--sidebar-text": null,
-  "--sidebar-muted": null,
-  "--sidebar-active": null,
-};
-
 const LIGHT = {
   "--primary": "#1B5E20",
   "--primary-strong": "#14471A",
