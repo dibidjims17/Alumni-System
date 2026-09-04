@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, Users, Download } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
@@ -232,14 +232,28 @@ export default function Events() {
         <div style={cardGrid}>
           {events.map((event) => (
             <div key={event.id} style={card}>
-              <h3 style={cardTitle}>{event.title}</h3>
-              <p style={cardMeta}>{event.eventDate ? new Date(event.eventDate).toLocaleString() : "—"}</p>
-              <p style={cardMeta}>Location: {event.location}</p>
-              <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 5 }}>
-                <Users size={13} />
-                {event.attendeeCount ?? 0} going
-              </p>
-              <div style={actionsRow}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                  <h3 style={cardTitle}>{event.title}</h3>
+                  <p style={cardMeta}>{event.eventDate ? new Date(event.eventDate).toLocaleString() : "—"}</p>
+                  <p style={cardMeta}>Location: {event.location}</p>
+                  <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 5 }}>
+                    <Users size={13} />
+                    {event.attendeeCount ?? 0} going
+                  </p>
+                </div>
+              </div>
+              <div
+                style={{
+                  borderTop: "1px solid var(--border)",
+                  paddingTop: 12,
+                  marginTop: 8,
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
                 <EditButton onClick={() => openEditModal(event)} />
                 <AttendeesButton onClick={() => openAttendees(event)} />
                 {isSuperAdmin && <DeleteButton onClick={() => setConfirmDeleteId(event.id)} style={{ color: "var(--danger)", borderColor: "var(--danger)" }} />}

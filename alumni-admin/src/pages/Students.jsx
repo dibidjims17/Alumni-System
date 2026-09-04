@@ -271,7 +271,7 @@ export default function Students() {
           <div style={cardGrid}>
             {filteredStudents.map((s) => (
               <div key={s.id} style={card}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   {s.profilePicturePath ? (
                     <img
                       src={`${FILE_ROOT}/${s.profilePicturePath}`}
@@ -287,25 +287,25 @@ export default function Students() {
                       {(s.fullName || "?").charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div style={{ minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <h4 style={{ ...cardTitle, margin: 0 }}>{s.fullName}</h4>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.studentNumber}</p>
+                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.email}</p>
+                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.program} • {s.schoolYear}</p>
                   </div>
+                  <span
+                    style={{
+                      marginLeft: "auto", flexShrink: 0, fontSize: 12, fontWeight: 600,
+                      padding: "2px 10px", borderRadius: 999,
+                      background: s.isActive ? "#e6f4ea" : "#fdecea",
+                      color: s.isActive ? "#1e7e34" : "#c0392b",
+                    }}
+                  >
+                    {s.isActive ? "Active" : "Inactive"}
+                  </span>
                 </div>
-                <p style={{ ...cardMeta, margin: 0 }}>{s.email}</p>
-                <p style={{ ...cardMeta, margin: 0 }}>{s.program} • {s.schoolYear}</p>
-                <span
-                  style={{
-                    alignSelf: "flex-start", fontSize: 12, fontWeight: 600,
-                    padding: "2px 10px", borderRadius: 999,
-                    background: s.isActive ? "#e6f4ea" : "#fdecea",
-                    color: s.isActive ? "#1e7e34" : "#c0392b",
-                  }}
-                >
-                  {s.isActive ? "Active" : "Inactive"}
-                </span>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
-                  <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => openViewProfile(s)}>
                       <Eye size={15} /> View
                     </button>

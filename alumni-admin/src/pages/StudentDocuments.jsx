@@ -167,49 +167,53 @@ export default function StudentDocuments() {
             const edited = !!pending[doc.id];
             return (
               <div key={doc.id} style={{ ...card, ...(edited ? { outline: "1px solid var(--primary)" } : {}) }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <FileText size={18} color="var(--primary)" style={{ marginTop: 2, flexShrink: 0 }} />
-                  <h4 style={{ ...cardTitle, margin: 0, flex: 1 }}>{doc.customLabel || doc.documentType}</h4>
-                  <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999, background: pill.background, color: currentStatus === "Released" ? "var(--success)" : "var(--muted)" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{ ...cardTitle, margin: 0 }}>{doc.customLabel || doc.documentType}</h4>
+                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>
+                      Updated {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : "never"}
+                      {edited ? " • unsaved" : ""}
+                    </p>
+                  </div>
+                  <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999, background: pill.background, color: currentStatus === "Released" ? "var(--success)" : "var(--muted)" }}>
                     {currentStatus}
                   </span>
                 </div>
 
-                <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                  <div>
-                    <label style={{ fontSize: 12, color: "var(--muted)" }}>Status</label><br />
-                    <select
-                      value={currentStatus}
-                      onChange={(e) => stage(doc.id, "status", e.target.value)}
-                      style={{ ...selectStyle, width: "auto", marginTop: 4 }}
-                    >
-                      {STATUS_OPTIONS.map((opt) => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div>
+                      <label style={{ fontSize: 12, color: "var(--muted)" }}>Status</label><br />
+                      <select
+                        value={currentStatus}
+                        onChange={(e) => stage(doc.id, "status", e.target.value)}
+                        style={{ ...selectStyle, width: "auto", marginTop: 4 }}
+                      >
+                        {STATUS_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 180 }}>
+                      <label style={{ fontSize: 12, color: "var(--muted)" }}>Notes</label><br />
+                      <textarea
+                        value={valueOf(doc, "notes") || ""}
+                        onChange={(e) => stage(doc.id, "notes", e.target.value)}
+                        rows={3}
+                        style={{ ...textInput, marginTop: 4, resize: "vertical" }}
+                      />
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 12, color: "var(--muted)" }}>Notes</label><br />
-                    <textarea
-                      value={valueOf(doc, "notes") || ""}
-                      onChange={(e) => stage(doc.id, "notes", e.target.value)}
-                      rows={3}
-                      style={{ ...textInput, marginTop: 4, resize: "vertical" }}
-                    />
-                  </div>
-                </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-                  <p style={{ ...cardMeta, margin: 0 }}>
-                    Updated {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : "never"}
-                    {edited ? " • unsaved" : ""}
-                  </p>
-                  <button
-                    onClick={() => setConfirmDeleteId(doc.id)}
-                    style={{ ...btnDanger, padding: "5px 9px" }}
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      onClick={() => setConfirmDeleteId(doc.id)}
+                      style={{ ...btnDanger, padding: "5px 9px" }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

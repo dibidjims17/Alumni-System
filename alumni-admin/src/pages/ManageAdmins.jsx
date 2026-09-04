@@ -115,7 +115,7 @@ export default function ManageAdmins() {
         <div style={cardGrid}>
           {admins.map((a) => (
             <div key={a.id} style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: "50%", background: "#eceaf6",
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -123,11 +123,26 @@ export default function ManageAdmins() {
                 }}>
                   {avatarInitial(a)}
                 </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <h4 style={{ ...cardTitle, margin: 0 }}>{a.fullName}</h4>
-                  <p style={{ ...cardMeta, margin: "2px 0 0" }}>@{a.username}</p>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <h4 style={{ ...cardTitle, margin: 0 }}>{a.fullName}</h4>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      fontSize: 12, fontWeight: 600, padding: "3px 10px",
+                      borderRadius: 999, whiteSpace: "nowrap", ...rolePillStyle(a.role),
+                    }}>
+                      <ShieldCheck size={13} />
+                      {a.role}
+                    </span>
+                  </div>
+                  <p style={{ ...cardMeta, margin: 0 }}>@{a.username}</p>
+                  <p style={{ ...cardMeta, margin: 0 }}>{a.email}</p>
+                  <p style={{ ...cardMeta, margin: 0 }}>
+                    Last login: {a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : "Never"}
+                  </p>
                 </div>
                 <span style={{
+                  marginLeft: "auto", flexShrink: 0,
                   fontSize: 12, fontWeight: 600, padding: "2px 10px",
                   borderRadius: 999, whiteSpace: "nowrap", ...statusPillStyle(a.isActive),
                 }}>
@@ -135,24 +150,17 @@ export default function ManageAdmins() {
                 </span>
               </div>
 
-              <p style={{ ...cardMeta, margin: 0 }}>{a.email}</p>
-
-              <div>
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  fontSize: 12, fontWeight: 600, padding: "3px 10px",
-                  borderRadius: 999, ...rolePillStyle(a.role),
-                }}>
-                  <ShieldCheck size={13} />
-                  {a.role}
-                </span>
-              </div>
-
-              <p style={{ ...cardMeta, margin: 0 }}>
-                Last login: {a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : "Never"}
-              </p>
-
-              <div style={actionsRow}>
+              <div
+                style={{
+                  borderTop: "1px solid var(--border)",
+                  paddingTop: 12,
+                  marginTop: 8,
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
                 <select
                   value={a.role}
                   onChange={(e) => handleRoleChange(a.id, e.target.value)}

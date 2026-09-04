@@ -4,7 +4,7 @@ import { getDeletedJobs, restoreJob, permanentlyDeleteJob } from "../services/jo
 import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton, selectStyle, btn } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn } from "../components/kit";
 
 export default function Trash() {
   const [deletedJobs, setDeletedJobs] = useState([]);
@@ -190,9 +190,23 @@ export default function Trash() {
         <div style={cardGrid}>
           {combinedItems.map((item) => (
             <div key={`${item.type}-${item.id}`} style={card}>
-              <div>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                  <h3 style={{ ...cardTitle, margin: 0 }}>{item.title}</h3>
+                  {item.type === "Job" ? (
+                    <p style={{ ...cardMeta, margin: 0 }}>{item.subtitle || "—"}</p>
+                  ) : (
+                    item.subtitle && (
+                      <p style={{ ...cardMeta, margin: 0 }}>Posted by {item.subtitle}</p>
+                    )
+                  )}
+                  <p style={{ ...cardMeta, margin: 0 }}>
+                    Posted {new Date(item.postedAt).toLocaleDateString()}
+                  </p>
+                </div>
                 <span
                   style={{
+                    marginLeft: "auto", flexShrink: 0,
                     display: "inline-flex", alignItems: "center", gap: 5,
                     fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
                     background: item.type === "Job" ? "#e3f2fd" : "#f3e5f5",
@@ -204,21 +218,17 @@ export default function Trash() {
                 </span>
               </div>
 
-              <h3 style={{ ...cardTitle, margin: 0 }}>{item.title}</h3>
-
-              {item.type === "Job" ? (
-                <p style={{ ...cardMeta, margin: 0 }}>{item.subtitle || "—"}</p>
-              ) : (
-                item.subtitle && (
-                  <p style={{ ...cardMeta, margin: 0 }}>Posted by {item.subtitle}</p>
-                )
-              )}
-
-              <p style={{ ...cardMeta, margin: 0 }}>
-                Posted {new Date(item.postedAt).toLocaleDateString()}
-              </p>
-
-              <div style={actionsRow}>
+              <div
+                style={{
+                  borderTop: "1px solid var(--border)",
+                  paddingTop: 12,
+                  marginTop: 8,
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
                 {iconButton("Restore", RotateCcw)(item.onRestore)}
                 {iconButton("Delete Forever", Trash2)(item.onDeleteForever, {
                   color: "var(--danger)",

@@ -183,7 +183,7 @@ export default function JobApplicants() {
             const pill = STATUS_STYLES[a.status] || STATUS_STYLES.Pending;
             return (
               <div key={a.applicationId} style={card}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <div style={{
                     width: 44, height: 44, borderRadius: "50%", background: "#eef3ec",
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -191,63 +191,64 @@ export default function JobApplicants() {
                   }}>
                     {(a.fullName || "?").charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <h4 style={{ ...cardTitle, margin: 0 }}>{a.fullName}</h4>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{a.studentNumber}</p>
+                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>{a.email}</p>
+                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>
+                      {a.program} • Applied {new Date(a.appliedAt).toLocaleString()}
+                    </p>
                   </div>
                   <span style={{
-                    marginLeft: "auto", fontSize: 12, fontWeight: 600,
-                    padding: "2px 10px", borderRadius: 999, flexShrink: 0,
+                    marginLeft: "auto", flexShrink: 0, fontSize: 12, fontWeight: 600,
+                    padding: "2px 10px", borderRadius: 999,
                     background: pill.background, color: pill.color,
                   }}>
                     {a.status}
                   </span>
                 </div>
 
-                <p style={{ ...cardMeta, margin: 0 }}>{a.email}</p>
-                <p style={{ ...cardMeta, margin: 0 }}>
-                  {a.program} • Applied {new Date(a.appliedAt).toLocaleString()}
-                </p>
-
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
-                  <div>
-                    <label style={{ fontSize: 12, color: "#555" }}>Status</label><br />
-                    <select
-                      value={a.status}
-                      onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes, a.fullName, a.status)}
-                      disabled={savingId === a.applicationId}
-                      style={{ ...selectStyle, width: "auto" }}
-                    >
-                      {STATUS_OPTIONS.map((opt) => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div>
+                      <label style={{ fontSize: 12, color: "#555" }}>Status</label><br />
+                      <select
+                        value={a.status}
+                        onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes, a.fullName, a.status)}
+                        disabled={savingId === a.applicationId}
+                        style={{ ...selectStyle, width: "auto" }}
+                      >
+                        {STATUS_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <label style={{ fontSize: 12, color: "#555" }}>Admin Notes</label><br />
+                      <input
+                        type="text"
+                        defaultValue={a.adminNotes || ""}
+                        onBlur={(e) => handleNotesBlur(a.applicationId, a.status, e.target.value, a.adminNotes)}
+                        disabled={savingId === a.applicationId}
+                        style={textInput}
+                      />
+                    </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <label style={{ fontSize: 12, color: "#555" }}>Admin Notes</label><br />
-                    <input
-                      type="text"
-                      defaultValue={a.adminNotes || ""}
-                      onBlur={(e) => handleNotesBlur(a.applicationId, a.status, e.target.value, a.adminNotes)}
-                      disabled={savingId === a.applicationId}
-                      style={textInput}
-                    />
-                  </div>
-                </div>
 
-                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                  {a.attachResume && a.resumeId ? (
-                    <button onClick={() => handleViewResume(a.resumeId)} style={btn}>
-                      <FileText size={15} />
-                      {a.resumeFileName || "View Resume"}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {a.attachResume && a.resumeId ? (
+                      <button onClick={() => handleViewResume(a.resumeId)} style={btn}>
+                        <FileText size={15} />
+                        {a.resumeFileName || "View Resume"}
+                      </button>
+                    ) : (
+                      <span style={{ ...cardMeta, margin: 0 }}>No resume</span>
+                    )}
+                    <button onClick={() => openHistory(a)} style={btn}>
+                      <History size={15} />
+                      History
                     </button>
-                  ) : (
-                    <span style={{ ...cardMeta, margin: 0 }}>No resume</span>
-                  )}
-                  <button onClick={() => openHistory(a)} style={btn}>
-                    <History size={15} />
-                    History
-                  </button>
+                  </div>
                 </div>
               </div>
             );

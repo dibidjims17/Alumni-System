@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucide-react";
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
@@ -155,24 +155,38 @@ export default function News() {
             return (
               <div
                 key={item.id}
-                style={{ ...card, cursor: "pointer", gap: 8 }}
+                style={{ ...card, cursor: "pointer" }}
                 onClick={() => navigate(`/news/${item.id}`)}
               >
-                <h3 style={cardTitle}>{item.title}</h3>
-                <p style={cardMeta}>
-                  Posted by {item.postedByAdminName} • {new Date(item.postedAt).toLocaleString()}
-                </p>
-                <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16, marginTop: 2 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <Heart size={14} color="#d64550" />
-                    {item.heartCount}
-                  </span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <MessageCircle size={14} color="#4574b8" />
-                    {item.commentCount}
-                  </span>
-                </p>
-                <div style={actionsRow}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                    <h3 style={cardTitle}>{item.title}</h3>
+                    <p style={cardMeta}>
+                      Posted by {item.postedByAdminName} • {new Date(item.postedAt).toLocaleString()}
+                    </p>
+                    <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <Heart size={14} color="#d64550" />
+                        {item.heartCount}
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <MessageCircle size={14} color="#4574b8" />
+                        {item.commentCount}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    borderTop: "1px solid var(--border)",
+                    paddingTop: 12,
+                    marginTop: 8,
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
                   <EditButton
                     onClick={(e) => {
                       e.stopPropagation();
@@ -186,23 +200,20 @@ export default function News() {
                     }}
                     style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
                   />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    marginTop: 2,
-                    paddingTop: 8,
-                    borderTop: "1px solid #f0f0f0",
-                    color: "#4574b8",
-                    fontSize: 12,
-                    fontWeight: 500,
-                  }}
-                >
-                  <MessageSquare size={13} />
-                  {`View post${item.commentCount ? ` (${item.commentCount} comments)` : ""}`}
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      color: "#4574b8",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    <MessageSquare size={13} />
+                    {`View post${item.commentCount ? ` (${item.commentCount} comments)` : ""}`}
+                  </span>
                 </div>
               </div>
             );

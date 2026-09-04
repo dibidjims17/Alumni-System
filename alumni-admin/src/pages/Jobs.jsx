@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const emptyForm = {
@@ -201,15 +201,29 @@ export default function Jobs() {
             const isClosed = job.deadline ? new Date(job.deadline).getTime() < Date.now() : false;
             return (
               <div key={job.id} style={card}>
-                <h3 style={cardTitle}>{job.jobTitle}</h3>
-                <p style={cardMeta}>{job.company || "—"} • {job.location || "—"}</p>
-                <p style={cardMeta}>{job.employmentType || "—"} • {job.industry || "—"}</p>
-                {salaryLine && <p style={cardMeta}>Salary: {salaryLine}</p>}
-                <p style={cardMeta}>
-                  Deadline: {deadlineDate}
-                  {isClosed ? " (Closed)" : ""}
-                </p>
-                <div style={{ ...actionsRow, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                    <h3 style={cardTitle}>{job.jobTitle}</h3>
+                    <p style={cardMeta}>{job.company || "—"} • {job.location || "—"}</p>
+                    <p style={cardMeta}>{job.employmentType || "—"} • {job.industry || "—"}</p>
+                    {salaryLine && <p style={cardMeta}>Salary: {salaryLine}</p>}
+                    <p style={cardMeta}>
+                      Deadline: {deadlineDate}
+                      {isClosed ? " (Closed)" : ""}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    borderTop: "1px solid var(--border)",
+                    paddingTop: 12,
+                    marginTop: 8,
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
                   {iconButton("Edit", Pencil)(() => openEditModal(job))}
                   {iconButton("Delete", Trash2)(() => setConfirmDeleteId(job.id), { color: "var(--danger)", borderColor: "var(--danger)" })}
                   <Link

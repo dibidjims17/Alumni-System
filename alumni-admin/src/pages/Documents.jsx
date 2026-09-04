@@ -98,7 +98,7 @@ export default function Documents() {
         <div style={cardGrid}>
           {filteredStudents.map((s) => (
             <div key={s.id} style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 {s.profilePicturePath ? (
                   <img
                     src={`${FILE_ROOT}/${s.profilePicturePath}`}
@@ -114,19 +114,21 @@ export default function Documents() {
                     {(s.fullName || "?").charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div style={{ minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h4 style={{ ...cardTitle, margin: 0 }}>{s.fullName}</h4>
                   <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.studentNumber}</p>
+                  <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.program} • {s.schoolYear}</p>
                 </div>
               </div>
-              <p style={{ ...cardMeta, margin: 0 }}>{s.program} • {s.schoolYear}</p>
-              <Link
-                to={`/documents/${s.id}`}
-                style={{ ...btn, textDecoration: "none", alignSelf: "flex-start" }}
-              >
-                <FileText size={15} />
-                View Checklist
-              </Link>
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+                <Link
+                  to={`/documents/${s.id}`}
+                  style={{ ...btn, textDecoration: "none", alignSelf: "flex-start" }}
+                >
+                  <FileText size={15} />
+                  View Checklist
+                </Link>
+              </div>
             </div>
           ))}
         </div>

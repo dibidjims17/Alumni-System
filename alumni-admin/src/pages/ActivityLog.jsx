@@ -115,7 +115,7 @@ export default function ActivityLog() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
               {pagedLogs.map((log) => (
                 <div key={log.id} style={card}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: "50%", background: "#eef3ec",
                       display: "flex", alignItems: "center", justifyContent: "center",
@@ -123,31 +123,35 @@ export default function ActivityLog() {
                     }}>
                       {(log.actorName || "?").charAt(0).toUpperCase()}
                     </div>
-                    <strong style={{ fontSize: 14 }}>{log.actorName || "—"}</strong>
-                    <span style={{
-                      fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999,
-                      background: log.actorType === "Admin" ? "#e3f2fd" : "#e6f4ea",
-                      color: log.actorType === "Admin" ? "#1565c0" : "#1e7e34",
-                    }}>
-                      {log.actorType || "—"}
-                    </span>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999,
-                      background: "#f3f4f6", color: "#374151",
-                    }}>
-                      <Activity size={13} />
-                      {log.action}
-                    </span>
-                    <span style={{ marginLeft: "auto", fontSize: 12, color: "#666" }}>
+                    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <strong style={{ fontSize: 14 }}>{log.actorName || "—"}</strong>
+                        <span style={{
+                          fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999,
+                          background: log.actorType === "Admin" ? "#e3f2fd" : "#e6f4ea",
+                          color: log.actorType === "Admin" ? "#1565c0" : "#1e7e34",
+                        }}>
+                          {log.actorType || "—"}
+                        </span>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999,
+                          background: "#f3f4f6", color: "#374151",
+                        }}>
+                          <Activity size={13} />
+                          {log.action}
+                        </span>
+                      </div>
+                      <p style={{ ...cardMeta, margin: 0 }}>{log.details || "—"}</p>
+                      <p style={{ ...cardMeta, margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
+                        <User size={13} color="#888" />
+                        IP: {log.ipAddress || "—"}
+                      </p>
+                    </div>
+                    <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 12, color: "#666" }}>
                       {new Date(log.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  <p style={{ ...cardMeta, margin: 0 }}>{log.details || "—"}</p>
-                  <p style={{ ...cardMeta, margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
-                    <User size={13} color="#888" />
-                    IP: {log.ipAddress || "—"}
-                  </p>
                 </div>
               ))}
             </div>
