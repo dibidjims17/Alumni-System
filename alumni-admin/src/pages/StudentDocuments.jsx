@@ -9,7 +9,7 @@ import {
   deleteDocument,
 } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, Field, textInput } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, Field, textInput, selectStyle, btnPrimary, btnDanger } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const STATUS_OPTIONS = ["Pending", "Released"];
@@ -116,8 +116,8 @@ export default function StudentDocuments() {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <button onClick={handleInitialize} style={{ marginBottom: 16 }}>
-        <RefreshCw size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+      <button onClick={handleInitialize} style={{ ...btnPrimary, marginBottom: 16 }}>
+        <RefreshCw size={15} />
         Initialize / Refresh Standard Checklist
       </button>
 
@@ -155,6 +155,7 @@ export default function StudentDocuments() {
                       value={doc.status}
                       onChange={(e) => handleStatusChange(doc, e.target.value)}
                       disabled={savingId === doc.id}
+                      style={{ ...selectStyle, width: "auto" }}
                     >
                       {STATUS_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>{opt}</option>
@@ -168,7 +169,7 @@ export default function StudentDocuments() {
                       defaultValue={doc.notes || ""}
                       onBlur={(e) => handleNotesBlur(doc, e.target.value)}
                       disabled={savingId === doc.id}
-                      style={{ width: "100%" }}
+                      style={textInput}
                     />
                   </div>
                 </div>
@@ -180,9 +181,9 @@ export default function StudentDocuments() {
                 <div style={{ marginTop: 8 }}>
                   <button
                     onClick={() => setConfirmDeleteId(doc.id)}
-                    style={{ color: "#c0392b", border: "1px solid #e0b4b4" }}
+                    style={btnDanger}
                   >
-                    <Trash2 size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                    <Trash2 size={15} />
                     Delete
                   </button>
                 </div>
@@ -217,7 +218,7 @@ export default function StudentDocuments() {
               style={textInput}
             />
           </Field>
-          <button type="submit" style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
+          <button type="submit" style={btnPrimary}>
             Add Document
           </button>
         </form>

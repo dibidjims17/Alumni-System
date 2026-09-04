@@ -5,6 +5,7 @@ import Toast from "../components/Toast";
 import {
   ModalShell, Field, textInput, selectStyle,
   cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton,
+  btn, btnPrimary,
 } from "../components/kit";
 
 const emptyForm = { username: "", fullName: "", email: "", password: "", role: "Staff" };
@@ -105,7 +106,7 @@ export default function ManageAdmins() {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Manage Admins</h2>
-        <button onClick={openCreateModal}>+ Add Admin</button>
+        <button onClick={openCreateModal} style={btnPrimary}>+ Add Admin</button>
       </div>
 
       {loading ? (
@@ -222,10 +223,10 @@ export default function ManageAdmins() {
             </Field>
 
             <div style={actionsRow}>
-              <button type="submit" disabled={saving}>
+              <button type="submit" disabled={saving} style={btnPrimary}>
                 {saving ? "Creating..." : "Create Admin"}
               </button>
-              <button type="button" onClick={closeModal}>
+              <button type="button" onClick={closeModal} style={btn}>
                 Cancel
               </button>
             </div>

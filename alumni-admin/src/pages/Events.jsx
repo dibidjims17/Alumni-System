@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
@@ -177,7 +177,7 @@ export default function Events() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Events</h2>
-        <button onClick={openCreateModal} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={15} />
           Add New Event
         </button>
@@ -191,10 +191,7 @@ export default function Events() {
           onSubmit={submitSearch}
           onReset={resetSearch}
         />
-        <button type="submit">Search</button>
-        {searchTerm.trim() !== "" && (
-          <button type="button" onClick={resetSearch}>Reset</button>
-        )}
+        <button type="submit" style={btn}>Search</button>
       </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -217,7 +214,7 @@ export default function Events() {
               <div style={actionsRow}>
                 <EditButton onClick={() => openEditModal(event)} />
                 <AttendeesButton onClick={() => openAttendees(event)} />
-                {isSuperAdmin && <DeleteButton onClick={() => setConfirmDeleteId(event.id)} />}
+                {isSuperAdmin && <DeleteButton onClick={() => setConfirmDeleteId(event.id)} style={{ color: "var(--danger)", borderColor: "var(--danger)" }} />}
               </div>
             </div>
           ))}
@@ -268,10 +265,10 @@ export default function Events() {
             </Field>
 
             <div style={{ display: "flex", gap: 8 }}>
-              <button type="submit" disabled={saving}>
+              <button type="submit" disabled={saving} style={btnPrimary}>
                 {saving ? "Saving..." : editingId ? "Update Event" : "Add Event"}
               </button>
-              <button type="button" onClick={closeModalGuarded}>
+              <button type="button" onClick={closeModalGuarded} style={btn}>
                 Cancel
               </button>
             </div>

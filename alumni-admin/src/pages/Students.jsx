@@ -4,9 +4,8 @@ import Papa from "papaparse";
 import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
-import { importDocuments } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, ModalShell, Field, textInput, selectStyle } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
@@ -24,10 +23,6 @@ export default function Students() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const fileInputRef = useRef(null);
-
-  const [docImporting, setDocImporting] = useState(false);
-  const [docImportResult, setDocImportResult] = useState(null);
-  const docFileInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("");
@@ -90,7 +85,6 @@ export default function Students() {
 
   function openImportModal() {
     setImportResult(null);
-    setDocImportResult(null);
     setShowImportModal(true);
   }
 
@@ -121,32 +115,6 @@ export default function Students() {
       },
       error: (err) => {
         setImportResult({ success: false, message: err.message });
-      },
-    });
-  }
-
-  function handleDocFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        setDocImporting(true);
-        setDocImportResult(null);
-        try {
-          const result = await importDocuments(results.data);
-          setDocImportResult({ success: true, message: "Documents imported successfully.", detail: result });
-        } catch (err) {
-          setDocImportResult({ success: false, message: err.message });
-        } finally {
-          setDocImporting(false);
-          if (docFileInputRef.current) docFileInputRef.current.value = "";
-        }
-      },
-      error: (err) => {
-        setDocImportResult({ success: false, message: err.message });
       },
     });
   }
@@ -250,11 +218,11 @@ export default function Students() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Students</h2>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={openAddModal}>
-            <UserPlus size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+          <button onClick={openAddModal} style={btnPrimary}>
+            <UserPlus size={15} />
             Add Student
           </button>
-          <button onClick={openImportModal}>+ Import CSV</button>
+          <button onClick={openImportModal} style={btn}>+ Import CSV</button>
         </div>
       </div>
 
@@ -266,14 +234,14 @@ export default function Students() {
           onReset={() => setSearchTerm("")}
         />
 
-        <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}>
+        <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Years</option>
           {YEAR_OPTIONS.map((y) => (
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
 
-        <select value={programFilter} onChange={(e) => setProgramFilter(e.target.value)}>
+        <select value={programFilter} onChange={(e) => setProgramFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Programs</option>
           {programOptions.map((p) => (
             <option key={p} value={p}>{p}</option>
@@ -281,13 +249,14 @@ export default function Students() {
         </select>
 
         <button
+          style={btn}
           onClick={() => {
             setSearchTerm("");
             setYearFilter("");
             setProgramFilter("");
           }}
         >
-          <RotateCcw size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+          <RotateCcw size={14} />
           Reset
         </button>
       </div>
@@ -327,13 +296,14 @@ export default function Students() {
                   {s.isActive ? "Active" : "Inactive"}
                 </span>
                 <div style={actionsRow}>
-                  <button type="button" title="View" onClick={() => openViewProfile(s)}><Eye size={15} /> View</button>
-                  <button type="button" title="Edit" onClick={() => openEditModal(s)}><Pencil size={15} /> Edit</button>
-                  <button type="button" title="Reset password" onClick={() => setConfirmResetId(s.id)}><KeyRound size={15} /> Reset PW</button>
-                  <Link to={`/students/${s.id}/documents`}><FileText size={15} /> Docs</Link>
+                  <button type="button" title="View" style={btn} onClick={() => openViewProfile(s)}><Eye size={15} /> View</button>
+                  <button type="button" title="Edit" style={btn} onClick={() => openEditModal(s)}><Pencil size={15} /> Edit</button>
+                  <button type="button" title="Reset password" style={btn} onClick={() => setConfirmResetId(s.id)}><KeyRound size={15} /> Reset PW</button>
+                  <Link to={`/students/${s.id}/documents`} style={{ ...btn, textDecoration: "none" }}><FileText size={15} /> Docs</Link>
                   <button
                     type="button"
                     title={s.isActive ? "Deactivate" : "Activate"}
+                    style={btn}
                     onClick={() => {
                       if (window.confirm(`Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`)) {
                         handleToggleStatus(s.id);
@@ -350,67 +320,31 @@ export default function Students() {
       )}
 
       {showImportModal && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.5)", display: "flex",
-            alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={closeImportModal}
-        >
-          <div
-            style={{
-              background: "#fff", padding: 24, borderRadius: 8,
-              maxWidth: 500, width: "90%", maxHeight: "85vh", overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>Import CSV</h3>
-              <button onClick={closeImportModal}>✕</button>
-            </div>
-
-            <div style={{ marginTop: 20 }}>
-              <p><strong>Import Students</strong></p>
-              <input
-                type="file"
-                accept=".csv"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                disabled={importing}
-              />
-              {importing && <p>Importing...</p>}
-              {importResult && (
-                <p style={{ color: importResult.success ? "green" : "red" }}>
-                  {importResult.message}
-                </p>
-              )}
-            </div>
-
-            <hr style={{ margin: "20px 0" }} />
-
-            <div>
-              <p><strong>Import Document Statuses</strong></p>
-              <input
-                type="file"
-                accept=".csv"
-                ref={docFileInputRef}
-                onChange={handleDocFileSelect}
-                disabled={docImporting}
-              />
-              {docImporting && <p>Importing documents...</p>}
-              {docImportResult && (
-                <p style={{ color: docImportResult.success ? "green" : "red" }}>
-                  {docImportResult.message}
-                </p>
-              )}
-            </div>
-
-            <div style={{ marginTop: 20 }}>
-              <button onClick={closeImportModal}>Close</button>
+        <ModalShell title="Import Students (CSV)" onClose={closeImportModal} width={480}>
+          <div>
+            <input
+              type="file"
+              accept=".csv"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              disabled={importing}
+            />
+            {importing && <p style={{ color: "var(--muted)" }}>Importing...</p>}
+            {importResult && (
+              <p style={{ color: importResult.success ? "var(--success)" : "var(--danger)" }}>
+                {importResult.message}
+              </p>
+            )}
+            <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+              Expected columns: StudentNumber, FullName, Email, Program, SchoolYear.
+              Existing student numbers are updated; new ones are created with the
+              student number as the default password.
+            </p>
+            <div style={{ marginTop: 16, textAlign: "right" }}>
+              <button onClick={closeImportModal} style={btn}>Close</button>
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
 
       {(loadingProfile || viewingProfile) && (
@@ -557,14 +491,10 @@ export default function Students() {
             </Field>
 
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={requestCloseEdit} style={{ padding: "8px 14px", border: "1px solid #ccc", borderRadius: 8, background: "#fff", cursor: "pointer" }}>
+              <button type="button" onClick={requestCloseEdit} style={btn}>
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={savingEdit}
-                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", cursor: "pointer", fontWeight: 600 }}
-              >
+              <button type="submit" disabled={savingEdit} style={btnPrimary}>
                 {savingEdit ? "Saving..." : "Save Changes"}
               </button>
             </div>
@@ -632,14 +562,10 @@ export default function Students() {
             </p>
 
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={closeAddModal} style={{ padding: "8px 14px", border: "1px solid #ccc", borderRadius: 8, background: "#fff", cursor: "pointer" }}>
+              <button type="button" onClick={closeAddModal} style={btn}>
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={savingAdd}
-                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", cursor: "pointer", fontWeight: 600 }}
-              >
+              <button type="submit" disabled={savingAdd} style={btnPrimary}>
                 {savingAdd ? "Saving..." : "Add Student"}
               </button>
             </div>
@@ -678,7 +604,7 @@ export default function Students() {
               Relay this to the student. It is shown only once — they must
               change it on next login.
             </p>
-            <button onClick={() => setResetResult(null)}>Done</button>
+            <button onClick={() => setResetResult(null)} style={btnPrimary}>Done</button>
           </div>
         </div>
       )}

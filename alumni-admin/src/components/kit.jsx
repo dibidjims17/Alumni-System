@@ -191,3 +191,43 @@ export const textInput = {
 };
 
 export const selectStyle = { ...textInput };
+
+// Consistent controls & buttons (mirrors the bordered look of Documents'
+// search box and the Manage Admins / Trash icon buttons).
+export const control = {
+  padding: "8px 10px",
+  border: "1px solid var(--border)",
+  borderRadius: 8,
+  background: "var(--surface)",
+  color: "var(--text)",
+  fontSize: 14,
+  width: "100%",
+};
+
+export const btn = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "7px 12px",
+  borderRadius: 8,
+  border: "1px solid var(--border)",
+  background: "var(--surface)",
+  color: "var(--text)",
+  cursor: "pointer",
+  fontSize: 13,
+  fontWeight: 500,
+};
+
+export const btnPrimary = {
+  ...btn,
+  background: "var(--primary)",
+  borderColor: "var(--primary)",
+  color: "var(--on-primary)",
+  fontWeight: 600,
+};
+
+export const btnDanger = {
+  ...btn,
+  color: "var(--danger)",
+  borderColor: "var(--danger)",
+};

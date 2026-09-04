@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton, ModalShell, Field, textInput, selectStyle } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const emptyForm = {
@@ -170,10 +170,7 @@ export default function Jobs() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Jobs</h2>
-        <button
-          onClick={openCreateModal}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-        >
+        <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={16} /> Add New Job
         </button>
       </div>
@@ -188,10 +185,7 @@ export default function Jobs() {
           onChange={setSearchTerm}
           onReset={resetSearch}
         />
-        <button type="submit">Search</button>
-        {searchTerm.trim() !== "" && (
-          <button type="button" onClick={resetSearch}>Reset</button>
-        )}
+        <button type="submit" style={btn}>Search</button>
       </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -218,22 +212,10 @@ export default function Jobs() {
                 </p>
                 <div style={{ ...actionsRow, flexWrap: "wrap" }}>
                   {iconButton("Edit", Pencil)(() => openEditModal(job))}
-                  {iconButton("Delete", Trash2)(() => setConfirmDeleteId(job.id), { color: "#c0392b" })}
+                  {iconButton("Delete", Trash2)(() => setConfirmDeleteId(job.id), { color: "var(--danger)", borderColor: "var(--danger)" })}
                   <Link
                     to={`/jobs/${job.id}/applicants`}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                      padding: "6px 10px",
-                      border: "1px solid #ccc",
-                      borderRadius: 8,
-                      background: "#fff",
-                      cursor: "pointer",
-                      fontSize: 13,
-                      color: "inherit",
-                      textDecoration: "none",
-                    }}
+                    style={{ ...btn, textDecoration: "none" }}
                   >
                     <Users size={15} />
                     Applicants
@@ -390,14 +372,10 @@ export default function Jobs() {
             </div>
 
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={closeModalGuarded} style={{ padding: "8px 14px", border: "1px solid #ccc", borderRadius: 8, background: "#fff", cursor: "pointer" }}>
+              <button type="button" onClick={closeModalGuarded} style={btn}>
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={saving}
-                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", cursor: "pointer", fontWeight: 600 }}
-              >
+              <button type="submit" disabled={saving} style={btnPrimary}>
                 {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
               </button>
             </div>

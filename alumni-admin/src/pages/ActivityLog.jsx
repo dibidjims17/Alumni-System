@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { Activity, User } from "lucide-react";
 import { getAllActivityLogs } from "../services/activityLogApi";
-import { SearchBox, card, cardMeta } from "../components/kit";
+import { SearchBox, card, cardMeta, selectStyle, btn } from "../components/kit";
+import { RotateCcw } from "lucide-react";
 import { notifyError } from "../components/toastBus";
 
 const PAGE_SIZE = 20;
@@ -76,13 +77,13 @@ export default function ActivityLog() {
           onReset={() => setSearchTerm("")}
         />
 
-        <select value={actorTypeFilter} onChange={(e) => setActorTypeFilter(e.target.value)}>
+        <select value={actorTypeFilter} onChange={(e) => setActorTypeFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Actor Types</option>
           <option value="Admin">Admin</option>
           <option value="Student">Student</option>
         </select>
 
-        <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
+        <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Actions</option>
           {actionOptions.map((a) => (
             <option key={a} value={a}>{a}</option>
@@ -90,13 +91,15 @@ export default function ActivityLog() {
         </select>
 
         <button
+          style={btn}
           onClick={() => {
             setSearchTerm("");
             setActorTypeFilter("");
             setActionFilter("");
           }}
         >
-          Reset Filters
+          <RotateCcw size={14} />
+          Reset
         </button>
       </div>
 
@@ -151,11 +154,11 @@ export default function ActivityLog() {
           )}
 
           <div style={{ marginTop: 16 }}>
-            <button disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>
+            <button disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)} style={btn}>
               ← Previous
             </button>{" "}
             <span style={{ margin: "0 10px" }}>Page {currentPage} of {totalPages}</span>
-            <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
+            <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => p + 1)} style={btn}>
               Next →
             </button>
           </div>

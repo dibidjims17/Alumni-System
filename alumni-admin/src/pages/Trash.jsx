@@ -4,7 +4,7 @@ import { getDeletedJobs, restoreJob, permanentlyDeleteJob } from "../services/jo
 import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton, selectStyle, btn } from "../components/kit";
 
 export default function Trash() {
   const [deletedJobs, setDeletedJobs] = useState([]);
@@ -165,13 +165,14 @@ export default function Trash() {
           onReset={() => setSearchTerm("")}
         />
 
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="all">All Types</option>
           <option value="jobs">Jobs Only</option>
           <option value="news">News Only</option>
         </select>
 
         <button
+          style={btn}
           onClick={() => {
             setSearchTerm("");
             setTypeFilter("all");
@@ -220,8 +221,8 @@ export default function Trash() {
               <div style={actionsRow}>
                 {iconButton("Restore", RotateCcw)(item.onRestore)}
                 {iconButton("Delete Forever", Trash2)(item.onDeleteForever, {
-                  color: "#dc2626",
-                  borderColor: "#e0b4b4",
+                  color: "var(--danger)",
+                  borderColor: "var(--danger)",
                 })}
               </div>
             </div>

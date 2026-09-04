@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucide-react";
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
@@ -127,7 +127,7 @@ export default function News() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>News</h2>
-        <button onClick={openCreateModal} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={15} />
           Add News
         </button>
@@ -141,10 +141,7 @@ export default function News() {
           onSubmit={submitSearch}
           onReset={resetSearch}
         />
-        <button type="submit">Search</button>
-        {searchTerm.trim() !== "" && (
-          <button type="button" onClick={resetSearch}>Reset</button>
-        )}
+        <button type="submit" style={btn}>Search</button>
       </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -188,7 +185,7 @@ export default function News() {
                       e.stopPropagation();
                       setConfirmDeleteId(item.id);
                     }}
-                    extra={{ color: "#c0392b", borderColor: "#e0b4b4" }}
+                    style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
                   />
                 </div>
                 <div
@@ -257,10 +254,10 @@ export default function News() {
             </Field>
 
             <div style={{ display: "flex", gap: 8 }}>
-              <button type="submit" disabled={saving}>
+              <button type="submit" disabled={saving} style={btnPrimary}>
                 {saving ? "Saving..." : editingId ? "Update Post" : "Create Post"}
               </button>
-              <button type="button" onClick={closeModalGuarded}>
+              <button type="button" onClick={closeModalGuarded} style={btn}>
                 Cancel
               </button>
             </div>

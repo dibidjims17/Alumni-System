@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { FileText, History, Download } from "lucide-react";
 import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
-import { cardGrid, card, cardTitle, cardMeta, ModalShell } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary, textInput, selectStyle } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
@@ -165,8 +165,8 @@ export default function JobApplicants() {
           </label>
         ))}
         <div style={{ marginTop: 10 }}>
-          <button onClick={handleExport} disabled={exporting}>
-            <Download size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+          <button onClick={handleExport} disabled={exporting} style={btnPrimary}>
+            <Download size={15} />
             {exporting ? "Preparing export..." : "Export to ZIP (CSV + Resumes)"}
           </button>
         </div>
@@ -215,6 +215,7 @@ export default function JobApplicants() {
                       value={a.status}
                       onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes, a.fullName, a.status)}
                       disabled={savingId === a.applicationId}
+                      style={{ ...selectStyle, width: "auto" }}
                     >
                       {STATUS_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>{opt}</option>
@@ -228,22 +229,22 @@ export default function JobApplicants() {
                       defaultValue={a.adminNotes || ""}
                       onBlur={(e) => handleNotesBlur(a.applicationId, a.status, e.target.value, a.adminNotes)}
                       disabled={savingId === a.applicationId}
-                      style={{ width: "100%" }}
+                      style={textInput}
                     />
                   </div>
                 </div>
 
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                   {a.attachResume && a.resumeId ? (
-                    <button onClick={() => handleViewResume(a.resumeId)}>
-                      <FileText size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                    <button onClick={() => handleViewResume(a.resumeId)} style={btn}>
+                      <FileText size={15} />
                       {a.resumeFileName || "View Resume"}
                     </button>
                   ) : (
                     <span style={{ ...cardMeta, margin: 0 }}>No resume</span>
                   )}
-                  <button onClick={() => openHistory(a)}>
-                    <History size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                  <button onClick={() => openHistory(a)} style={btn}>
+                    <History size={15} />
                     History
                   </button>
                 </div>
