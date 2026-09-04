@@ -304,27 +304,37 @@ export default function Students() {
                 >
                   {s.isActive ? "Active" : "Inactive"}
                 </span>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
-                  <button type="button" title="View" aria-label="View" style={{ ...btn, padding: "6px 9px" }} onClick={() => openViewProfile(s)}><Eye size={15} /></button>
-                  <button type="button" title="Edit" aria-label="Edit" style={{ ...btn, padding: "6px 9px" }} onClick={() => openEditModal(s)}><Pencil size={15} /></button>
-                  <button type="button" title="Reset password" aria-label="Reset password" style={{ ...btn, padding: "6px 9px" }} onClick={() => setConfirmResetId(s.id)}><KeyRound size={15} /></button>
-                  <Link to={`/documents/${s.id}`} title="Documents" style={{ ...btn, padding: "6px 9px", textDecoration: "none" }}><FileText size={15} /></Link>
-                  <button
-                    type="button"
-                    title={s.isActive ? "Deactivate" : "Activate"}
-                    aria-label={s.isActive ? "Deactivate" : "Activate"}
-                    style={{ ...btn, padding: "6px 9px", color: s.isActive ? "var(--danger)" : "var(--success)", borderColor: "var(--border)" }}
-                    onClick={async () => {
-                      if (await askConfirm(
-                        `Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`,
-                        { confirmLabel: s.isActive ? "Deactivate" : "Activate", danger: s.isActive }
-                      )) {
-                        handleToggleStatus(s.id);
-                      }
-                    }}
-                  >
-                    {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />}
-                  </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => openViewProfile(s)}>
+                      <Eye size={15} /> View
+                    </button>
+                    <button type="button" style={{ ...btnPrimary, padding: "6px 12px" }} onClick={() => openEditModal(s)}>
+                      <Pencil size={15} /> Edit
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <Link to={`/documents/${s.id}`} style={{ ...btn, padding: "6px 12px", textDecoration: "none" }}>
+                      <FileText size={15} /> Documents
+                    </Link>
+                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => setConfirmResetId(s.id)}>
+                      <KeyRound size={15} /> Reset PW
+                    </button>
+                    <button
+                      type="button"
+                      style={{ ...btn, padding: "6px 12px", color: s.isActive ? "var(--danger)" : "var(--success)" }}
+                      onClick={async () => {
+                        if (await askConfirm(
+                          `Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`,
+                          { confirmLabel: s.isActive ? "Deactivate" : "Activate", danger: s.isActive }
+                        )) {
+                          handleToggleStatus(s.id);
+                        }
+                      }}
+                    >
+                      {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />} {s.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
