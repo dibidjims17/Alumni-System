@@ -1,8 +1,12 @@
 // Promo site settings — edit these before defense day.
 window.SITE_CONFIG = {
-  // Relative path of the installable APK (drop the built file here).
-  // Build it with:  npx eas build -p android --profile preview
-  // (run inside alumni-mobile/). See README.md for the full flow.
+  // Primary install link: direct EAS artifact (Expo-hosted, always live).
+  // Rebuild with:  npx eas build -p android --profile preview
+  // (run inside alumni-mobile/), then paste the new artifact URL here.
+  installUrl: "https://expo.dev/artifacts/eas/KywuzGDxXi0ZfJSncwVww6DuiYgwLtWsuac5VjhvvoE.apk",
+
+  // Fallback: self-hosted APK (drop the built file here). Used only when
+  // installUrl is empty.
   apkPath: "downloads/alumni.apk",
 
   // Shown next to the download button.

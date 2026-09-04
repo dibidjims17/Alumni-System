@@ -33,24 +33,33 @@
     });
   }
 
-  // APK availability: served over http(s) we can HEAD the file; on file://
-  // the check fails, so leave the button active (it works once hosted).
+  // Download wiring: prefer the hosted installUrl (Expo artifact, verified
+  // live); otherwise fall back to the self-hosted apkPath with an
+  // availability check.
   var btn = document.getElementById("apkButton");
   var note = document.getElementById("apkNote");
-  function setState(ok) {
+  function setState(ok, readyText) {
     if (!btn || !note) return;
     if (ok) {
       btn.removeAttribute("aria-disabled");
-      note.textContent = "APK is ready — tap to download, then follow the install steps below.";
+      note.textContent = readyText;
     } else {
       btn.setAttribute("aria-disabled", "true");
       note.textContent =
         "APK not uploaded yet — the download activates once downloads/alumni.apk is in place (see README).";
     }
   }
-  if (window.location.protocol.indexOf("http") === 0 && cfg.apkPath) {
+  if (cfg.installUrl) {
+    if (btn) {
+      btn.setAttribute("href", cfg.installUrl);
+      btn.setAttribute("target", "_blank");
+      btn.setAttribute("rel", "noopener");
+      btn.removeAttribute("download");
+    }
+    setState(true, "Hosted on Expo — tap to download (~190 MB), then follow the install steps below.");
+  } else if (window.location.protocol.indexOf("http") === 0 && cfg.apkPath) {
     fetch(cfg.apkPath, { method: "HEAD" }).then(
-      function (res) { setState(res.ok); },
+      function (res) { setState(res.ok, "APK is ready — tap to download, then follow the install steps below."); },
       function () { setState(false); }
     );
   } else if (note) {

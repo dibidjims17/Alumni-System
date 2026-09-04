@@ -11,16 +11,21 @@ server, or even a USB stick).
    ```bash
    npx eas build -p android --profile preview
    ```
-   Download the `.apk` from the EAS link when it finishes.
+   When it finishes, copy the direct artifact URL
+   (`https://expo.dev/artifacts/eas/….apk`).
    Offline alternative: `npx expo run:android --variant release`, then
    `android/app/build/outputs/apk/release/app-release.apk`.
-2. **Drop it here**: save the file as `downloads/alumni.apk`
-   (exact name — the button and availability check use it).
-   Update `apkVersion` in `config.js` if the version changed.
-3. **Generate the QR**: point any free QR generator at the *hosted* APK
-   URL (e.g. `https://<your-site>/downloads/alumni.apk`) and save it as
-   `assets/qr-download.png` (until then a styled placeholder shows).
-4. **Host this folder** and open it on a PC connected to the demo WiFi.
+2. **Point the site at it**: set `installUrl` in `config.js` to the
+   artifact URL (current: v1.0.0 preview build, ~190 MB).
+   Regenerate the QR to match:
+   ```bash
+   python -m pip install qrcode pillow
+   python -c "import qrcode; q=qrcode.make('<artifact-url>'); q.save('alumni-website/assets/qr-download.png')"
+   ```
+   (`downloads/alumni.apk` remains as a self-hosted fallback — used only
+   when `installUrl` is empty.) Update `apkVersion` in `config.js` if the
+   version changed.
+3. **Host this folder** and open it on a PC connected to the demo WiFi.
    Panel members on the same WiFi open the site, scan the QR, install,
    and log in with their student accounts.
 
