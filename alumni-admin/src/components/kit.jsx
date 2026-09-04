@@ -3,6 +3,7 @@
 // dark modes work without touching every call site.
 import { useEffect, useState, useRef } from "react";
 import { Search, X } from "lucide-react";
+import { requestDiscardConfirm } from "./discardBus";
 
 // Icon search input with a clear (X) button.
 export function SearchBox({ placeholder, value, onChange, onSubmit, onReset }) {
@@ -54,7 +55,11 @@ export function useDirtyGuard() {
   // Runs `action` only after confirming if there are unsaved changes.
   const withGuard = (action) => {
     if (dirtyRef.current) {
-      if (!window.confirm("You have unsaved changes. Discard them and leave?")) return;
+      requestDiscardConfirm(() => {
+        setDirty(false);
+        action();
+      });
+      return;
     }
     setDirty(false);
     action();
@@ -186,7 +191,7 @@ export const textInput = {
   borderRadius: 8,
   fontSize: 14,
   boxSizing: "border-box",
-  background: "var(--surface)",
+  background: "var(--surface-alt)",
   color: "var(--text)",
 };
 
@@ -198,7 +203,7 @@ export const control = {
   padding: "8px 10px",
   border: "1px solid var(--border)",
   borderRadius: 8,
-  background: "var(--surface)",
+  background: "var(--surface-alt)",
   color: "var(--text)",
   fontSize: 14,
   width: "100%",

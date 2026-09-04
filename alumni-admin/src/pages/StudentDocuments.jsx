@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { FileText, Trash2, RefreshCw, Plus } from "lucide-react";
 import {
   getStudentDocuments,
@@ -111,7 +111,6 @@ export default function StudentDocuments() {
 
   return (
     <div>
-      <Link to="/students">← Back to Students</Link>
       <h2>Document Checklist</h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -132,13 +131,10 @@ export default function StudentDocuments() {
             return (
               <div key={doc.id} style={card}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <FileText size={18} color="#34558b" style={{ marginTop: 2, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h4 style={{ ...cardTitle, margin: 0 }}>{doc.customLabel || doc.documentType}</h4>
-                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>
-                      {doc.documentType === doc.customLabel ? "" : doc.documentType}
-                    </p>
-                  </div>
+                  <FileText size={18} color="var(--primary)" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <h4 style={{ ...cardTitle, margin: 0, flex: 1 }}>
+                    {doc.customLabel || doc.documentType}
+                  </h4>
                   <span style={{
                     marginLeft: "auto", fontSize: 12, fontWeight: 600,
                     padding: "2px 10px", borderRadius: 999, flexShrink: 0,

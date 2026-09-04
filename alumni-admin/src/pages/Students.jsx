@@ -359,7 +359,7 @@ export default function Students() {
         >
           <div
             style={{
-              background: "#fff", padding: 24, borderRadius: 8,
+              background: "var(--surface)", padding: 24, borderRadius: 10,
               maxWidth: 640, width: "92%", maxHeight: "85vh", overflowY: "auto",
             }}
             onClick={(e) => e.stopPropagation()}
@@ -585,7 +585,7 @@ export default function Students() {
         >
           <div
             style={{
-              background: "#fff", padding: 24, borderRadius: 8,
+              background: "var(--surface)", padding: 24, borderRadius: 10,
               maxWidth: 480, width: "90%",
             }}
             onClick={(e) => e.stopPropagation()}
