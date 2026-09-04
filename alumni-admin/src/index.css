@@ -19,6 +19,12 @@
   --sidebar-text: #E4EFE7;
   --sidebar-muted: #8FA996;
   --sidebar-active: #66BB6A;
+  --hero-from: #0F3513;
+  --hero-to: #2E7D32;
+  --hero-text: #FFFFFF;
+  --hero-muted: rgba(255,255,255,0.76);
+  --stat-shadow: 0 1px 2px rgba(27,94,32,0.08), 0 10px 26px rgba(27,94,32,0.10);
+  --tile-bg: #E7F0E4;
 
   font-size: 15px;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;

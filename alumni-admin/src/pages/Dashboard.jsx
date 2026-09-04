@@ -6,7 +6,7 @@ import {
   UserCheck,
   Newspaper,
   Briefcase,
-  ArrowRight,
+  ArrowUpRight,
   FileText,
 } from "lucide-react";
 import { getStudentStats } from "../services/studentsApi";
@@ -15,79 +15,103 @@ import { getJobs } from "../services/jobsApi";
 import { notifyError } from "../components/toastBus";
 import { pageWrap } from "../components/kit";
 
+// Compact, no-scroll dashboard: one hero strip + one stat row + one bottom
+// row. Total vertical budget ≈ 480px so a standard viewport never scrolls;
+// small screens fall back to normal page scroll via the Layout <main>.
 const statGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 210px), 1fr))",
-  gap: 16,
+  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+  gap: 12,
   width: "100%",
 };
 
-const panelGrid = {
+const bottomGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
-  gap: 16,
-  marginTop: 16,
+  gridTemplateColumns: "minmax(0, 5fr) minmax(0, 7fr)",
+  gap: 12,
   width: "100%",
+  minHeight: 0,
 };
 
-function StatCard({ label, value, sub, Icon, accent, loading }) {
+function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
   return (
     <div
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
-        borderRadius: 14,
-        padding: "16px 18px",
+        borderRadius: 13,
+        padding: "12px 14px",
         minWidth: 0,
         display: "flex",
         flexDirection: "column",
-        gap: 12,
-        boxShadow: "0 1px 2px rgba(16,24,20,0.06), 0 4px 14px rgba(16,24,20,0.06)",
+        gap: 7,
+        boxShadow: "var(--stat-shadow)",
         position: "relative",
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: accent,
-        }}
-      />
-      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: accent }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
         <div
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 11,
-            background: "var(--surface-alt)",
+            width: 32,
+            height: 32,
+            borderRadius: 9,
+            background: tint,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <Icon size={19} color={accent} />
+          <Icon size={16} color={accent} />
         </div>
-        <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 750,
+            letterSpacing: 0.5,
+            textTransform: "uppercase",
+            color: "var(--muted)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
           {label}
         </div>
       </div>
-      <div style={{ fontSize: 30, fontWeight: 750, lineHeight: 1, letterSpacing: -0.5 }}>
+      <div style={{ fontSize: 25, fontWeight: 780, lineHeight: 1, letterSpacing: -0.5 }}>
         {loading ? "—" : value}
       </div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.4 }}>{loading ? "Loading…" : sub}</div>
+      <div
+        style={{
+          fontSize: 11.5,
+          color: "var(--muted)",
+          lineHeight: 1.3,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {loading ? "Loading…" : sub}
+      </div>
     </div>
   );
 }
 
 function Bar({ pct, color }) {
   return (
-    <div style={{ height: 8, borderRadius: 999, background: "var(--surface-alt)", overflow: "hidden", width: "100%" }}>
-      <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", borderRadius: 999, background: color, transition: "width 400ms ease" }} />
+    <div style={{ height: 7, borderRadius: 999, background: "var(--surface-alt)", overflow: "hidden", width: "100%" }}>
+      <div
+        style={{
+          width: `${Math.max(0, Math.min(100, pct))}%`,
+          height: "100%",
+          borderRadius: 999,
+          background: color,
+          transition: "width 400ms ease",
+        }}
+      />
     </div>
   );
 }
@@ -141,60 +165,131 @@ export default function Dashboard() {
   );
 
   const quickLinks = [
-    { to: "/students", label: "Manage students", desc: "Directory & accounts", Icon: Users },
-    { to: "/documents", label: "Review documents", desc: "Checklists & releases", Icon: FileText },
-    { to: "/news", label: "Publish news", desc: "Announcements", Icon: Newspaper },
-    { to: "/jobs", label: "Manage jobs", desc: "Board & applicants", Icon: Briefcase },
+    { to: "/students", label: "Students", desc: "Directory", Icon: Users },
+    { to: "/documents", label: "Documents", desc: "Checklists", Icon: FileText },
+    { to: "/news", label: "News", desc: "Publish", Icon: Newspaper },
+    { to: "/jobs", label: "Jobs", desc: "Board", Icon: Briefcase },
   ];
 
   return (
-    <div style={pageWrap}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
-        <div style={{ minWidth: 0 }}>
-          <h2 style={{ margin: 0, fontSize: 22, letterSpacing: -0.3 }}>Dashboard</h2>
-          <p style={{ margin: "6px 0 0", fontSize: 13.5, color: "var(--muted)" }}>
-            {today} • At-a-glance health of students, content, and hiring.
+    <div style={{ ...pageWrap, display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
+      {/* Hero strip — this is what gives light mode its character */}
+      <div
+        style={{
+          background: "linear-gradient(100deg, var(--hero-from) 0%, var(--hero-to) 100%)",
+          borderRadius: 16,
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16,
+          color: "var(--hero-text)",
+          boxShadow: "var(--stat-shadow)",
+          position: "relative",
+          overflow: "hidden",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            right: -70,
+            top: -70,
+            width: 230,
+            height: 230,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.09)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            right: 60,
+            bottom: -110,
+            width: 220,
+            height: 220,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.06)",
+            pointerEvents: "none",
+          }}
+        />
+        <div style={{ minWidth: 0, position: "relative" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: "var(--hero-muted)" }}>
+            {today}
+          </div>
+          <h2 style={{ margin: "3px 0 0", fontSize: 21, letterSpacing: -0.3, color: "var(--hero-text)" }}>
+            Alumni at a glance
+          </h2>
+          <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "var(--hero-muted)" }}>
+            Students, content, and hiring health — no scrolling needed.
           </p>
         </div>
         <div
           style={{
-            fontSize: 12,
-            fontWeight: 650,
-            padding: "7px 12px",
-            borderRadius: 999,
-            border: "1px solid var(--border)",
-            background: "var(--surface)",
-            color: "var(--muted)",
-            whiteSpace: "nowrap",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexShrink: 0,
+            position: "relative",
           }}
         >
-          {loading ? "Syncing…" : "● Live"}
+          <div className="dash-hero-total" style={{ textAlign: "right", lineHeight: 1.15 }}>
+
+            <div style={{ fontSize: 24, fontWeight: 800 }}>{loading ? "—" : derived.total}</div>
+            <div style={{ fontSize: 11, color: "var(--hero-muted)" }}>total students</div>
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              padding: "7px 12px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.14)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              color: "var(--hero-text)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {loading ? "Syncing…" : "● Live"}
+          </div>
         </div>
       </div>
 
-      <div style={{ ...statGrid, marginTop: 18 }}>
-        <StatCard label="Total Students" value={derived.total} sub="All records in directory" Icon={Users} accent="var(--primary)" loading={loading} />
-        <StatCard label="Graduate Alumni" value={derived.grads} sub={`${derived.gradPct}% of total students`} Icon={GraduationCap} accent="#2E7D32" loading={loading} />
-        <StatCard label="Active Accounts" value={derived.active} sub={`${derived.activePct}% currently active`} Icon={UserCheck} accent="#1565C0" loading={loading} />
-        <StatCard label="News Posts" value={newsCount ?? 0} sub="Published announcements" Icon={Newspaper} accent="#6A1B9A" loading={loading} />
-        <StatCard label="Active Jobs" value={activeJobsCount ?? 0} sub="Open on the job board" Icon={Briefcase} accent="#EF6C00" loading={loading} />
+      <div className="dash-stat-grid" style={statGrid}>
+        <StatCard label="Total" value={derived.total} sub="All records" Icon={Users} accent="var(--primary)" tint="var(--tile-bg)" loading={loading} />
+        <StatCard label="Graduates" value={derived.grads} sub={`${derived.gradPct}% of total`} Icon={GraduationCap} accent="#2E7D32" tint="rgba(46,125,50,0.13)" loading={loading} />
+        <StatCard label="Active" value={derived.active} sub={`${derived.activePct}% active`} Icon={UserCheck} accent="#1565C0" tint="rgba(21,101,192,0.12)" loading={loading} />
+        <StatCard label="News" value={newsCount ?? 0} sub="Announcements" Icon={Newspaper} accent="#6A1B9A" tint="rgba(106,27,154,0.12)" loading={loading} />
+        <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="#EF6C00" tint="rgba(239,108,0,0.13)" loading={loading} />
       </div>
 
-      <div style={panelGrid}>
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "18px 20px", minWidth: 0 }}>
-          <h3 style={{ margin: 0, fontSize: 15 }}>Student mix</h3>
-          <p style={{ margin: "4px 0 16px", fontSize: 13, color: "var(--muted)" }}>Share of graduates and active accounts.</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="dash-bottom-grid" style={bottomGrid}>
+        <div
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 14,
+            padding: "14px 16px",
+            minWidth: 0,
+            boxShadow: "var(--stat-shadow)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 13.5 }}>Student mix</h3>
+            <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Graduates vs active</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 11, marginTop: 12 }}>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                <span style={{ fontWeight: 600 }}>Graduates</span>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+                <span style={{ fontWeight: 650 }}>Graduates</span>
                 <span style={{ color: "var(--muted)" }}>{loading ? "—" : `${derived.grads} (${derived.gradPct}%)`}</span>
               </div>
               <Bar pct={derived.gradPct} color="#2E7D32" />
             </div>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                <span style={{ fontWeight: 600 }}>Active accounts</span>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+                <span style={{ fontWeight: 650 }}>Active</span>
                 <span style={{ color: "var(--muted)" }}>{loading ? "—" : `${derived.active} (${derived.activePct}%)`}</span>
               </div>
               <Bar pct={derived.activePct} color="#1565C0" />
@@ -202,10 +297,21 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "18px 20px", minWidth: 0 }}>
-          <h3 style={{ margin: 0, fontSize: 15 }}>Quick actions</h3>
-          <p style={{ margin: "4px 0 12px", fontSize: 13, color: "var(--muted)" }}>Jump to the most-used workflows.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
+        <div
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 14,
+            padding: "14px 16px",
+            minWidth: 0,
+            boxShadow: "var(--stat-shadow)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 13.5 }}>Quick actions</h3>
+            <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Most-used workflows</span>
+          </div>
+          <div className="dash-quick-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10, marginTop: 12 }}>
             {quickLinks.map(({ to, label, desc, Icon }) => (
               <Link
                 key={to}
@@ -213,8 +319,8 @@ export default function Dashboard() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
-                  padding: "11px 12px",
+                  gap: 9,
+                  padding: "10px 11px",
                   border: "1px solid var(--border)",
                   borderRadius: 10,
                   background: "var(--surface-alt)",
@@ -223,17 +329,32 @@ export default function Dashboard() {
                   minWidth: 0,
                 }}
               >
-                <Icon size={17} color="var(--primary)" style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 13.5, fontWeight: 650, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
-                  <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>{desc}</span>
+                <Icon size={16} color="var(--primary)" style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1, minWidth: 0, lineHeight: 1.25 }}>
+                  <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {label}
+                  </span>
+                  <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>{desc}</span>
                 </span>
-                <ArrowRight size={15} color="var(--muted)" style={{ flexShrink: 0 }} />
+                <ArrowUpRight size={14} color="var(--muted)" style={{ flexShrink: 0 }} />
               </Link>
             ))}
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 1100px) {
+          .dash-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+          .dash-bottom-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .dash-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 640px) {
+          .dash-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          .dash-quick-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .dash-hero-total { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }
