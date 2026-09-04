@@ -106,14 +106,22 @@ export const cardGrid = {
 export const card = {
   border: "1px solid var(--border)",
   borderRadius: 14,
-  padding: 0,
+  padding: "16px 18px",
   background: "var(--surface)",
   display: "flex",
   flexDirection: "column",
+  gap: 12,
   minWidth: 0,
   height: "100%",
-  overflow: "hidden",
   boxShadow: "0 1px 2px rgba(16,24,20,0.06), 0 4px 14px rgba(16,24,20,0.06)",
+};
+
+// Structured variant: padding moves into head/body/footer so dividers can
+// bleed edge-to-edge. Use as <div style={{ ...card, ...cardFlush }}>
+export const cardFlush = {
+  padding: 0,
+  gap: 0,
+  overflow: "hidden",
 };
 
 // Card sections — use these so every list card shares the same rhythm:

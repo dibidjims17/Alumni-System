@@ -9,7 +9,7 @@ import {
   deleteDocument,
 } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { pageWrap, pageHeader, cardGrid, card, cardHead, cardBody, cardFooter, cardTitle, cardMeta, pill, iconTile, fieldLabel, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell } from "../components/kit";
+import { pageWrap, pageHeader, cardGrid, card, cardFlush, cardHead, cardBody, cardFooter, cardTitle, cardMeta, pill, iconTile, fieldLabel, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell } from "../components/kit";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
@@ -174,7 +174,7 @@ export default function StudentDocuments() {
             const edited = !!pending[doc.id];
             const released = currentStatus === "Released";
             return (
-              <div key={doc.id} style={{ ...card, ...(edited ? { outline: "2px solid var(--primary)", outlineOffset: -2 } : {}) }}>
+              <div key={doc.id} style={{ ...card, ...cardFlush, ...(edited ? { outline: "2px solid var(--primary)", outlineOffset: -2 } : {}) }}>
                 <div style={cardHead}>
                   <div style={iconTile}>
                     <FileText size={18} color="var(--primary)" />
