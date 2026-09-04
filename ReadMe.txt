@@ -31,6 +31,15 @@ cd D:\CAPSTONE_SYSTEM\alumni-mobile
 cls
 npx expo start
 
+D:
+cd D:\CAPSTONE_SYSTEM\alumni-website
+cls
+python -m http.server 8901
+
+cd D:\CAPSTONE_SYSTEM\alumni-website
+cls
+npx --yes serve -l 8901 .
+
 "incase EXPO won't work in administrator powershell
 
 New-NetFirewallRule -DisplayName "Metro Bundler - Port 8081" -Direction Inbound -LocalPort 8081 -Protocol TCP -Action Allow
