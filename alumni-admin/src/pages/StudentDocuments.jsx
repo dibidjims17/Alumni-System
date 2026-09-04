@@ -10,6 +10,7 @@ import {
 } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { cardGrid, card, cardTitle, cardMeta, Field, textInput } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 const STATUS_OPTIONS = ["Pending", "Released"];
 
@@ -35,7 +36,7 @@ export default function StudentDocuments() {
       const data = await getStudentDocuments(id);
       setDocuments(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,7 @@ export default function StudentDocuments() {
       await initializeChecklist(id);
       loadDocuments();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     }
   }
 
@@ -64,7 +65,7 @@ export default function StudentDocuments() {
       await updateDocumentStatus(doc.id, newStatus, doc.notes || "");
       loadDocuments();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSavingId(null);
     }
@@ -78,7 +79,7 @@ export default function StudentDocuments() {
       await updateDocumentStatus(doc.id, doc.status, newNotes);
       loadDocuments();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSavingId(null);
     }
@@ -89,7 +90,7 @@ export default function StudentDocuments() {
       await deleteDocument(confirmDeleteId);
       loadDocuments();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setConfirmDeleteId(null);
     }
@@ -104,7 +105,7 @@ export default function StudentDocuments() {
       setCustomLabel("");
       loadDocuments();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     }
   }
 

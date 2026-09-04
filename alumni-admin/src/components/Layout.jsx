@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
 import { useAdminTheme } from "../theme";
+import ToastHost from "./ToastHost";
 
 const TITLES = {
   "/dashboard": "Dashboard",
@@ -92,6 +93,7 @@ export default function Layout() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", color: "var(--text)" }}>
+      <ToastHost />
       {/* Sidebar — always dark evergreen */}
       <aside
         style={{

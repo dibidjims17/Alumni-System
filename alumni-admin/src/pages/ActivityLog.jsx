@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Activity, User } from "lucide-react";
 import { getAllActivityLogs } from "../services/activityLogApi";
 import { SearchBox, card, cardMeta } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 const PAGE_SIZE = 20;
 
@@ -23,7 +24,7 @@ export default function ActivityLog() {
         const data = await getAllActivityLogs();
         setLogs(data);
       } catch (err) {
-        setError(err.message);
+        notifyError(err.message);
       } finally {
         setLoading(false);
       }

@@ -7,6 +7,7 @@ import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, up
 import { importDocuments } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, ModalShell, Field, textInput, selectStyle } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "1" };
@@ -64,7 +65,7 @@ export default function Students() {
       closeAddModal();
       loadStudents();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSavingAdd(false);
     }
@@ -77,7 +78,7 @@ export default function Students() {
       const data = await getStudents();
       setStudents(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -155,7 +156,7 @@ export default function Students() {
       await toggleStudentStatus(id);
       loadStudents();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     }
   }
 
@@ -166,7 +167,7 @@ export default function Students() {
       const data = await getStudentProfile(student.id);
       setViewingProfile({ student, ...data });
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoadingProfile(false);
     }
@@ -205,7 +206,7 @@ export default function Students() {
       closeEditModal();
       loadStudents();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSavingEdit(false);
     }
@@ -217,7 +218,7 @@ export default function Students() {
       const student = students.find((s) => s.id === confirmResetId);
       setResetResult({ student, temporaryPassword: result.temporaryPassword });
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setConfirmResetId(null);
     }

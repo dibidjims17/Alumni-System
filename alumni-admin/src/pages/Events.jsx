@@ -4,6 +4,7 @@ import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees 
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
 const DeleteButton = iconButton("Delete", Trash2);
@@ -46,7 +47,7 @@ export default function Events() {
       const data = await getAllEvents(activeSearch);
       setEvents(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function Events() {
         const data = await getAllEvents();
         if (active) setEvents(data);
       } catch (err) {
-        if (active) setError(err.message);
+        if (active) notifyError(err.message);
       } finally {
         if (active) setLoading(false);
       }
@@ -141,7 +142,7 @@ export default function Events() {
       closeModal();
       loadEvents(searchTerm);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSaving(false);
     }
@@ -152,7 +153,7 @@ export default function Events() {
       await deleteEvent(confirmDeleteId);
       loadEvents(searchTerm);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setConfirmDeleteId(null);
     }
@@ -166,7 +167,7 @@ export default function Events() {
       const data = await getEventAttendees(event.id);
       setAttendees(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoadingAttendees(false);
     }

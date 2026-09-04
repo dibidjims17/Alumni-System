@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { getStudents } from "../services/studentsApi";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 export default function Documents() {
   const [students, setStudents] = useState([]);
@@ -18,7 +19,7 @@ export default function Documents() {
         const data = await getStudents();
         setStudents(data);
       } catch (err) {
-        setError(err.message);
+        notifyError(err.message);
       } finally {
         setLoading(false);
       }

@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton, ModalShell, Field, textInput, selectStyle } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 const emptyForm = {
   jobTitle: "",
@@ -69,7 +70,7 @@ export default function Jobs() {
       const data = await getJobs(activeSearch);
       setJobs(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -148,7 +149,7 @@ export default function Jobs() {
       setDirty(false);
       loadJobs(searchTerm);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSaving(false);
     }
@@ -159,7 +160,7 @@ export default function Jobs() {
       await deleteJob(confirmDeleteId);
       loadJobs(searchTerm);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setConfirmDeleteId(null);
     }

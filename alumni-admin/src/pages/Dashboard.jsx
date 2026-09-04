@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { getStudentStats } from "../services/studentsApi";
 import { getNews } from "../services/newsApi";
 import { getJobs } from "../services/jobsApi";
+import { notifyError } from "../components/toastBus";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [newsCount, setNewsCount] = useState(null);
   const [activeJobsCount, setActiveJobsCount] = useState(null);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -21,7 +21,7 @@ export default function Dashboard() {
         setNewsCount(news.length);
         setActiveJobsCount(jobs.filter((j) => j.isActive).length);
       } catch (err) {
-        setError(err.message);
+        notifyError(err.message);
       }
     }
     load();
@@ -37,7 +37,6 @@ export default function Dashboard() {
   return (
     <div>
       <h2>Dashboard</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 20 }}>
         <div style={cardStyle}>

@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { FileText, History, Download } from "lucide-react";
 import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
 import { cardGrid, card, cardTitle, cardMeta, ModalShell } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
@@ -33,7 +34,7 @@ export default function JobApplicants() {
       const data = await getJobApplicants(id);
       setApplicants(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -44,7 +45,7 @@ export default function JobApplicants() {
       const data = await getJobById(id);
       setJob(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     }
   }
 
@@ -62,7 +63,7 @@ export default function JobApplicants() {
       await updateApplicationStatus(applicationId, newStatus, currentNotes || "");
       loadApplicants();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSavingId(null);
     }
@@ -76,7 +77,7 @@ export default function JobApplicants() {
       await updateApplicationStatus(applicationId, status, newNotes);
       loadApplicants();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSavingId(null);
     }
@@ -86,7 +87,7 @@ export default function JobApplicants() {
     try {
       await downloadResume(resumeId);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     }
   }
 
@@ -102,7 +103,7 @@ export default function JobApplicants() {
     try {
       await exportApplicants(id, exportStatuses);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setExporting(false);
     }
@@ -116,7 +117,7 @@ export default function JobApplicants() {
       const data = await getApplicationHistory(a.applicationId);
       setHistory(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoadingHistory(false);
     }

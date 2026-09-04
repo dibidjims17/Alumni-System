@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucid
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { cardGrid, card, cardTitle, cardMeta, actionsRow, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput } from "../components/kit";
+import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
 const DeleteButton = iconButton("Delete", Trash2);
@@ -35,7 +36,7 @@ export default function News() {
       const data = await getNews(activeSearch);
       setNewsList(data);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,7 @@ export default function News() {
       closeModal();
       loadNews(searchTerm);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setSaving(false);
     }
@@ -116,7 +117,7 @@ export default function News() {
       await deleteNews(confirmDeleteId);
       loadNews(searchTerm);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setConfirmDeleteId(null);
     }
