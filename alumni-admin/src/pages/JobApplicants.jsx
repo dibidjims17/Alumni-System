@@ -185,7 +185,7 @@ export default function JobApplicants() {
                   <div style={{
                     width: 44, height: 44, borderRadius: "50%", background: "#eef3ec",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, color: "#1B5E20", flexShrink: 0,
+                    fontWeight: 700, color: "var(--primary)", flexShrink: 0,
                   }}>
                     {(a.fullName || "?").charAt(0).toUpperCase()}
                   </div>

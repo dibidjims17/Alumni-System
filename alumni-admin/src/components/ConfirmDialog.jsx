@@ -1,6 +1,6 @@
 export default function ConfirmDialog({ message, onConfirm, onCancel }) {
     if (!message) return null;
-  
+
     return (
       <div
         style={{
@@ -12,15 +12,23 @@ export default function ConfirmDialog({ message, onConfirm, onCancel }) {
       >
         <div
           style={{
-            background: "#fff", padding: 24, borderRadius: 8,
+            background: "var(--surface)", color: "var(--text)", padding: 24, borderRadius: 10,
             maxWidth: 380, width: "90%",
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <p style={{ marginTop: 0 }}>{message}</p>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-            <button onClick={onCancel}>Cancel</button>
-            <button onClick={onConfirm} style={{ background: "#dc2626", color: "#fff", border: "none", padding: "6px 14px", borderRadius: 4 }}>
+            <button
+              onClick={onCancel}
+              style={{ padding: "7px 14px", borderRadius: 8, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)", cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "var(--danger)", color: "#fff", cursor: "pointer" }}
+            >
               Confirm
             </button>
           </div>

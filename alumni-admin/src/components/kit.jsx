@@ -1,28 +1,30 @@
 // Shared admin UI bits: styled icon search box and an unsaved-changes guard.
+// All colors read CSS variables set by the theme provider so both light and
+// dark modes work without touching every call site.
 import { useEffect, useState, useRef } from "react";
 import { Search, X } from "lucide-react";
 
 // Icon search input with a clear (X) button.
 export function SearchBox({ placeholder, value, onChange, onSubmit, onReset }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #ccc", borderRadius: 8, padding: "2px 6px", minWidth: 280, background: "#fff" }}>
-      <Search size={16} color="#666" />
+    <div style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid var(--border)", borderRadius: 8, padding: "2px 6px", minWidth: 280, background: "var(--surface)" }}>
+      <Search size={16} color="var(--muted)" />
       <input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmit && onSubmit()}
-        style={{ border: "none", outline: "none", flex: 1, padding: "8px 4px", fontSize: 14 }}
+        style={{ border: "none", outline: "none", flex: 1, padding: "8px 4px", fontSize: 14, background: "transparent", color: "var(--text)" }}
       />
       {value && (
         <button
           type="button"
           onClick={onReset}
-          style={{ border: "none", background: "none", cursor: "pointer", display: "flex" }}
+          style={{ border: "none", background: "none", cursor: "pointer", display: "flex", color: "var(--muted)" }}
           aria-label="Clear search"
         >
-          <X size={16} color="#888" />
+          <X size={16} />
         </button>
       )}
     </div>
@@ -70,25 +72,26 @@ export const cardGrid = {
 };
 
 export const card = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   padding: "14px 16px",
-  background: "#fff",
+  background: "var(--surface)",
   display: "flex",
   flexDirection: "column",
   gap: 6,
-  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
 };
 
 export const cardTitle = {
   fontSize: 15,
   fontWeight: 600,
   margin: 0,
+  color: "var(--text)",
 };
 
 export const cardMeta = {
   fontSize: 13,
-  color: "#555",
+  color: "var(--muted)",
   margin: 0,
 };
 
@@ -118,9 +121,10 @@ export function iconButton(label, Icon) {
           alignItems: "center",
           gap: 6,
           padding: "6px 10px",
-          border: "1px solid #ccc",
+          border: "1px solid var(--border)",
           borderRadius: 8,
-          background: "#fff",
+          background: "var(--surface)",
+          color: "var(--text)",
           cursor: "pointer",
           fontSize: 13,
           ...style,
@@ -146,14 +150,15 @@ export function ModalShell({ title, onClose, width = 500, children }) {
     >
       <div
         style={{
-          background: "#fff", padding: 22, borderRadius: 10,
+          background: "var(--surface)", padding: 22, borderRadius: 10,
           maxWidth: width, width: "92%", maxHeight: "88vh", overflowY: "auto",
+          color: "var(--text)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 17 }}>{title}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ border: "none", background: "none", cursor: "pointer", fontSize: 16 }}>✕</button>
+          <h3 style={{ margin: 0, fontSize: 17, color: "var(--text)" }}>{title}</h3>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ border: "none", background: "none", cursor: "pointer", fontSize: 16, color: "var(--muted)" }}>✕</button>
         </div>
         {children}
       </div>
@@ -165,11 +170,11 @@ export function ModalShell({ title, onClose, width = 500, children }) {
 export function Field({ label, hint, children }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4, color: "#333" }}>
+      <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 4, color: "var(--text)" }}>
         {label}
       </label>
       {children}
-      {hint && <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>{hint}</div>}
     </div>
   );
 }
@@ -177,10 +182,12 @@ export function Field({ label, hint, children }) {
 export const textInput = {
   width: "100%",
   padding: "9px 10px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   borderRadius: 8,
   fontSize: 14,
   boxSizing: "border-box",
+  background: "var(--surface)",
+  color: "var(--text)",
 };
 
-export const selectStyle = { ...textInput, background: "#fff" };
+export const selectStyle = { ...textInput };

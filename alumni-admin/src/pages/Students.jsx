@@ -304,7 +304,7 @@ export default function Students() {
                   <div style={{
                     width: 44, height: 44, borderRadius: "50%", background: "#eef3ec",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, color: "#1B5E20", flexShrink: 0,
+                    fontWeight: 700, color: "var(--primary)", flexShrink: 0,
                   }}>
                     {(s.fullName || "?").charAt(0).toUpperCase()}
                   </div>
@@ -562,7 +562,7 @@ export default function Students() {
               <button
                 type="submit"
                 disabled={savingEdit}
-                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "#1B5E20", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", cursor: "pointer", fontWeight: 600 }}
               >
                 {savingEdit ? "Saving..." : "Save Changes"}
               </button>
@@ -637,7 +637,7 @@ export default function Students() {
               <button
                 type="submit"
                 disabled={savingAdd}
-                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "#1B5E20", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", cursor: "pointer", fontWeight: 600 }}
               >
                 {savingAdd ? "Saving..." : "Add Student"}
               </button>

@@ -395,7 +395,7 @@ export default function Jobs() {
               <button
                 type="submit"
                 disabled={saving}
-                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "#1B5E20", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", cursor: "pointer", fontWeight: 600 }}
               >
                 {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
               </button>

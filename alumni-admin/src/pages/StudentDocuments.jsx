@@ -216,7 +216,7 @@ export default function StudentDocuments() {
               style={textInput}
             />
           </Field>
-          <button type="submit" style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "#1B5E20", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
+          <button type="submit" style={{ padding: "9px 18px", border: "none", borderRadius: 8, background: "var(--primary)", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
             Add Document
           </button>
         </form>

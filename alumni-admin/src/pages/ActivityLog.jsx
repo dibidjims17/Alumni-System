@@ -115,7 +115,7 @@ export default function ActivityLog() {
                     <div style={{
                       width: 36, height: 36, borderRadius: "50%", background: "#eef3ec",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 700, color: "#1B5E20", flexShrink: 0, fontSize: 15,
+                      fontWeight: 700, color: "var(--primary)", flexShrink: 0, fontSize: 15,
                     }}>
                       {(log.actorName || "?").charAt(0).toUpperCase()}
                     </div>
