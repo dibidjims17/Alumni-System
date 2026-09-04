@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Download } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -173,6 +173,35 @@ export default function Events() {
     }
   }
 
+  function exportAttendeesCsv() {
+    if (attendees.length === 0) return;
+    const esc = (v) => {
+      const s = String(v ?? "");
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = [
+      ["Name", "Student Number", "Program", "School Year", "RSVP Date"],
+      ...attendees.map((a) => [
+        esc(a.fullName),
+        esc(a.studentNumber),
+        esc(a.program),
+        esc(a.schoolYear),
+        esc(a.rsvpedAt ? new Date(a.rsvpedAt).toLocaleString() : ""),
+      ]),
+    ];
+    const csv = rows.map((r) => r.join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeTitle = (attendeeEvent?.title || "event").replace(/[\\/:*?"<>|]+/g, "_").trim();
+    link.href = url;
+    link.download = `attendees_${safeTitle || "event"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -276,32 +305,43 @@ export default function Events() {
       )}
 
       {attendeeEvent && (
-        <ModalShell title={`Attendees (${attendeeEvent.title})`} onClose={() => setAttendeeEvent(null)} width={600}>
+        <ModalShell title={`Attendees (${attendeeEvent.title})`} onClose={() => setAttendeeEvent(null)} width={620}>
           {loadingAttendees ? (
             <p>Loading attendees...</p>
           ) : attendees.length === 0 ? (
             <p>No RSVPs yet.</p>
           ) : (
-            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%", marginTop: 12 }}>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Student #</th>
-                  <th>Program</th>
-                  <th>Year</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendees.map((a) => (
-                  <tr key={a.id}>
-                    <td>{a.fullName}</td>
-                    <td>{a.studentNumber}</td>
-                    <td>{a.program}</td>
-                    <td>{a.schoolYear}</td>
+            <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ color: "var(--muted)", fontSize: 13 }}>{attendees.length} going</span>
+                <button style={btn} onClick={exportAttendeesCsv}>
+                  <Download size={15} />
+                  Export CSV
+                </button>
+              </div>
+              <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Student #</th>
+                    <th>Program</th>
+                    <th>Year</th>
+                    <th>RSVP Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {attendees.map((a) => (
+                    <tr key={a.id}>
+                      <td>{a.fullName}</td>
+                      <td>{a.studentNumber}</td>
+                      <td>{a.program}</td>
+                      <td>{a.schoolYear}</td>
+                      <td>{a.rsvpedAt ? new Date(a.rsvpedAt).toLocaleString() : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
           )}
         </ModalShell>
       )}

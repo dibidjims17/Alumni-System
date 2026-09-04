@@ -10,17 +10,22 @@ import DiscardHost from "./DiscardHost";
 import ConfirmHost from "./ConfirmHost";
 import { askConfirm } from "./confirmBus";
 
-const TITLES = {
-  "/dashboard": "Dashboard",
-  "/students": "Students",
-  "/documents": "Documents",
-  "/news": "News",
-  "/jobs": "Jobs",
-  "/events": "Events",
-  "/activity-log": "Activity Log",
-  "/manage-admins": "Manage Admins",
-  "/trash": "Trash",
+const SEGMENT_TITLES = {
+  dashboard: "Dashboard",
+  students: "Students",
+  documents: "Documents",
+  news: "News",
+  jobs: "Jobs",
+  events: "Events",
+  "activity-log": "Activity Log",
+  "manage-admins": "Manage Admins",
+  trash: "Trash",
 };
+
+function titleFor(pathname) {
+  const segment = pathname.split("/")[1];
+  return (segment && SEGMENT_TITLES[segment]) || "Dashboard";
+}
 
 const GROUPS = [
   {
@@ -54,15 +59,6 @@ const SUPER_ADMIN_GROUP = {
     { path: "/trash", label: "Trash", Icon: Trash2 },
   ],
 };
-
-function titleFor(pathname) {
-  // exact-ish match: longest known prefix
-  let match = "/dashboard";
-  Object.keys(TITLES).forEach((p) => {
-    if (pathname.startsWith(p) && p.length >= match.length) match = p;
-  });
-  return TITLES[match];
-}
 
 export default function Layout() {
   const navigate = useNavigate();
