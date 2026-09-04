@@ -141,7 +141,6 @@ export default function News() {
           onSubmit={submitSearch}
           onReset={resetSearch}
         />
-        <button type="submit" style={btn}>Search</button>
       </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}

@@ -5,7 +5,7 @@ import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX 
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, actionsRow, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
 import { notifyError } from "../components/toastBus";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
@@ -295,22 +295,23 @@ export default function Students() {
                 >
                   {s.isActive ? "Active" : "Inactive"}
                 </span>
-                <div style={actionsRow}>
-                  <button type="button" title="View" style={btn} onClick={() => openViewProfile(s)}><Eye size={15} /> View</button>
-                  <button type="button" title="Edit" style={btn} onClick={() => openEditModal(s)}><Pencil size={15} /> Edit</button>
-                  <button type="button" title="Reset password" style={btn} onClick={() => setConfirmResetId(s.id)}><KeyRound size={15} /> Reset PW</button>
-                  <Link to={`/students/${s.id}/documents`} style={{ ...btn, textDecoration: "none" }}><FileText size={15} /> Docs</Link>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
+                  <button type="button" title="View" aria-label="View" style={{ ...btn, padding: "6px 9px" }} onClick={() => openViewProfile(s)}><Eye size={15} /></button>
+                  <button type="button" title="Edit" aria-label="Edit" style={{ ...btn, padding: "6px 9px" }} onClick={() => openEditModal(s)}><Pencil size={15} /></button>
+                  <button type="button" title="Reset password" aria-label="Reset password" style={{ ...btn, padding: "6px 9px" }} onClick={() => setConfirmResetId(s.id)}><KeyRound size={15} /></button>
+                  <Link to={`/students/${s.id}/documents`} title="Documents" style={{ ...btn, padding: "6px 9px", textDecoration: "none" }}><FileText size={15} /></Link>
                   <button
                     type="button"
                     title={s.isActive ? "Deactivate" : "Activate"}
-                    style={btn}
+                    aria-label={s.isActive ? "Deactivate" : "Activate"}
+                    style={{ ...btn, padding: "6px 9px", color: s.isActive ? "var(--danger)" : "var(--success)", borderColor: "var(--border)" }}
                     onClick={() => {
                       if (window.confirm(`Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`)) {
                         handleToggleStatus(s.id);
                       }
                     }}
                   >
-                    {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />} {s.isActive ? "Deactivate" : "Activate"}
+                    {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />}
                   </button>
                 </div>
               </div>

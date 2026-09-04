@@ -67,18 +67,18 @@ export function useDirtyGuard() {
 export const cardGrid = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-  gap: 16,
+  gap: 18,
   marginTop: 16,
 };
 
 export const card = {
   border: "1px solid var(--border)",
-  borderRadius: 12,
-  padding: "14px 16px",
+  borderRadius: 14,
+  padding: "16px 18px",
   background: "var(--surface)",
   display: "flex",
   flexDirection: "column",
-  gap: 6,
+  gap: 10,
   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
 };
 

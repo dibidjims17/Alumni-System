@@ -61,7 +61,15 @@ export default function NewsDetail() {
               <img
                 src={newsImageUrl(post.imagePath)}
                 alt=""
-                style={{ width: "100%", borderRadius: 8, margin: "8px 0 12px", display: "block" }}
+                style={{
+                  width: "100%",
+                  maxHeight: 300,
+                  objectFit: "cover",
+                  borderRadius: 10,
+                  margin: "10px 0 14px",
+                  display: "block",
+                  background: "var(--surface-alt)",
+                }}
               />
             )}
 
