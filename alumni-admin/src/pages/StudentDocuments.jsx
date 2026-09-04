@@ -9,7 +9,7 @@ import {
   deleteDocument,
 } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell } from "../components/kit";
+import { pageWrap, pageHeader, cardGrid, card, cardHead, cardBody, cardFooter, cardTitle, cardMeta, pill, iconTile, fieldLabel, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell } from "../components/kit";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
@@ -128,10 +128,17 @@ export default function StudentDocuments() {
   }
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-        <h2 style={{ margin: 0 }}>Document Checklist</h2>
-        <div style={{ display: "flex", gap: 8 }}>
+    <div style={pageWrap}>
+      <div style={pageHeader}>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ margin: 0 }}>Document Checklist</h2>
+          <p style={{ ...cardMeta, marginTop: 4 }}>
+            {documents.length > 0
+              ? `${documents.length} document${documents.length === 1 ? "" : "s"}${pendingCount ? ` • ${pendingCount} unsaved` : ""}`
+              : "Review and release student documents"}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button style={btn} onClick={openCustomModal}>
             <Plus size={15} />
             Add Custom Document
@@ -162,58 +169,66 @@ export default function StudentDocuments() {
       ) : (
         <div style={cardGrid}>
           {documents.map((doc) => {
-            const pill = STATUS_STYLES[doc.status] || STATUS_STYLES.Pending;
+            const pillStyle = STATUS_STYLES[doc.status] || STATUS_STYLES.Pending;
             const currentStatus = valueOf(doc, "status");
             const edited = !!pending[doc.id];
+            const released = currentStatus === "Released";
             return (
-              <div key={doc.id} style={{ ...card, ...(edited ? { outline: "1px solid var(--primary)" } : {}) }}>
-                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <FileText size={18} color="var(--primary)" style={{ marginTop: 2, flexShrink: 0 }} />
+              <div key={doc.id} style={{ ...card, ...(edited ? { outline: "2px solid var(--primary)", outlineOffset: -2 } : {}) }}>
+                <div style={cardHead}>
+                  <div style={iconTile}>
+                    <FileText size={18} color="var(--primary)" />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h4 style={{ ...cardTitle, margin: 0 }}>{doc.customLabel || doc.documentType}</h4>
-                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>
+                    <h4 style={cardTitle}>{doc.customLabel || doc.documentType}</h4>
+                    <p style={{ ...cardMeta, marginTop: 3 }}>
                       Updated {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : "never"}
-                      {edited ? " • unsaved" : ""}
                     </p>
                   </div>
-                  <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999, background: pill.background, color: currentStatus === "Released" ? "var(--success)" : "var(--muted)" }}>
+                  <span style={{ ...pill, background: pillStyle.background, color: released ? "var(--success)" : "var(--muted)" }}>
                     {currentStatus}
                   </span>
                 </div>
 
-                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <div>
-                      <label style={{ fontSize: 12, color: "var(--muted)" }}>Status</label><br />
+                <div style={cardBody}>
+                  <div style={{ display: "grid", gridTemplateColumns: "132px minmax(0, 1fr)", gap: 12, alignItems: "start", width: "100%" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <label style={fieldLabel}>Status</label>
                       <select
                         value={currentStatus}
                         onChange={(e) => stage(doc.id, "status", e.target.value)}
-                        style={{ ...selectStyle, width: "auto", marginTop: 4 }}
+                        style={{ ...selectStyle, width: "100%", margin: 0 }}
                       >
                         {STATUS_OPTIONS.map((opt) => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>
                     </div>
-                    <div style={{ flex: 1, minWidth: 180 }}>
-                      <label style={{ fontSize: 12, color: "var(--muted)" }}>Notes</label><br />
+                    <div style={{ minWidth: 0 }}>
+                      <label style={fieldLabel}>Notes</label>
                       <textarea
                         value={valueOf(doc, "notes") || ""}
                         onChange={(e) => stage(doc.id, "notes", e.target.value)}
                         rows={3}
-                        style={{ ...textInput, marginTop: 4, resize: "vertical" }}
+                        placeholder="Add a note…"
+                        style={{ ...textInput, margin: 0, minHeight: 76, resize: "vertical" }}
                       />
                     </div>
                   </div>
+                </div>
 
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <button
-                      onClick={() => setConfirmDeleteId(doc.id)}
-                      style={{ ...btnDanger, padding: "5px 9px" }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                <div style={cardFooter}>
+                  <span style={{ marginRight: "auto", fontSize: 12, fontWeight: 600, color: edited ? "var(--primary)" : "transparent", userSelect: "none" }}>
+                    {edited ? "● Unsaved" : "●"}
+                  </span>
+                  <button
+                    onClick={() => setConfirmDeleteId(doc.id)}
+                    style={btnDanger}
+                    title="Remove document"
+                  >
+                    <Trash2 size={15} />
+                    Remove
+                  </button>
                 </div>
               </div>
             );

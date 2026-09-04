@@ -68,44 +68,144 @@ export function useDirtyGuard() {
   return { dirty, setDirty, withGuard };
 }
 
+// Page container: centers content and caps line length on wide screens so
+// cards don't hug the left edge with dead space on the right.
+export const pageWrap = {
+  width: "100%",
+  maxWidth: 1280,
+  margin: "0 auto",
+  minWidth: 0,
+};
+
+export const pageHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: 12,
+};
+
 // Card grid used by list pages in place of plain tables.
+// - auto-fit (not auto-fill) collapses empty tracks so the last row doesn't
+//   leave ghost columns that push real cards to the left.
+// - stretch gives every card in a row equal height; cards pin their footer
+//   with margin-top:auto so actions line up across siblings.
 export const cardGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-  gap: 18,
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
+  gap: 20,
   marginTop: 16,
-  alignItems: "start", // don't stretch short cards to the tallest sibling
+  width: "100%",
+  maxWidth: 1280,
+  marginLeft: "auto",
+  marginRight: "auto",
+  alignItems: "stretch",
+  justifyContent: "center",
 };
 
 export const card = {
   border: "1px solid var(--border)",
   borderRadius: 14,
-  padding: "16px 18px",
+  padding: 0,
   background: "var(--surface)",
   display: "flex",
   flexDirection: "column",
-  gap: 10,
-  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+  minWidth: 0,
+  height: "100%",
+  overflow: "hidden",
+  boxShadow: "0 1px 2px rgba(16,24,20,0.06), 0 4px 14px rgba(16,24,20,0.06)",
+};
+
+// Card sections — use these so every list card shares the same rhythm:
+// head (title/meta) / divider / body (controls) / footer (actions).
+export const cardHead = {
+  display: "flex",
+  gap: 12,
+  alignItems: "flex-start",
+  padding: "16px 18px 14px",
+  minWidth: 0,
+};
+
+export const cardBody = {
+  padding: "14px 18px",
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+  flex: 1,
+  minWidth: 0,
+};
+
+export const cardFooter = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: 8,
+  padding: "12px 18px 16px",
+  borderTop: "1px solid var(--border)",
+  marginTop: "auto",
+};
+
+export const cardDivider = {
+  borderTop: "1px solid var(--border)",
+  margin: 0,
 };
 
 export const cardTitle = {
   fontSize: 15,
-  fontWeight: 600,
+  fontWeight: 650,
   margin: 0,
   color: "var(--text)",
+  lineHeight: 1.35,
+  overflowWrap: "break-word",
+  wordBreak: "break-word",
 };
 
 export const cardMeta = {
-  fontSize: 13,
+  fontSize: 12.5,
+  lineHeight: 1.45,
   color: "var(--muted)",
   margin: 0,
+};
+
+export const fieldLabel = {
+  display: "block",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: 0.6,
+  textTransform: "uppercase",
+  color: "var(--muted)",
+  marginBottom: 6,
+};
+
+export const pill = {
+  flexShrink: 0,
+  fontSize: 12,
+  fontWeight: 650,
+  lineHeight: 1,
+  padding: "6px 11px",
+  borderRadius: 999,
+  whiteSpace: "nowrap",
+};
+
+export const iconTile = {
+  width: 36,
+  height: 36,
+  borderRadius: 10,
+  background: "var(--surface-alt)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
 };
 
 export const actionsRow = {
   display: "flex",
   gap: 8,
-  marginTop: 10,
+  marginTop: "auto",
+  paddingTop: 12,
   alignItems: "center",
+  justifyContent: "flex-end",
+  flexWrap: "wrap",
 };
 
 // iconButton factory — usable BOTH ways:
