@@ -1,6 +1,6 @@
 // src/screens/HomeScreen.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import {
   Newspaper,
   Briefcase,
@@ -27,6 +27,11 @@ export default function HomeScreen({ navigation }) {
   const { student } = useAuth();
   const { theme } = useTheme();
   const c = theme.colors;
+  const { width } = useWindowDimensions();
+  // Column count follows the actual window width so phones, landscape
+  // tablets, and split-screen windows all get a fitting grid.
+  const numColumns = width >= 900 ? 4 : width >= 600 ? 3 : 2;
+  const tileBasis = numColumns === 2 ? '48%' : numColumns === 3 ? '31%' : '23%';
   const [unreadCount, setUnreadCount] = useState(0);
 
   useFocusEffect(
@@ -66,22 +71,27 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.grid}>
-        {TILES.map(({ key, label, Icon, target }) => (
-          <TouchableOpacity
-            key={key}
-            style={[
-              styles.tile,
-              { backgroundColor: c.surface, borderColor: c.border },
-            ]}
-            activeOpacity={0.85}
-            onPress={() => navigation.navigate(target[0], { screen: target[1] })}
-          >
-            <Icon size={32} color={c.primary} />
-            <Text style={[styles.tileLabel, { color: c.text }]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.grid}>
+          {TILES.map(({ key, label, Icon, target }) => (
+            <TouchableOpacity
+              key={key}
+              style={[
+                styles.tile,
+                { backgroundColor: c.surface, borderColor: c.border, flexBasis: tileBasis },
+              ]}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate(target[0], { screen: target[1] })}
+            >
+              <Icon size={32} color={c.primary} />
+              <Text style={[styles.tileLabel, { color: c.text }]}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -135,8 +145,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 16,
+  },
   tile: {
-    flexBasis: '48%',
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
