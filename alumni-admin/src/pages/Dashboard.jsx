@@ -15,6 +15,7 @@ import { getNews } from "../services/newsApi";
 import { getJobs } from "../services/jobsApi";
 import { notifyError } from "../components/toastBus";
 import { pageWrap } from "../components/kit";
+import { Skeleton } from "../components/Skeleton";
 
 // Fill-viewport dashboard: hero + stat row + bottom row share the available
 // height (flex:1 on the bottom row) so it consumes the page without
@@ -85,9 +86,9 @@ function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
           {label}
         </div>
       </div>
-      <div style={{ fontSize: 30, fontWeight: 780, lineHeight: 1, letterSpacing: -0.5 }}>
-        {loading ? "—" : value}
-      </div>
+      {loading ? <Skeleton width={72} height={30} /> : (
+        <div style={{ fontSize: 30, fontWeight: 780, lineHeight: 1, letterSpacing: -0.5 }}>{value}</div>
+      )}
       <div
         style={{
           fontSize: 12.5,
@@ -98,7 +99,7 @@ function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
           textOverflow: "ellipsis",
         }}
       >
-        {loading ? "Loading…" : sub}
+        {loading ? <Skeleton width="70%" height={12} /> : sub}
       </div>
     </div>
   );
@@ -254,7 +255,9 @@ export default function Dashboard() {
           }}
         >
           <div className="dash-hero-total" style={{ textAlign: "right", lineHeight: 1.2 }}>
-            <div style={{ fontSize: 28, fontWeight: 800 }}>{loading ? "—" : derived.total}</div>
+            {loading ? <Skeleton width={64} height={28} /> : (
+              <div style={{ fontSize: 28, fontWeight: 800 }}>{derived.total}</div>
+            )}
             <div style={{ fontSize: 11.5, color: "var(--hero-muted)" }}>total students</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
@@ -317,14 +320,18 @@ export default function Dashboard() {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
                 <span style={{ fontWeight: 650 }}>Graduates</span>
-                <span style={{ color: "var(--muted)" }}>{loading ? "—" : `${derived.grads} (${derived.gradPct}%)`}</span>
+                {loading ? <Skeleton width={90} height={12} /> : (
+                  <span style={{ color: "var(--muted)" }}>{`${derived.grads} (${derived.gradPct}%)`}</span>
+                )}
               </div>
               <Bar pct={derived.gradPct} color="#2E7D32" />
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
                 <span style={{ fontWeight: 650 }}>Active</span>
-                <span style={{ color: "var(--muted)" }}>{loading ? "—" : `${derived.active} (${derived.activePct}%)`}</span>
+                {loading ? <Skeleton width={90} height={12} /> : (
+                  <span style={{ color: "var(--muted)" }}>{`${derived.active} (${derived.activePct}%)`}</span>
+                )}
               </div>
               <Bar pct={derived.activePct} color="#1565C0" />
             </div>

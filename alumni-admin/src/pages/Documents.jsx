@@ -7,6 +7,7 @@ import { getStudents } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 export default function Documents() {
@@ -91,7 +92,7 @@ export default function Documents() {
       </div>
 
       {loading ? (
-        <p>Loading students...</p>
+        <GridSkeleton count={6} />
       ) : filteredStudents.length === 0 ? (
         <p>No matching students.</p>
       ) : (

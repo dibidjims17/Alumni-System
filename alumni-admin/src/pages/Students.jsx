@@ -6,6 +6,7 @@ import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
@@ -262,7 +263,7 @@ export default function Students() {
         </button>
       </div>
 
-      {loading && <p>Loading students...</p>}
+      {loading && <GridSkeleton count={8} />}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {!loading && !error && (

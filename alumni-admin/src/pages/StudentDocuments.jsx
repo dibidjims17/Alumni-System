@@ -10,6 +10,7 @@ import {
 } from "../services/documentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { pageWrap, pageHeader, cardGrid, card, cardFlush, cardHead, cardBody, cardFooter, cardTitle, cardMeta, pill, iconTile, fieldLabel, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
@@ -163,7 +164,7 @@ export default function StudentDocuments() {
       )}
 
       {loading ? (
-        <p>Loading...</p>
+        <GridSkeleton count={6} />
       ) : documents.length === 0 ? (
         <p>No documents found for this student yet.</p>
       ) : (

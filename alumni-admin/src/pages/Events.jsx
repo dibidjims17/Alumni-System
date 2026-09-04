@@ -4,6 +4,7 @@ import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees 
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
@@ -225,7 +226,7 @@ export default function Events() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {loading ? (
-        <p>Loading events...</p>
+        <GridSkeleton count={6} />
       ) : events.length === 0 ? (
         <p>No events yet.</p>
       ) : (

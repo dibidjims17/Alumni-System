@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { FileText, History, Download } from "lucide-react";
 import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
 import { cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary, textInput, selectStyle } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
@@ -174,7 +175,7 @@ export default function JobApplicants() {
       </div>
 
       {loading ? (
-        <p>Loading applicants...</p>
+        <GridSkeleton count={6} />
       ) : applicants.length === 0 ? (
         <p>No applicants yet.</p>
       ) : (

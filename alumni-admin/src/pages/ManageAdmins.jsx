@@ -7,6 +7,7 @@ import {
   cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton,
   btn, btnPrimary,
 } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 
 const emptyForm = { username: "", fullName: "", email: "", password: "", role: "Staff" };
 
@@ -110,7 +111,7 @@ export default function ManageAdmins() {
       </div>
 
       {loading ? (
-        <p>Loading admins...</p>
+        <GridSkeleton count={6} />
       ) : (
         <div style={cardGrid}>
           {admins.map((a) => (

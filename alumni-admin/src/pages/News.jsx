@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucid
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
 const EditButton = iconButton("Edit", Pencil);
@@ -146,7 +147,7 @@ export default function News() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {loading ? (
-        <p>Loading news...</p>
+        <GridSkeleton count={6} />
       ) : newsList.length === 0 ? (
         <p>No news yet.</p>
       ) : (

@@ -5,6 +5,7 @@ import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 
 export default function Trash() {
   const [deletedJobs, setDeletedJobs] = useState([]);
@@ -183,7 +184,7 @@ export default function Trash() {
       </div>
 
       {loading ? (
-        <p>Loading trash...</p>
+        <GridSkeleton count={6} />
       ) : combinedItems.length === 0 ? (
         <p>Nothing in trash{searchTerm ? " matching your search." : "."}</p>
       ) : (

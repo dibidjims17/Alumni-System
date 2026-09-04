@@ -55,6 +55,22 @@ a { color: var(--primary); }
 
 ::placeholder { color: var(--placeholder); }
 
+/* Loading skeletons — web mirror of mobile's pulsing Skeleton (surfaceAlt). */
+.admin-skeleton {
+  background: var(--surface-alt);
+  animation: admin-skeleton-pulse 1.5s ease-in-out infinite;
+  overflow: hidden;
+}
+
+@keyframes admin-skeleton-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-skeleton { animation: none; opacity: 0.6; }
+}
+
 /* Themed scrollbars so long lists look intentional in both modes */
 * {
   scrollbar-width: thin;

@@ -4,6 +4,7 @@ import { Heart, MessageCircle } from "lucide-react";
 import { getNewsDetail, deleteCommentAsAdmin, newsImageUrl } from "../services/newsApi";
 import CommentRow from "../components/CommentRow";
 import { card, cardTitle, cardMeta } from "../components/kit";
+import { DetailSkeleton } from "../components/Skeleton";
 
 export default function NewsDetail() {
   const { id } = useParams();
@@ -45,7 +46,7 @@ export default function NewsDetail() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {loading ? (
-        <p>Loading post...</p>
+        <DetailSkeleton />
       ) : !post ? (
         <p>Post not found.</p>
       ) : (

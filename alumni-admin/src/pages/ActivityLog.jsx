@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Activity, User } from "lucide-react";
 import { getAllActivityLogs } from "../services/activityLogApi";
 import { SearchBox, card, cardMeta, selectStyle, btn } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 import { RotateCcw } from "lucide-react";
 import { notifyError } from "../components/toastBus";
 
@@ -104,7 +105,7 @@ export default function ActivityLog() {
       </div>
 
       {loading ? (
-        <p>Loading activity log...</p>
+        <GridSkeleton count={6} />
       ) : (
         <>
           <p>{filteredLogs.length} entries found</p>

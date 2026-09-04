@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
+import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
 const emptyForm = {
@@ -190,7 +191,7 @@ export default function Jobs() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {loading ? (
-        <p>Loading jobs...</p>
+        <GridSkeleton count={6} />
       ) : jobs.length === 0 ? (
         <p>No jobs found.</p>
       ) : (
