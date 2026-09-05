@@ -64,7 +64,7 @@ export default function Login() {
 
       <div
         style={{
-          width: 360,
+          width: "min(360px, 100%)",
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: 14,

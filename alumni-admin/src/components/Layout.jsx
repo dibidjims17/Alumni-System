@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, Newspaper, Briefcase, CalendarDays,
-  UserCog, Trash2, Activity, LogOut, Moon, Sun, School,
+  UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu,
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
 import { useAdminTheme } from "../theme";
@@ -77,6 +78,25 @@ export default function Layout() {
     ? [...GROUPS, SUPER_ADMIN_GROUP]
     : GROUPS;
 
+  // Responsive shell: under ~960px the sidebar becomes an overlay drawer
+  // so half/quarter windows keep full content width; under ~600px the
+  // header compacts (icon-only user block, tighter padding).
+  const [vw, setVw] = useState(() => (typeof window !== "undefined" ? window.innerWidth : 1280));
+  const [navOpen, setNavOpen] = useState(false);
+  const compact = vw < 960;
+  const tiny = vw < 600;
+
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Close the drawer on navigation; never leave it stuck open.
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
+
   const navItemStyle = (isActive) => ({
     display: "flex",
     alignItems: "center",
@@ -95,7 +115,16 @@ export default function Layout() {
       <ToastHost />
       <DiscardHost />
       <ConfirmHost />
-      {/* Sidebar — always dark evergreen */}
+      {/* Sidebar — docked on wide screens, overlay drawer when compact */}
+      {compact && navOpen && (
+        <div
+          onClick={() => setNavOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 30,
+            background: "rgba(0,0,0,0.45)",
+          }}
+        />
+      )}
       <aside
         style={{
           width: 244,
@@ -104,9 +133,13 @@ export default function Layout() {
           color: "var(--sidebar-text)",
           display: "flex",
           flexDirection: "column",
-          position: "sticky",
+          position: compact ? "fixed" : "sticky",
           top: 0,
           height: "100vh",
+          zIndex: compact ? 40 : "auto",
+          transform: compact && !navOpen ? "translateX(-105%)" : "none",
+          transition: "transform 200ms ease",
+          boxShadow: compact && navOpen ? "8px 0 32px rgba(0,0,0,0.35)" : "none",
         }}
       >
         <div style={{ padding: "20px 18px 8px", display: "flex", alignItems: "center", gap: 10 }}>
@@ -165,15 +198,39 @@ export default function Layout() {
         <header
           style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "14px 28px",
+            gap: 12,
+            padding: tiny ? "10px 12px" : compact ? "12px 16px" : "14px 28px",
             background: "var(--surface)",
             borderBottom: "1px solid var(--border)",
             position: "sticky", top: 0, zIndex: 10,
           }}
         >
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: -0.3 }}>{titleFor(location.pathname)}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            {compact && (
+              <button
+                onClick={() => setNavOpen((v) => !v)}
+                title="Open navigation"
+                aria-label="Open navigation"
+                style={{
+                  width: 36, height: 36, borderRadius: 8, cursor: "pointer", flexShrink: 0,
+                  border: "1px solid var(--border)", background: "var(--surface-alt)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "var(--text)",
+                }}
+              >
+                <Menu size={18} />
+              </button>
+            )}
+            <h1 style={{
+              margin: 0, fontWeight: 800, letterSpacing: -0.3,
+              fontSize: tiny ? 19 : 24,
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            }}>
+              {titleFor(location.pathname)}
+            </h1>
+          </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: tiny ? 8 : 14, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
@@ -183,10 +240,12 @@ export default function Layout() {
               }}>
                 {(session?.fullName || "A").charAt(0).toUpperCase()}
               </div>
-              <div style={{ lineHeight: 1.2 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{session?.fullName}</div>
-                <div style={{ fontSize: 11, color: "var(--muted)" }}>{session?.role}</div>
-              </div>
+              {!tiny && (
+                <div style={{ lineHeight: 1.2 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{session?.fullName}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)" }}>{session?.role}</div>
+                </div>
+              )}
             </div>
 
             <button
@@ -204,7 +263,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main style={{ flex: 1, padding: 28, overflow: "auto" }}>
+        <main style={{ flex: 1, padding: tiny ? 12 : compact ? 16 : 28, overflow: "auto", minWidth: 0 }}>
           <Outlet />
         </main>
       </div>

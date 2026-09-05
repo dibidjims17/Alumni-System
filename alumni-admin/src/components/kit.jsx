@@ -8,7 +8,7 @@ import { requestDiscardConfirm } from "./discardBus";
 // Icon search input with a clear (X) button.
 export function SearchBox({ placeholder, value, onChange, onSubmit, onReset }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid var(--border)", borderRadius: 8, padding: "2px 6px", minWidth: 280, background: "var(--surface)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid var(--border)", borderRadius: 8, padding: "2px 6px", flex: "1 1 240px", minWidth: "min(280px, 100%)", background: "var(--surface)" }}>
       <Search size={16} color="var(--muted)" />
       <input
         type="text"

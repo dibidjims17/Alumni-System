@@ -334,7 +334,8 @@ export default function Events() {
                   Export CSV
                 </button>
               </div>
-              <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+              <div style={{ overflowX: "auto", margin: "0 -4px", padding: "0 4px" }}>
+              <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%", minWidth: 560 }}>
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -356,6 +357,7 @@ export default function Events() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </>
           )}
         </ModalShell>
