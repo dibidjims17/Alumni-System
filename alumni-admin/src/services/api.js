@@ -51,7 +51,22 @@ export function saveSession(data) {
     fullName: data.fullName,
     username: data.username,
     role: data.role,
+    profilePicturePath: data.profilePicturePath || null,
   }));
+}
+
+// Refresh stored profile fields (name/photo) after a self-edit without
+// forcing a full re-login. Listeners (Layout header) refresh via the
+// "admin-session-updated" window event.
+export function patchSession(patch) {
+  try {
+    const infoRaw = localStorage.getItem("adminInfo");
+    if (!infoRaw) return;
+    localStorage.setItem("adminInfo", JSON.stringify({ ...JSON.parse(infoRaw), ...patch }));
+    window.dispatchEvent(new Event("admin-session-updated"));
+  } catch {
+    // Corrupted session — treat it as logged out.
+  }
 }
 
 export function getSession() {

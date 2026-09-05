@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck, UserCheck, UserX } from "lucide-react";
-import { getAdmins, createAdmin, toggleAdminStatus, updateAdminRole } from "../services/adminApi";
-import { getSession } from "../services/api";
+import { ShieldCheck, UserCheck, UserX, Pencil, Camera } from "lucide-react";
+import { getAdmins, createAdmin, toggleAdminStatus, updateAdminRole, updateAdminProfile, uploadAdminPicture } from "../services/adminApi";
+import { getSession, patchSession } from "../services/api";
+import { API_BASE_URL } from "../config";
 import Toast from "../components/Toast";
 import {
   ModalShell, Field, textInput, selectStyle,
@@ -11,6 +12,14 @@ import {
 import { GridSkeleton } from "../components/Skeleton";
 
 const emptyForm = { username: "", fullName: "", email: "", password: "", role: "Staff" };
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
+const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
+
+export function adminPictureUrl(path) {
+  if (!path) return null;
+  const clean = String(path).replace(/\\/g, "/").replace(/^\/+/, "");
+  return `${FILE_ROOT}/${clean}`;
+}
 
 export default function ManageAdmins() {
   const [admins, setAdmins] = useState([]);
@@ -20,6 +29,13 @@ export default function ManageAdmins() {
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
+
+  const [editingAdmin, setEditingAdmin] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editFile, setEditFile] = useState(null);
+  const [editPreview, setEditPreview] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   async function loadAdmins() {
     setLoading(true);
@@ -100,6 +116,65 @@ export default function ManageAdmins() {
     return (admin.fullName || admin.username || "?").charAt(0).toUpperCase();
   }
 
+  function openEditModal(admin) {
+    setEditingAdmin(admin);
+    setEditName(admin.fullName || "");
+    setEditEmail(admin.email || "");
+    setEditFile(null);
+    setEditPreview(adminPictureUrl(admin.profilePicturePath));
+  }
+
+  function closeEditModal() {
+    if (editPreview && editPreview.startsWith("blob:")) {
+      try { URL.revokeObjectURL(editPreview); } catch { }
+    }
+    setEditingAdmin(null);
+    setEditFile(null);
+    setEditPreview(null);
+  }
+
+  function handleEditFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_PICTURE_BYTES) {
+      setToast({ message: "Image size must not exceed 5MB.", type: "error" });
+      return;
+    }
+    if (editPreview && editPreview.startsWith("blob:")) {
+      try { URL.revokeObjectURL(editPreview); } catch { }
+    }
+    setEditFile(file);
+    setEditPreview(URL.createObjectURL(file));
+  }
+
+  async function handleEditSave(e) {
+    e.preventDefault();
+    if (!editingAdmin) return;
+    setEditSaving(true);
+    try {
+      const updated = await updateAdminProfile(editingAdmin.id, {
+        fullName: editName.trim(),
+        email: editEmail.trim(),
+      });
+      let picturePath = updated.profilePicturePath || null;
+      if (editFile) {
+        const pic = await uploadAdminPicture(editingAdmin.id, editFile);
+        picturePath = pic.profilePicturePath || picturePath;
+      }
+      // Keep the header + own-card in sync when editing yourself.
+      if (isSelf(editingAdmin)) {
+        patchSession({ fullName: updated.fullName, profilePicturePath: picturePath });
+      }
+      setToast({ message: "Profile updated.", type: "success" });
+      closeEditModal();
+      loadAdmins();
+    } catch (err) {
+      setToast({ message: err.message, type: "error" });
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
   function rolePillStyle(role) {
     return role === "SuperAdmin"
       ? { background: "#ede7f6", color: "#5e35b1" }
@@ -122,13 +197,21 @@ export default function ManageAdmins() {
         }}
       >
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: "50%", background: "#eceaf6",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 700, color: "#4a3b8f", flexShrink: 0,
-          }}>
-            {avatarInitial(a)}
-          </div>
+          {adminPictureUrl(a.profilePicturePath) ? (
+            <img
+              src={adminPictureUrl(a.profilePicturePath)}
+              alt=""
+              style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+            />
+          ) : (
+            <div style={{
+              width: 44, height: 44, borderRadius: "50%", background: "#eceaf6",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontWeight: 700, color: "#4a3b8f", flexShrink: 0,
+            }}>
+              {avatarInitial(a)}
+            </div>
+          )}
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <h4 style={{ ...cardTitle, margin: 0 }}>{a.fullName}</h4>
@@ -177,9 +260,12 @@ export default function ManageAdmins() {
           }}
         >
           {self ? (
-            <p style={{ ...cardMeta, margin: 0 }}>
-              This is your account — role and status can only be changed by another SuperAdmin.
-            </p>
+            <>
+              <p style={{ ...cardMeta, margin: 0, flex: 1 }}>
+                This is your account — role and status can only be changed by another SuperAdmin.
+              </p>
+              {iconButton("Edit profile", Pencil)(() => openEditModal(a))}
+            </>
           ) : (
             <>
               <select
@@ -191,6 +277,7 @@ export default function ManageAdmins() {
                 <option value="Staff">Staff</option>
                 <option value="SuperAdmin">SuperAdmin</option>
               </select>
+              {iconButton("Edit", Pencil)(() => openEditModal(a))}
               {iconButton(
                 a.isActive ? "Deactivate" : "Activate",
                 a.isActive ? UserX : UserCheck
@@ -293,6 +380,66 @@ export default function ManageAdmins() {
                 {saving ? "Creating..." : "Create Admin"}
               </button>
               <button type="button" onClick={closeModal} style={btn}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </ModalShell>
+      )}
+
+      {editingAdmin && (
+        <ModalShell title={`Edit profile — ${editingAdmin.username}`} onClose={closeEditModal} width={460}>
+          <form onSubmit={handleEditSave}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+              {editPreview ? (
+                <img
+                  src={editPreview}
+                  alt=""
+                  style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                />
+              ) : (
+                <div style={{
+                  width: 64, height: 64, borderRadius: "50%", background: "#eceaf6",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 700, fontSize: 22, color: "#4a3b8f", flexShrink: 0,
+                }}>
+                  {avatarInitial(editingAdmin)}
+                </div>
+              )}
+              <label style={{ ...btn, cursor: "pointer" }}>
+                <Camera size={15} />
+                {editPreview && !editPreview.startsWith("blob:") ? "Change photo" : "Upload photo"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                  onChange={handleEditFile}
+                  style={{ display: "none" }}
+                />
+              </label>
+            </div>
+            <Field label="Full Name">
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                required
+                style={textInput}
+              />
+            </Field>
+            <Field label="Email">
+              <input
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                required
+                style={textInput}
+              />
+            </Field>
+            <div style={actionsRow}>
+              <button type="submit" disabled={editSaving} style={btnPrimary}>
+                {editSaving ? "Saving..." : "Save changes"}
+              </button>
+              <button type="button" onClick={closeEditModal} style={btn}>
                 Cancel
               </button>
             </div>

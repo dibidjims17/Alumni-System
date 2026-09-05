@@ -13,5 +13,6 @@ namespace MyApp.Domain.Entities
         public DateTime? LastLoginAt { get; set; }
         public string? PasswordResetCode { get; set; }
         public DateTime? PasswordResetCodeExpiry { get; set; }
+        public string? ProfilePicturePath { get; set; }
     }
 }

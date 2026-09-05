@@ -61,7 +61,8 @@ namespace MyApp.Application.Services
                 Token = token,
                 FullName = admin.FullName,
                 Username = admin.Username,
-                Role = admin.Role
+                Role = admin.Role,
+                ProfilePicturePath = admin.ProfilePicturePath
             };
         }
 

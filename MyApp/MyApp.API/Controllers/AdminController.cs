@@ -88,5 +88,52 @@ namespace MyApp.API.Controllers
             if (!success) return BadRequest(new { message = "Cannot change your own role, remove the last SuperAdmin, or invalid role." });
             return Ok(new { message = "Admin role updated." });
         }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPut("{id}/profile")]
+        public async Task<IActionResult> UpdateAdminProfile(int id, [FromBody] UpdateAdminProfileRequest request)
+        {
+            var requestingAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var requestingIsSuperAdmin = User.IsInRole("SuperAdmin");
+            var (success, message) = await _adminManagementService.UpdateAdminProfileAsync(id, request, requestingAdminId, requestingIsSuperAdmin);
+            if (!success) return BadRequest(new { message });
+            var admins = await _adminManagementService.GetAllAdminsAsync();
+            return Ok(admins.FirstOrDefault(a => a.Id == id));
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPost("{id}/picture")]
+        public async Task<IActionResult> UploadAdminPicture(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file provided." });
+
+            // Max 5MB
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "Image size must not exceed 5MB." });
+
+            // Only allow image extensions
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
+            if (!allowedExtensions.Contains(ext))
+                return BadRequest(new { message = "Only JPG, PNG, GIF, WEBP and BMP images are allowed." });
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "AdminPictures");
+            Directory.CreateDirectory(uploadsFolder);
+
+            // Server-side name is generated (never trust the client filename for the path)
+            var storedFileName = $"admin_{id}_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsFolder, storedFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"Uploads/AdminPictures/{storedFileName}";
+            var (success, relative, message) = await _adminManagementService.UpdateAdminPictureAsync(id, relativePath, filePath);
+            if (!success) return NotFound(new { message });
+            return Ok(new { profilePicturePath = relative });
+        }
     }
 }

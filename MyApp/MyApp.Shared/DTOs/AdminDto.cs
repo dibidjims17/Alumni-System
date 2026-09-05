@@ -10,5 +10,6 @@ namespace MyApp.Shared.DTOs
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public string? ProfilePicturePath { get; set; }
     }
 }

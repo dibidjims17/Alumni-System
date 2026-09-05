@@ -18,17 +18,23 @@ namespace MyApp.Application.Services
         public async Task<List<AdminDto>> GetAllAdminsAsync()
         {
             var admins = await _adminRepository.GetAllAsync();
-            return admins.Select(a => new AdminDto
+            return admins.Select(Map).ToList();
+        }
+
+        private static AdminDto Map(Admin admin)
+        {
+            return new AdminDto
             {
-                Id = a.Id,
-                Username = a.Username,
-                FullName = a.FullName,
-                Email = a.Email,
-                Role = a.Role,
-                IsActive = a.IsActive,
-                CreatedAt = a.CreatedAt,
-                LastLoginAt = a.LastLoginAt
-            }).ToList();
+                Id = admin.Id,
+                Username = admin.Username,
+                FullName = admin.FullName,
+                Email = admin.Email,
+                Role = admin.Role,
+                IsActive = admin.IsActive,
+                CreatedAt = admin.CreatedAt,
+                LastLoginAt = admin.LastLoginAt,
+                ProfilePicturePath = admin.ProfilePicturePath
+            };
         }
 
         public async Task<AdminDto?> CreateAdminAsync(CreateAdminRequest request)
@@ -62,17 +68,62 @@ namespace MyApp.Application.Services
                 // against anything unexpected in body construction.
             }
 
-            return new AdminDto
+            return Map(admin);
+        }
+
+        public async Task<(bool Success, string Message)> UpdateAdminProfileAsync(int adminId, UpdateAdminProfileRequest request, int requestingAdminId, bool requestingIsSuperAdmin)
+        {
+            var admin = await _adminRepository.GetByIdAsync(adminId);
+            if (admin == null)
+                return (false, "Admin not found.");
+
+            // SuperAdmins may edit anyone; anyone may edit their own profile.
+            if (adminId != requestingAdminId && !requestingIsSuperAdmin)
+                return (false, "You can only edit your own profile.");
+
+            var email = (request.Email ?? string.Empty).Trim();
+            var fullName = (request.FullName ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email))
+                return (false, "Full name and email are required.");
+
+            var owner = await _adminRepository.GetByEmailAsync(email);
+            if (owner != null && owner.Id != adminId)
+                return (false, "That email is already used by another admin.");
+
+            admin.FullName = fullName;
+            admin.Email = email;
+            await _adminRepository.UpdateAsync(admin);
+            return (true, "Profile updated.");
+        }
+
+        public async Task<(bool Success, string? RelativePath, string Message)> UpdateAdminPictureAsync(int adminId, string relativePath, string physicalPath)
+        {
+            var admin = await _adminRepository.GetByIdAsync(adminId);
+            if (admin == null)
             {
-                Id = admin.Id,
-                Username = admin.Username,
-                FullName = admin.FullName,
-                Email = admin.Email,
-                Role = admin.Role,
-                IsActive = admin.IsActive,
-                CreatedAt = admin.CreatedAt,
-                LastLoginAt = admin.LastLoginAt
-            };
+                // Stale upload with no owner — don't orphan the file.
+                try { if (File.Exists(physicalPath)) File.Delete(physicalPath); } catch { }
+                return (false, null, "Admin not found.");
+            }
+
+            // Remove the previous picture so Uploads/AdminPictures can't fill
+            // with orphans on every re-upload.
+            var oldRelative = admin.ProfilePicturePath;
+            admin.ProfilePicturePath = relativePath;
+            await _adminRepository.UpdateAsync(admin);
+
+            if (!string.IsNullOrWhiteSpace(oldRelative))
+            {
+                try
+                {
+                    var oldPhysical = Path.Combine(Directory.GetCurrentDirectory(),
+                        oldRelative.Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(oldPhysical)) File.Delete(oldPhysical);
+                }
+                catch { }
+            }
+
+            return (true, relativePath, "Profile picture updated.");
         }
 
         public async Task<bool> ToggleAdminStatusAsync(int adminId, int requestingAdminId)

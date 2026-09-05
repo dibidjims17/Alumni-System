@@ -5,6 +5,15 @@ import {
   UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu,
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
+import { API_BASE_URL } from "../config";
+
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
+
+function adminPhotoUrl(path) {
+  if (!path) return null;
+  const clean = String(path).replace(/\\/g, "/").replace(/^\/+/, "");
+  return `${FILE_ROOT}/${clean}`;
+}
 import { useAdminTheme } from "../theme";
 import ToastHost from "./ToastHost";
 import DiscardHost from "./DiscardHost";
@@ -83,6 +92,13 @@ export default function Layout() {
   // header compacts (icon-only user block, tighter padding).
   const [vw, setVw] = useState(() => (typeof window !== "undefined" ? window.innerWidth : 1280));
   const [navOpen, setNavOpen] = useState(false);
+  // Re-read the session (name/photo) after in-place profile edits.
+  const [, setSessionVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setSessionVersion((v) => v + 1);
+    window.addEventListener("admin-session-updated", refresh);
+    return () => window.removeEventListener("admin-session-updated", refresh);
+  }, []);
   const compact = vw < 960;
   const tiny = vw < 600;
 
@@ -232,14 +248,22 @@ export default function Layout() {
 
           <div style={{ display: "flex", alignItems: "center", gap: tiny ? 8 : 14, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%",
-                background: "var(--primary)", color: "var(--on-primary)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 700, fontSize: 14,
-              }}>
-                {(session?.fullName || "A").charAt(0).toUpperCase()}
-              </div>
+              {adminPhotoUrl(session?.profilePicturePath) ? (
+                <img
+                  src={adminPhotoUrl(session?.profilePicturePath)}
+                  alt=""
+                  style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <div style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: "var(--primary)", color: "var(--on-primary)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 700, fontSize: 14,
+                }}>
+                  {(session?.fullName || "A").charAt(0).toUpperCase()}
+                </div>
+              )}
               {!tiny && (
                 <div style={{ lineHeight: 1.2 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{session?.fullName}</div>
