@@ -171,7 +171,7 @@ export default function Layout() {
             position: "sticky", top: 0, zIndex: 10,
           }}
         >
-          <h1 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{titleFor(location.pathname)}</h1>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: -0.3 }}>{titleFor(location.pathname)}</h1>
 
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

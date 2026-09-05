@@ -132,8 +132,7 @@ export default function StudentDocuments() {
     <div style={pageWrap}>
       <div style={pageHeader}>
         <div style={{ minWidth: 0 }}>
-          <h2 style={{ margin: 0 }}>Document Checklist</h2>
-          <p style={{ ...cardMeta, marginTop: 4 }}>
+          <p style={{ ...cardMeta, margin: 0 }}>
             {documents.length > 0
               ? `${documents.length} document${documents.length === 1 ? "" : "s"}${pendingCount ? ` • ${pendingCount} unsaved` : ""}`
               : "Review and release student documents"}

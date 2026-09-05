@@ -74,8 +74,7 @@ export default function Documents() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Documents</h2>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
         <button style={btnPrimary} onClick={() => { setImportResult(null); setShowImport(true); }}>
           <Upload size={15} />
           Import Statuses (CSV)

@@ -126,8 +126,7 @@ export default function News() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>News</h2>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
         <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={15} />
           Add News

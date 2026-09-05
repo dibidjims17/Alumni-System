@@ -156,8 +156,6 @@ export default function Trash() {
         onCancel={() => setConfirmAction(null)}
       />
 
-      <h2>Trash</h2>
-
       <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <SearchBox
           placeholder="Search deleted jobs or news..."

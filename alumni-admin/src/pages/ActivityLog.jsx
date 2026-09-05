@@ -66,8 +66,6 @@ export default function ActivityLog() {
 
   return (
     <div>
-      <h2>Activity Log</h2>
-
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>

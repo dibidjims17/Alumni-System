@@ -128,7 +128,6 @@ export default function JobApplicants() {
   return (
     <div>
       <Link to="/jobs">← Back to Jobs</Link>
-      <h2>Applicants</h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 

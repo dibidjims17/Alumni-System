@@ -217,8 +217,7 @@ export default function Students() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Students</h2>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={openAddModal} style={btnPrimary}>
             <UserPlus size={15} />

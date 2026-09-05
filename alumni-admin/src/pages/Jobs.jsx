@@ -169,8 +169,7 @@ export default function Jobs() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Jobs</h2>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
         <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={16} /> Add New Job
         </button>
