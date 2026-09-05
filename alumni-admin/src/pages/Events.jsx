@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, Users, Download } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -205,14 +205,14 @@ export default function Events() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+      <div style={toolbar}>
         <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={15} />
           Add New Event
         </button>
       </div>
 
-      <form onSubmit={submitSearch} style={{ margin: "16px 0", display: "flex", gap: 8, alignItems: "center" }}>
+      <form onSubmit={submitSearch} style={filterRow}>
         <SearchBox
           placeholder="Search title or location"
           value={searchTerm}

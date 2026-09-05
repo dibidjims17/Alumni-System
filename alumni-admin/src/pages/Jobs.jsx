@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -169,15 +169,16 @@ export default function Jobs() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+      <div style={toolbar}>
         <button onClick={openCreateModal} style={btnPrimary}>
-          <Plus size={16} /> Add New Job
+          <Plus size={15} />
+          Add New Job
         </button>
       </div>
 
       <form
         onSubmit={submitSearch}
-        style={{ margin: "16px 0", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+        style={filterRow}
       >
         <SearchBox
           placeholder="Search title or company"

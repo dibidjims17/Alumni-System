@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
-import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX } from "lucide-react";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -217,17 +217,18 @@ export default function Students() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={openAddModal} style={btnPrimary}>
-            <UserPlus size={15} />
-            Add Student
-          </button>
-          <button onClick={openImportModal} style={btn}>+ Import CSV</button>
-        </div>
+      <div style={toolbar}>
+        <button onClick={openAddModal} style={btnPrimary}>
+          <UserPlus size={15} />
+          Add Student
+        </button>
+        <button onClick={openImportModal} style={btn}>
+          <Upload size={15} />
+          Import CSV
+        </button>
       </div>
 
-      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={filterRow}>
         <SearchBox
           placeholder="Search by Student Number, Name, or Email"
           value={searchTerm}

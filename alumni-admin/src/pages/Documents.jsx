@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config";
 import { getStudents } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
 import { notifyError, notifySuccess } from "../components/toastBus";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
@@ -74,14 +74,14 @@ export default function Documents() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+      <div style={toolbar}>
         <button style={btnPrimary} onClick={() => { setImportResult(null); setShowImport(true); }}>
           <Upload size={15} />
           Import Statuses (CSV)
         </button>
       </div>
 
-      <div style={{ margin: "16px 0", display: "flex", gap: 8 }}>
+      <div style={filterRow}>
         <SearchBox
           placeholder="Search by Student Number, Name, or Program"
           value={searchTerm}

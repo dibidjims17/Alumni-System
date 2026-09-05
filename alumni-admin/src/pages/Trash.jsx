@@ -4,7 +4,7 @@ import { getDeletedJobs, restoreJob, permanentlyDeleteJob } from "../services/jo
 import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
 export default function Trash() {
@@ -102,6 +102,31 @@ export default function Trash() {
     });
   }
 
+  const trashCount = deletedJobs.length + deletedNews.length;
+
+  function askEmptyTrash() {
+    if (trashCount === 0) return;
+    setConfirmAction({
+      message: `Permanently delete all ${trashCount} item${trashCount === 1 ? "" : "s"} in trash? This cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          for (const job of deletedJobs) {
+            await permanentlyDeleteJob(job.id);
+          }
+          for (const item of deletedNews) {
+            await permanentlyDeleteNews(item.id);
+          }
+          setToast({ message: `Emptied trash (${trashCount} item${trashCount === 1 ? "" : "s"} deleted).`, type: "success" });
+          loadTrash();
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmAction(null);
+        }
+      },
+    });
+  }
+
   const combinedItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
@@ -156,7 +181,19 @@ export default function Trash() {
         onCancel={() => setConfirmAction(null)}
       />
 
-      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={toolbar}>
+        <button
+          style={btnDanger}
+          onClick={askEmptyTrash}
+          disabled={loading || trashCount === 0}
+          title={trashCount === 0 ? "Trash is empty" : `Permanently delete all ${trashCount} items`}
+        >
+          <Trash2 size={15} />
+          Empty Trash{trashCount > 0 ? ` (${trashCount})` : ""}
+        </button>
+      </div>
+
+      <div style={filterRow}>
         <SearchBox
           placeholder="Search deleted jobs or news..."
           value={searchTerm}

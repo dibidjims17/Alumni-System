@@ -216,6 +216,24 @@ export const actionsRow = {
   flexWrap: "wrap",
 };
 
+// Page top bars — one shared rhythm so every list page lines up:
+// actions pinned right on top, filters/search in an even row below.
+export const toolbar = {
+  display: "flex",
+  justifyContent: "flex-end",
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "wrap",
+};
+
+export const filterRow = {
+  margin: "16px 0",
+  display: "flex",
+  gap: 12,
+  flexWrap: "wrap",
+  alignItems: "center",
+};
+
 // iconButton factory — usable BOTH ways:
 //   const EditBtn = iconButton("Edit", Pencil); <EditBtn onClick={fn} />
 //   or inline: iconButton("Edit", Pencil)(fn)
