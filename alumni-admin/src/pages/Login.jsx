@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { School, LogIn, Sun, Moon } from "lucide-react";
 import { loginAdmin, saveSession, adminForgotPassword, adminResetPassword } from "../services/api";
-import { PasswordInput } from "../components/kit";
+import { PasswordInput, CodeInput } from "../components/kit";
 import { useAdminTheme } from "../theme";
 
 export default function Login() {
@@ -73,6 +73,10 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setNotice("");
+    if (resetCode.trim().length !== 6) {
+      setError("Please enter the full 6-digit code.");
+      return;
+    }
     setLoading(true);
     try {
       await adminResetPassword(resetEmail.trim(), resetCode.trim(), newPassword);
@@ -234,16 +238,8 @@ export default function Login() {
               Code sent to <strong>{resetEmail}</strong>. Enter it below with your new password.
             </p>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 13, color: "var(--muted)" }}>6-digit code</label>
-              <input
-                type="text"
-                value={resetCode}
-                onChange={(e) => setResetCode(e.target.value)}
-                required
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                style={inputStyle}
-              />
+              <label style={{ display: "block", fontSize: 13, color: "var(--muted)", marginBottom: 8 }}>6-digit code</label>
+              <CodeInput value={resetCode} onChange={setResetCode} />
             </div>
 
             <div style={{ marginBottom: 12 }}>

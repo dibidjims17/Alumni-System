@@ -69,6 +69,92 @@ export function PasswordInput({ value, onChange, autoComplete = "current-passwor
   );
 }
 
+// 6-box verification code input (mirrors mobile's ResetPasswordScreen,
+// plus filled-state highlight and flexible widths). Handles typing,
+// backspace navigation, and pasting a full code into any box.
+export function CodeInput({ length = 6, value = "", onChange, ariaLabel = "Verification code" }) {
+  const refs = useRef([]);
+
+  const digits = Array.from({ length }, (_, i) => value[i] || "");
+
+  function emit(next) {
+    onChange(next.join("").slice(0, length));
+  }
+
+  function handleChange(index, text) {
+    const cleaned = text.replace(/[^0-9]/g, "");
+    if (!cleaned) {
+      const next = [...digits];
+      next[index] = "";
+      emit(next);
+      return;
+    }
+    const next = [...digits];
+    const chars = cleaned.slice(0, length - index).split("");
+    chars.forEach((ch, i) => {
+      next[index + i] = ch;
+    });
+    emit(next);
+    const lastFilled = Math.min(index + chars.length, length - 1);
+    // Focus next empty box, or stay on the last one when complete.
+    const nextEmpty = next.findIndex((d, i) => i > index && !d);
+    refs.current[nextEmpty === -1 ? lastFilled : nextEmpty]?.focus();
+  }
+
+  function handleKeyDown(index, e) {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      e.preventDefault();
+      const next = [...digits];
+      next[index - 1] = "";
+      emit(next);
+      refs.current[index - 1]?.focus();
+    }
+  }
+
+  // Pasting anywhere fills forward from that box.
+  function handlePaste(index, e) {
+    const text = (e.clipboardData?.getData("text") || "").replace(/[^0-9]/g, "");
+    if (text.length > 1) {
+      e.preventDefault();
+      handleChange(index, text);
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", gap: 8 }} role="group" aria-label={ariaLabel}>
+      {digits.map((digit, i) => (
+        <input
+          key={i}
+          ref={(el) => (refs.current[i] = el)}
+          value={digit}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={(e) => handlePaste(i, e)}
+          inputMode="numeric"
+          autoComplete={i === 0 ? "one-time-code" : "off"}
+          maxLength={length}
+          aria-label={`${ariaLabel} digit ${i + 1}`}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            maxWidth: 56,
+            height: 52,
+            textAlign: "center",
+            fontSize: 20,
+            fontWeight: 700,
+            color: "var(--text)",
+            background: digit ? "var(--surface)" : "var(--surface-alt)",
+            border: digit ? "2px solid var(--primary)" : "1px solid var(--border)",
+            borderRadius: 10,
+            outline: "none",
+            padding: 0,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // Promise-style dirty guard for forms (works whether dirty or not).
 // Usage: const { withGuard, setDirty } = useDirtyGuard();
 export function useDirtyGuard() {

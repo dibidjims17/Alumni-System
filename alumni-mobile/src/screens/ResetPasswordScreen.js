@@ -107,7 +107,12 @@ export default function ResetPasswordScreen({ route, navigation }) {
             ref={(ref) => (inputRefs.current[index] = ref)}
             style={[
               styles.codeBox,
-              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+              {
+                backgroundColor: digit ? c.surface : c.surfaceAlt,
+                borderColor: digit ? c.primary : c.border,
+                borderWidth: digit ? 2 : 1,
+                color: c.text,
+              },
             ]}
             value={digit}
             onChangeText={(text) => handleDigitChange(text, index)}
@@ -116,6 +121,7 @@ export default function ResetPasswordScreen({ route, navigation }) {
             maxLength={6}
             textAlign="center"
             selectTextOnFocus
+            autoFocus={index === 0}
           />
         ))}
       </View>
@@ -181,15 +187,16 @@ const styles = StyleSheet.create({
   codeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 8,
     marginBottom: 16,
   },
   codeBox: {
-    width: 44,
+    flex: 1,
+    maxWidth: 52,
     height: 52,
-    borderWidth: 1,
     borderRadius: 12,
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   linkButton: {
     marginTop: 16,
