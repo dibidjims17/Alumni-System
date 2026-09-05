@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { School, LogIn, Sun, Moon } from "lucide-react";
+import { School, LogIn, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { loginAdmin, saveSession } from "../services/api";
 import { useAdminTheme } from "../theme";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -93,14 +94,30 @@ export default function Login() {
 
           <div style={{ marginBottom: 12 }}>
             <label style={{ fontSize: 13, color: "var(--muted)" }}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              style={inputStyle}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                style={{ ...inputStyle, paddingRight: 40 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                title={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                style={{
+                  position: "absolute", right: 6, top: "50%",
+                  transform: "translateY(-50%)",
+                  border: "none", background: "none", cursor: "pointer",
+                  display: "flex", color: "var(--muted)", padding: 4,
+                }}
+              >
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
           </div>
 
           {error && <p style={{ color: "var(--danger)", fontSize: 13, margin: "4px 0" }}>{error}</p>}
