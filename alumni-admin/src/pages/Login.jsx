@@ -134,13 +134,14 @@ export default function Login() {
         {mode === "login" && (
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 13, color: "var(--muted)" }}>Username</label>
+              <label style={{ fontSize: 13, color: "var(--muted)" }}>Username or email</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 autoComplete="username"
+                placeholder="e.g. jdelacruz or jdelacruz@school.edu"
                 style={inputStyle}
               />
             </div>

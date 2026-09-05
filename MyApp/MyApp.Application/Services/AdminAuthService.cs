@@ -27,8 +27,12 @@ namespace MyApp.Application.Services
 
         public async Task<AdminLoginResponse?> LoginAsync(AdminLoginRequest request)
         {
-            // 1. Find admin
-            var admin = await _adminRepository.GetByUsernameAsync(request.Username);
+            // 1. Find admin by username or email — the Username field carries
+            // whichever identifier the user typed (an "@" means email).
+            var identifier = (request.Username ?? string.Empty).Trim();
+            var admin = identifier.Contains('@')
+                ? await _adminRepository.GetByEmailAsync(identifier)
+                : await _adminRepository.GetByUsernameAsync(identifier);
             if (admin == null || !admin.IsActive)
                 return null;
 
