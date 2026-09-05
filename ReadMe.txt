@@ -19,7 +19,7 @@ dotnet build
 D:
 cd D:\CAPSTONE_SYSTEM\MyApp
 cls
-dotnet run --project MyApp.API
+dotnet run --project MyApp.API --launch-profile http
 
 D:
 cd D:\CAPSTONE_SYSTEM\alumni-admin
@@ -29,16 +29,16 @@ npm run electron:dev
 D:
 cd D:\CAPSTONE_SYSTEM\alumni-mobile
 cls
-npx expo start
+npx expo start --lan --clear
+
+cd D:\CAPSTONE_SYSTEM\alumni-website
+cls
+npx --yes serve -l 8901 .
 
 D:
 cd D:\CAPSTONE_SYSTEM\alumni-website
 cls
 python -m http.server 8901
-
-cd D:\CAPSTONE_SYSTEM\alumni-website
-cls
-npx --yes serve -l 8901 .
 
 "incase EXPO won't work in administrator powershell
 
