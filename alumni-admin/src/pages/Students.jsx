@@ -5,7 +5,7 @@ import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX,
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, toolbarFilters, toolbarActions } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -218,49 +218,50 @@ export default function Students() {
   return (
     <div>
       <div style={toolbar}>
-        <button onClick={openAddModal} style={btnPrimary}>
-          <UserPlus size={15} />
-          Add Student
-        </button>
-        <button onClick={openImportModal} style={btn}>
-          <Upload size={15} />
-          Import CSV
-        </button>
-      </div>
+        <div style={toolbarFilters}>
+          <SearchBox
+            placeholder="Search by Student Number, Name, or Email"
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onReset={() => setSearchTerm("")}
+          />
 
-      <div style={filterRow}>
-        <SearchBox
-          placeholder="Search by Student Number, Name, or Email"
-          value={searchTerm}
-          onChange={setSearchTerm}
-          onReset={() => setSearchTerm("")}
-        />
+          <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
+            <option value="">All Years</option>
+            {YEAR_OPTIONS.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
 
-        <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
-          <option value="">All Years</option>
-          {YEAR_OPTIONS.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+          <select value={programFilter} onChange={(e) => setProgramFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
+            <option value="">All Programs</option>
+            {programOptions.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
 
-        <select value={programFilter} onChange={(e) => setProgramFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
-          <option value="">All Programs</option>
-          {programOptions.map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-
-        <button
-          style={btn}
-          onClick={() => {
-            setSearchTerm("");
-            setYearFilter("");
-            setProgramFilter("");
-          }}
-        >
-          <RotateCcw size={14} />
-          Reset
-        </button>
+          <button
+            style={btn}
+            onClick={() => {
+              setSearchTerm("");
+              setYearFilter("");
+              setProgramFilter("");
+            }}
+          >
+            <RotateCcw size={14} />
+            Reset
+          </button>
+        </div>
+        <div style={toolbarActions}>
+          <button onClick={openAddModal} style={btnPrimary}>
+            <UserPlus size={15} />
+            Add Student
+          </button>
+          <button onClick={openImportModal} style={btn}>
+            <Upload size={15} />
+            Import CSV
+          </button>
+        </div>
       </div>
 
       {loading && <GridSkeleton count={8} />}

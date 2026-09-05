@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, Users, Download } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, toolbarFilters, toolbarActions } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -206,21 +206,22 @@ export default function Events() {
   return (
     <div>
       <div style={toolbar}>
-        <button onClick={openCreateModal} style={btnPrimary}>
-          <Plus size={15} />
-          Add New Event
-        </button>
+        <form onSubmit={submitSearch} style={{ ...toolbarFilters, flex: 1 }}>
+          <SearchBox
+            placeholder="Search title or location"
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onSubmit={submitSearch}
+            onReset={resetSearch}
+          />
+        </form>
+        <div style={toolbarActions}>
+          <button onClick={openCreateModal} style={btnPrimary}>
+            <Plus size={15} />
+            Add New Event
+          </button>
+        </div>
       </div>
-
-      <form onSubmit={submitSearch} style={filterRow}>
-        <SearchBox
-          placeholder="Search title or location"
-          value={searchTerm}
-          onChange={setSearchTerm}
-          onSubmit={submitSearch}
-          onReset={resetSearch}
-        />
-      </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 

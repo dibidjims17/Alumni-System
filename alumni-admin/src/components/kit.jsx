@@ -216,14 +216,31 @@ export const actionsRow = {
   flexWrap: "wrap",
 };
 
-// Page top bars — one shared rhythm so every list page lines up:
-// actions pinned right on top, filters/search in an even row below.
+// Page top bars — single-row toolbar: filters/search left, actions right
+// on one baseline. Wraps gracefully on narrow screens. Vertical rhythm
+// comes from the grid below (cardGrid already carries marginTop).
 export const toolbar = {
   display: "flex",
-  justifyContent: "flex-end",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+export const toolbarFilters = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+  flex: 1,
+  minWidth: 240,
+};
+
+export const toolbarActions = {
+  display: "flex",
   alignItems: "center",
   gap: 8,
   flexWrap: "wrap",
+  marginLeft: "auto",
 };
 
 export const filterRow = {
