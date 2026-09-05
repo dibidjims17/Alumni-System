@@ -17,8 +17,8 @@ import { askConfirm } from "../components/confirmBus";
 const STATUS_OPTIONS = ["Pending", "Released"];
 
 const STATUS_STYLES = {
-  Pending: { background: "var(--surface-alt)", color: "var(--muted)" },
-  Released: { background: "var(--surface-alt)", color: "var(--success)" },
+  Pending: { background: "rgba(239,108,0,0.14)", color: "#B45309" },
+  Released: { background: "rgba(46,125,50,0.13)", color: "var(--success)" },
 };
 
 export default function StudentDocuments() {
@@ -185,7 +185,7 @@ export default function StudentDocuments() {
                       Updated {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : "never"}
                     </p>
                   </div>
-                  <span style={{ ...pill, background: pillStyle.background, color: released ? "var(--success)" : "var(--muted)" }}>
+                  <span style={{ ...pill, background: pillStyle.background, color: released ? "var(--success)" : "#B45309" }}>
                     {currentStatus}
                   </span>
                 </div>
@@ -218,7 +218,7 @@ export default function StudentDocuments() {
                 </div>
 
                 <div style={cardFooter}>
-                  <span style={{ marginRight: "auto", fontSize: 12, fontWeight: 600, color: edited ? "var(--primary)" : "transparent", userSelect: "none" }}>
+                  <span style={{ marginRight: "auto", fontSize: 12.5, fontWeight: 800, color: edited ? "var(--primary)" : "transparent", userSelect: "none" }}>
                     {edited ? "● Unsaved" : "●"}
                   </span>
                   <button

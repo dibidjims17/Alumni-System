@@ -5,7 +5,7 @@ import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/
 import { getDeletedEvents, restoreEvent, permanentlyDeleteEvent } from "../services/eventsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
 export default function Trash() {
@@ -301,12 +301,13 @@ export default function Trash() {
                       <p style={{ ...cardMeta, margin: 0 }}>Posted by {item.subtitle}</p>
                     )
                   )}
-                  <p style={{ ...cardMeta, margin: 0 }}>
+                  <p style={{ ...cardMeta, margin: 0, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>
                     {item.type === "Event" ? "Event date" : "Posted"} {new Date(item.postedAt).toLocaleDateString()}
                   </p>
                 </div>
                 <span
                   style={{
+                    ...pill,
                     marginLeft: "auto", flexShrink: 0,
                     display: "inline-flex", alignItems: "center", gap: 5,
                     fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999,

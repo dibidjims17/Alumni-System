@@ -5,7 +5,7 @@ import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX,
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -292,16 +292,16 @@ export default function Students() {
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h4 style={{ ...cardTitle, margin: 0 }}>{s.fullName}</h4>
-                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.studentNumber}</p>
+                    <p style={{ ...cardMeta, margin: "2px 0 0", fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{s.studentNumber}</p>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.email}</p>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.program} • {s.schoolYear}</p>
                   </div>
                   <span
                     style={{
-                      marginLeft: "auto", flexShrink: 0, fontSize: 12, fontWeight: 600,
-                      padding: "2px 10px", borderRadius: 999,
-                      background: s.isActive ? "#e6f4ea" : "#fdecea",
-                      color: s.isActive ? "#1e7e34" : "#c0392b",
+                      ...pill,
+                      marginLeft: "auto",
+                      background: s.isActive ? "rgba(46,125,50,0.13)" : "rgba(194,57,43,0.10)",
+                      color: s.isActive ? "var(--success)" : "var(--danger)",
                     }}
                   >
                     {s.isActive ? "Active" : "Inactive"}

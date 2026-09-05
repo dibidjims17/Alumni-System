@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, pill, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -200,12 +200,18 @@ export default function Jobs() {
             const salaryLine = formatSalaryRange(job);
             const deadlineDate = job.deadline ? new Date(job.deadline).toLocaleDateString() : "—";
             const isClosed = job.deadline ? new Date(job.deadline).getTime() < Date.now() : false;
+            const isJobActive = job.isActive !== false && !isClosed;
             return (
               <div key={job.id} style={card}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                    <h3 style={cardTitle}>{job.jobTitle}</h3>
-                    <p style={cardMeta}>{job.company || "—"} • {job.location || "—"}</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <h3 style={cardTitle}>{job.jobTitle}</h3>
+                      <span style={{ ...pill, background: isJobActive ? "rgba(46,125,50,0.13)" : "rgba(194,57,43,0.10)", color: isJobActive ? "#257A2B" : "var(--danger)" }}>
+                        {isJobActive ? "Active" : "Closed"}
+                      </span>
+                    </div>
+                    <p style={{ ...cardMeta, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{job.company || "—"} • {job.location || "—"}</p>
                     <p style={cardMeta}>{job.employmentType || "—"} • {job.industry || "—"}</p>
                     {salaryLine && <p style={cardMeta}>Salary: {salaryLine}</p>}
                     <p style={cardMeta}>

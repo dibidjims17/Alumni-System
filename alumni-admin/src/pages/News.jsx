@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucide-react";
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, pill, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -161,7 +161,7 @@ export default function News() {
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                     <h3 style={cardTitle}>{item.title}</h3>
-                    <p style={cardMeta}>
+                    <p style={{ ...cardMeta, margin: 0, fontWeight: 700, color: "var(--text)", fontSize: 13 }}>
                       Posted by {item.postedByAdminName} • {new Date(item.postedAt).toLocaleString()}
                     </p>
                     <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16 }}>
@@ -175,6 +175,9 @@ export default function News() {
                       </span>
                     </p>
                   </div>
+                  <span style={{ ...pill, marginLeft: "auto", background: item.isPublished ? "rgba(46,125,50,0.13)" : "rgba(239,108,0,0.14)", color: item.isPublished ? "var(--success)" : "#B45309" }}>
+                    {item.isPublished ? "Published" : "Draft"}
+                  </span>
                 </div>
                 <div
                   style={{

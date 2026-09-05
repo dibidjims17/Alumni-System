@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config";
 import { getStudents } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
 import { notifyError, notifySuccess } from "../components/toastBus";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, ModalShell, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
@@ -116,9 +116,12 @@ export default function Documents() {
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h4 style={{ ...cardTitle, margin: 0 }}>{s.fullName}</h4>
-                  <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.studentNumber}</p>
+                  <p style={{ ...cardMeta, margin: "2px 0 0", fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{s.studentNumber}</p>
                   <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.program} • {s.schoolYear}</p>
                 </div>
+                <span style={{ ...pill, marginLeft: "auto", background: s.isActive === false ? "rgba(194,57,43,0.10)" : "rgba(46,125,50,0.13)", color: s.isActive === false ? "var(--danger)" : "var(--success)" }}>
+                  {s.isActive === false ? "Inactive" : "Active"}
+                </span>
               </div>
               <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
                 <Link

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { FileText, History, Download } from "lucide-react";
 import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
-import { cardGrid, card, cardTitle, cardMeta, ModalShell, btn, btnPrimary, textInput, selectStyle } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, pill, ModalShell, btn, btnPrimary, textInput, selectStyle } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -10,10 +10,10 @@ import { askConfirm } from "../components/confirmBus";
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
 const STATUS_STYLES = {
-  Pending: { background: "#eee", color: "#555" },
-  Reviewed: { background: "#e8eefc", color: "#1a4fd8" },
-  Shortlisted: { background: "#e6f4ea", color: "#1e7e34" },
-  Rejected: { background: "#fdecea", color: "#cc0000" },
+  Pending: { background: "rgba(239,108,0,0.14)", color: "#B45309" },
+  Reviewed: { background: "rgba(69,116,184,0.13)", color: "#1a4fd8" },
+  Shortlisted: { background: "rgba(46,125,50,0.13)", color: "var(--success)" },
+  Rejected: { background: "rgba(194,57,43,0.10)", color: "var(--danger)" },
 };
 
 export default function JobApplicants() {
@@ -180,7 +180,7 @@ export default function JobApplicants() {
       ) : (
         <div style={cardGrid}>
           {applicants.map((a) => {
-            const pill = STATUS_STYLES[a.status] || STATUS_STYLES.Pending;
+            const statusStyle = STATUS_STYLES[a.status] || STATUS_STYLES.Pending;
             return (
               <div key={a.applicationId} style={card}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -195,14 +195,14 @@ export default function JobApplicants() {
                     <h4 style={{ ...cardTitle, margin: 0 }}>{a.fullName}</h4>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{a.studentNumber}</p>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{a.email}</p>
-                    <p style={{ ...cardMeta, margin: "2px 0 0" }}>
+                    <p style={{ ...cardMeta, margin: "2px 0 0", fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>
                       {a.program} • Applied {new Date(a.appliedAt).toLocaleString()}
                     </p>
                   </div>
                   <span style={{
-                    marginLeft: "auto", flexShrink: 0, fontSize: 12, fontWeight: 600,
-                    padding: "2px 10px", borderRadius: 999,
-                    background: pill.background, color: pill.color,
+                    ...pill,
+                    marginLeft: "auto",
+                    background: statusStyle.background, color: statusStyle.color,
                   }}>
                     {a.status}
                   </span>

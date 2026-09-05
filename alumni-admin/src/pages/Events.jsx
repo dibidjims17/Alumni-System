@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, Users, Download } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, pill, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -230,13 +230,20 @@ export default function Events() {
         <p>No events yet.</p>
       ) : (
         <div style={cardGrid}>
-          {events.map((event) => (
+          {events.map((event) => {
+            const isPast = event.eventDate ? new Date(event.eventDate).getTime() < Date.now() : false;
+            return (
             <div key={event.id} style={card}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                  <h3 style={cardTitle}>{event.title}</h3>
-                  <p style={cardMeta}>{event.eventDate ? new Date(event.eventDate).toLocaleString() : "—"}</p>
-                  <p style={cardMeta}>Location: {event.location}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <h3 style={cardTitle}>{event.title}</h3>
+                    <span style={{ ...pill, background: isPast ? "rgba(194,57,43,0.10)" : "rgba(46,125,50,0.13)", color: isPast ? "var(--danger)" : "#257A2B" }}>
+                      {isPast ? "Past" : "Upcoming"}
+                    </span>
+                  </div>
+                  <p style={{ ...cardMeta, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{event.eventDate ? new Date(event.eventDate).toLocaleString() : "—"}</p>
+                  <p style={{ ...cardMeta, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>Location: {event.location}</p>
                   <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 5 }}>
                     <Users size={13} />
                     {event.attendeeCount ?? 0} going
@@ -259,7 +266,8 @@ export default function Events() {
                 {isSuperAdmin && <DeleteButton onClick={() => setConfirmDeleteId(event.id)} style={{ color: "var(--danger)", borderColor: "var(--danger)" }} />}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
