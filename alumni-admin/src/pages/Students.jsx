@@ -219,12 +219,14 @@ export default function Students() {
     <div>
       <div style={toolbar}>
         <div style={toolbarFilters}>
-          <SearchBox
-            placeholder="Search by Student Number, Name, or Email"
-            value={searchTerm}
-            onChange={setSearchTerm}
-            onReset={() => setSearchTerm("")}
-          />
+          <div style={{ flex: "2 1 300px", maxWidth: 460, minWidth: 240, display: "flex" }}>
+            <SearchBox
+              placeholder="Search by Student Number, Name, or Email"
+              value={searchTerm}
+              onChange={setSearchTerm}
+              onReset={() => setSearchTerm("")}
+            />
+          </div>
 
           <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
             <option value="">All Years</option>
