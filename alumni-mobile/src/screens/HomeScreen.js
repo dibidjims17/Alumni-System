@@ -10,6 +10,8 @@ import {
   Bell,
   ChevronRight,
   CheckCheck,
+  Moon,
+  Sun,
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,7 +36,7 @@ function greeting() {
 
 export default function HomeScreen({ navigation }) {
   const { student } = useAuth();
-  const { theme } = useTheme();
+  const { theme, isDark, toggleDarkMode } = useTheme();
   const c = theme.colors;
   const { width } = useWindowDimensions();
   // Column count follows the actual window width so phones, landscape
@@ -75,20 +77,29 @@ export default function HomeScreen({ navigation }) {
             {student?.studentNumber} • {student?.program}
           </Text>
         </View>
-        <TouchableOpacity
-          style={[styles.bellButton, { backgroundColor: c.surface, borderColor: c.border }]}
-          onPress={() => navigation.navigate('Notifications')}
-          accessibilityLabel="Notifications"
-        >
-          <Bell size={22} color={c.primary} />
-          {unreadCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: c.badge }]}>
-              <Text style={styles.badgeText}>
-                {unreadCount > 99 ? '99+' : String(unreadCount)}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: c.surface, borderColor: c.border }]}
+            onPress={toggleDarkMode}
+            accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun size={22} color={c.primary} /> : <Moon size={22} color={c.primary} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: c.surface, borderColor: c.border }]}
+            onPress={() => navigation.navigate('Notifications')}
+            accessibilityLabel="Notifications"
+          >
+            <Bell size={22} color={c.primary} />
+            {unreadCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: c.badge }]}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 99 ? '99+' : String(unreadCount)}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -196,7 +207,12 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     marginTop: 2,
   },
-  bellButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
