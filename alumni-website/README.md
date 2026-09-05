@@ -1,4 +1,4 @@
-# Alumni Connect — Promo Website
+# Reunio · Alumni Connect — Promo Website
 
 Static landing page that promotes the mobile app (capstone device #3:
 **mobile app** + **desktop admin** + **this website**). No build step, no

@@ -126,7 +126,7 @@ export default function Login() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
           <School size={30} color="var(--primary)" />
           <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: "var(--text)" }}>Alumni System</div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: "var(--text)" }}>Reunio</div>
             <div style={{ fontSize: 12, color: "var(--muted)" }}>Admin Console</div>
           </div>
         </div>

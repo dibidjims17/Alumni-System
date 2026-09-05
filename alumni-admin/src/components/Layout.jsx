@@ -161,7 +161,7 @@ export default function Layout() {
         <div style={{ padding: "20px 18px 8px", display: "flex", alignItems: "center", gap: 10 }}>
           <School size={24} color="var(--sidebar-active)" />
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>Alumni System</div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>Reunio</div>
             <div style={{ fontSize: 11, color: "var(--sidebar-muted)" }}>Admin Console</div>
           </div>
         </div>

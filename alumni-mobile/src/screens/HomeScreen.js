@@ -109,7 +109,7 @@ export default function HomeScreen({ navigation }) {
         <View style={[styles.hero, { backgroundColor: c.primaryStrong }]}>
           <View style={styles.heroGlow} />
           <View style={styles.heroGlowSmall} />
-          <Text style={styles.heroKicker}>ALUMNI CONNECT</Text>
+          <Text style={styles.heroKicker}>REUNIO · ALUMNI CONNECT</Text>
           <Text style={styles.heroTitle}>
             {unreadCount > 0
               ? `${unreadCount} new notification${unreadCount === 1 ? '' : 's'}`
