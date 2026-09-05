@@ -4,7 +4,7 @@ import { getDeletedJobs, restoreJob, permanentlyDeleteJob } from "../services/jo
 import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn, btnDanger, toolbar, toolbarFilters, toolbarActions } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
 export default function Trash() {
@@ -181,42 +181,43 @@ export default function Trash() {
         onCancel={() => setConfirmAction(null)}
       />
 
-      <div style={toolbar}>
-        <div style={toolbarFilters}>
-          <SearchBox
-            placeholder="Search deleted jobs or news..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-            onReset={() => setSearchTerm("")}
-          />
+      <div style={{ ...toolbar, justifyContent: "flex-end" }}>
+        <button
+          style={btnDanger}
+          onClick={askEmptyTrash}
+          disabled={loading || trashCount === 0}
+          title={trashCount === 0 ? "Trash is empty" : `Permanently delete all ${trashCount} items`}
+        >
+          <Trash2 size={15} />
+          Empty Trash{trashCount > 0 ? ` (${trashCount})` : ""}
+        </button>
+      </div>
 
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
-            <option value="all">All Types</option>
-            <option value="jobs">Jobs Only</option>
-            <option value="news">News Only</option>
-          </select>
+      <div style={filterRow}>
+        <SearchBox
+          placeholder="Search deleted jobs or news..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onReset={() => setSearchTerm("")}
+        />
+      </div>
 
-          <button
-            style={btn}
-            onClick={() => {
-              setSearchTerm("");
-              setTypeFilter("all");
-            }}
-          >
-            Reset Filters
-          </button>
-        </div>
-        <div style={toolbarActions}>
-          <button
-            style={btnDanger}
-            onClick={askEmptyTrash}
-            disabled={loading || trashCount === 0}
-            title={trashCount === 0 ? "Trash is empty" : `Permanently delete all ${trashCount} items`}
-          >
-            <Trash2 size={15} />
-            Empty Trash{trashCount > 0 ? ` (${trashCount})` : ""}
-          </button>
-        </div>
+      <div style={{ ...filterRow, marginTop: -4 }}>
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
+          <option value="all">All Types</option>
+          <option value="jobs">Jobs Only</option>
+          <option value="news">News Only</option>
+        </select>
+
+        <button
+          style={btn}
+          onClick={() => {
+            setSearchTerm("");
+            setTypeFilter("all");
+          }}
+        >
+          Reset Filters
+        </button>
       </div>
 
       {loading ? (

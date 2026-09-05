@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, toolbarFilters, toolbarActions } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -169,25 +169,24 @@ export default function Jobs() {
 
   return (
     <div>
-      <div style={toolbar}>
-        <form
-          onSubmit={submitSearch}
-          style={{ ...toolbarFilters, flex: 1 }}
-        >
-          <SearchBox
-            placeholder="Search title or company"
-            value={searchTerm}
-            onChange={setSearchTerm}
-            onReset={resetSearch}
-          />
-        </form>
-        <div style={toolbarActions}>
-          <button onClick={openCreateModal} style={btnPrimary}>
-            <Plus size={15} />
-            Add New Job
-          </button>
-        </div>
+      <div style={{ ...toolbar, justifyContent: "flex-end" }}>
+        <button onClick={openCreateModal} style={btnPrimary}>
+          <Plus size={15} />
+          Add New Job
+        </button>
       </div>
+
+      <form
+        onSubmit={submitSearch}
+        style={filterRow}
+      >
+        <SearchBox
+          placeholder="Search title or company"
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onReset={resetSearch}
+        />
+      </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 

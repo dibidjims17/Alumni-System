@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucide-react";
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, toolbarFilters, toolbarActions } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 
@@ -126,23 +126,22 @@ export default function News() {
 
   return (
     <div>
-      <div style={toolbar}>
-        <form onSubmit={submitSearch} style={{ ...toolbarFilters, flex: 1 }}>
-          <SearchBox
-            placeholder="Search title or content"
-            value={searchTerm}
-            onChange={setSearchTerm}
-            onSubmit={submitSearch}
-            onReset={resetSearch}
-          />
-        </form>
-        <div style={toolbarActions}>
-          <button onClick={openCreateModal} style={btnPrimary}>
-            <Plus size={15} />
-            Add News
-          </button>
-        </div>
+      <div style={{ ...toolbar, justifyContent: "flex-end" }}>
+        <button onClick={openCreateModal} style={btnPrimary}>
+          <Plus size={15} />
+          Add News
+        </button>
       </div>
+
+      <form onSubmit={submitSearch} style={filterRow}>
+        <SearchBox
+          placeholder="Search title or content"
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onSubmit={submitSearch}
+          onReset={resetSearch}
+        />
+      </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 

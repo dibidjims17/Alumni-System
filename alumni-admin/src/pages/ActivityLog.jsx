@@ -68,14 +68,16 @@ export default function ActivityLog() {
     <div>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <div style={{ margin: "16px 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ margin: "16px 0 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <SearchBox
           placeholder="Search by name or details"
           value={searchTerm}
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}
         />
+      </div>
 
+      <div style={{ margin: "12px 0 16px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <select value={actorTypeFilter} onChange={(e) => setActorTypeFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Actor Types</option>
           <option value="Admin">Admin</option>
