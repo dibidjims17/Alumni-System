@@ -39,6 +39,7 @@ namespace MyApp.Infrastructure.Data
             // the repository explicitly opts out with IgnoreQueryFilters().
             modelBuilder.Entity<Job>().HasQueryFilter(j => !j.IsDeleted);
             modelBuilder.Entity<News>().HasQueryFilter(n => !n.IsDeleted);
+            modelBuilder.Entity<Event>().HasQueryFilter(e => !e.IsDeleted);
 
             // A student can RSVP to a given event only once.
             modelBuilder.Entity<EventRsvp>()

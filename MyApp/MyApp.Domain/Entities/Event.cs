@@ -10,6 +10,7 @@ namespace MyApp.Domain.Entities
         public int PostedByAdminId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsDeleted { get; set; } = false;
 
         public Admin PostedByAdmin { get; set; } = null!;
         public ICollection<EventRsvp> Rsvps { get; set; } = new List<EventRsvp>();

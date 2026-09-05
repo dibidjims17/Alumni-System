@@ -60,3 +60,29 @@ export async function getEventAttendees(eventId) {
   if (!response.ok) throw new Error("Failed to fetch attendees");
   return response.json();
 }
+
+export async function getDeletedEvents() {
+  const response = await fetch(`${API_BASE_URL}/Events/trash`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch event trash");
+  return response.json();
+}
+
+export async function restoreEvent(id) {
+  const response = await fetch(`${API_BASE_URL}/Events/${id}/restore`, {
+    method: "PUT",
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to restore event");
+  return response.json();
+}
+
+export async function permanentlyDeleteEvent(id) {
+  const response = await fetch(`${API_BASE_URL}/Events/${id}/permanent`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to permanently delete event");
+  return response.json();
+}

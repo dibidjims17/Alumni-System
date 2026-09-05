@@ -363,7 +363,7 @@ export default function Events() {
       )}
 
       <ConfirmDialog
-        message={confirmDeleteId ? "Delete this event permanently? RSVPs will also be removed." : null}
+        message={confirmDeleteId ? "Move this event to trash? You can restore it later." : null}
         onConfirm={confirmDelete}
         onCancel={() => setConfirmDeleteId(null)}
       />

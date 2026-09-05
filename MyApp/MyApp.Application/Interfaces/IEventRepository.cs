@@ -9,6 +9,8 @@ namespace MyApp.Application.Interfaces
         Task<List<Event>> GetAllAsync(int page, int pageSize, string? search = null);
         Task<int> CountAllAsync(string? search = null);
         Task<Event?> GetByIdAsync(int id);
+        Task<Event?> GetByIdIncludingDeletedAsync(int id);
+        Task<List<Event>> GetDeletedAsync();
         Task<EventRsvp?> GetRsvpAsync(int eventId, int studentId);
         Task AddRsvpAsync(EventRsvp rsvp);
         Task RemoveRsvpAsync(EventRsvp rsvp);

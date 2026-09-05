@@ -86,6 +86,26 @@ namespace MyApp.Infrastructure.Repositories
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 
+        public async Task<Event?> GetByIdIncludingDeletedAsync(int id)
+        {
+            return await _context.Events
+                .IgnoreQueryFilters()
+                .Include(e => e.PostedByAdmin)
+                .Include(e => e.Rsvps)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<List<Event>> GetDeletedAsync()
+        {
+            return await _context.Events
+                .IgnoreQueryFilters()
+                .Where(e => e.IsDeleted)
+                .Include(e => e.PostedByAdmin)
+                .Include(e => e.Rsvps)
+                .OrderByDescending(e => e.EventDate)
+                .ToListAsync();
+        }
+
         public async Task<EventRsvp?> GetRsvpAsync(int eventId, int studentId)
         {
             return await _context.EventRsvps

@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
-import { RotateCcw, Trash2, Briefcase, Newspaper } from "lucide-react";
+import { RotateCcw, Trash2, Briefcase, Newspaper, CalendarDays } from "lucide-react";
 import { getDeletedJobs, restoreJob, permanentlyDeleteJob } from "../services/jobsApi";
 import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/newsApi";
+import { getDeletedEvents, restoreEvent, permanentlyDeleteEvent } from "../services/eventsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow } from "../components/kit";
@@ -10,19 +11,21 @@ import { GridSkeleton } from "../components/Skeleton";
 export default function Trash() {
   const [deletedJobs, setDeletedJobs] = useState([]);
   const [deletedNews, setDeletedNews] = useState([]);
+  const [deletedEvents, setDeletedEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const [typeFilter, setTypeFilter] = useState("all"); // "all" | "jobs" | "news"
+  const [typeFilter, setTypeFilter] = useState("all"); // "all" | "jobs" | "news" | "events"
   const [searchTerm, setSearchTerm] = useState("");
 
   async function loadTrash() {
     setLoading(true);
     try {
-      const [jobs, news] = await Promise.all([getDeletedJobs(), getDeletedNews()]);
+      const [jobs, news, events] = await Promise.all([getDeletedJobs(), getDeletedNews(), getDeletedEvents()]);
       setDeletedJobs(jobs);
       setDeletedNews(news);
+      setDeletedEvents(events);
     } catch (err) {
       setToast({ message: err.message, type: "error" });
     } finally {
@@ -102,7 +105,41 @@ export default function Trash() {
     });
   }
 
-  const trashCount = deletedJobs.length + deletedNews.length;
+  const trashCount = deletedJobs.length + deletedNews.length + deletedEvents.length;
+
+  function askRestoreEvent(event) {
+    setConfirmAction({
+      message: `Restore "${event.title}"?`,
+      onConfirm: async () => {
+        try {
+          await restoreEvent(event.id);
+          setToast({ message: "Event restored.", type: "success" });
+          loadTrash();
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmAction(null);
+        }
+      },
+    });
+  }
+
+  function askPermanentDeleteEvent(event) {
+    setConfirmAction({
+      message: `Permanently delete "${event.title}"? This cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await permanentlyDeleteEvent(event.id);
+          setToast({ message: "Event permanently deleted.", type: "success" });
+          loadTrash();
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmAction(null);
+        }
+      },
+    });
+  }
 
   function askEmptyTrash() {
     if (trashCount === 0) return;
@@ -115,6 +152,9 @@ export default function Trash() {
           }
           for (const item of deletedNews) {
             await permanentlyDeleteNews(item.id);
+          }
+          for (const event of deletedEvents) {
+            await permanentlyDeleteEvent(event.id);
           }
           setToast({ message: `Emptied trash (${trashCount} item${trashCount === 1 ? "" : "s"} deleted).`, type: "success" });
           loadTrash();
@@ -164,13 +204,31 @@ export default function Trash() {
         onDeleteForever: () => askPermanentDeleteNews(item),
       }));
 
+    const eventItems = deletedEvents
+      .filter(
+        (event) =>
+          !term ||
+          event.title?.toLowerCase().includes(term) ||
+          event.location?.toLowerCase().includes(term)
+      )
+      .map((event) => ({
+        type: "Event",
+        id: event.id,
+        title: event.title,
+        subtitle: event.location,
+        postedAt: event.eventDate,
+        onRestore: () => askRestoreEvent(event),
+        onDeleteForever: () => askPermanentDeleteEvent(event),
+      }));
+
     let combined = [];
-    if (typeFilter === "all") combined = [...jobItems, ...newsItems];
+    if (typeFilter === "all") combined = [...jobItems, ...newsItems, ...eventItems];
     else if (typeFilter === "jobs") combined = jobItems;
     else if (typeFilter === "news") combined = newsItems;
+    else if (typeFilter === "events") combined = eventItems;
 
     return combined.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
-  }, [deletedJobs, deletedNews, typeFilter, searchTerm]);
+  }, [deletedJobs, deletedNews, deletedEvents, typeFilter, searchTerm]);
 
   return (
     <div>
@@ -195,7 +253,7 @@ export default function Trash() {
 
       <div style={filterRow}>
         <SearchBox
-          placeholder="Search deleted jobs or news..."
+          placeholder="Search deleted jobs, news, or events..."
           value={searchTerm}
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}
@@ -207,6 +265,7 @@ export default function Trash() {
           <option value="all">All Types</option>
           <option value="jobs">Jobs Only</option>
           <option value="news">News Only</option>
+          <option value="events">Events Only</option>
         </select>
 
         <button
@@ -233,13 +292,17 @@ export default function Trash() {
                   <h3 style={{ ...cardTitle, margin: 0 }}>{item.title}</h3>
                   {item.type === "Job" ? (
                     <p style={{ ...cardMeta, margin: 0 }}>{item.subtitle || "—"}</p>
+                  ) : item.type === "Event" ? (
+                    item.subtitle && (
+                      <p style={{ ...cardMeta, margin: 0 }}>{item.subtitle}</p>
+                    )
                   ) : (
                     item.subtitle && (
                       <p style={{ ...cardMeta, margin: 0 }}>Posted by {item.subtitle}</p>
                     )
                   )}
                   <p style={{ ...cardMeta, margin: 0 }}>
-                    Posted {new Date(item.postedAt).toLocaleDateString()}
+                    {item.type === "Event" ? "Event date" : "Posted"} {new Date(item.postedAt).toLocaleDateString()}
                   </p>
                 </div>
                 <span
@@ -247,11 +310,11 @@ export default function Trash() {
                     marginLeft: "auto", flexShrink: 0,
                     display: "inline-flex", alignItems: "center", gap: 5,
                     fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                    background: item.type === "Job" ? "#e3f2fd" : "#f3e5f5",
-                    color: item.type === "Job" ? "#1565c0" : "#6a1b9a",
+                    background: item.type === "Job" ? "#e3f2fd" : item.type === "Event" ? "#e0f2f1" : "#f3e5f5",
+                    color: item.type === "Job" ? "#1565c0" : item.type === "Event" ? "#00796b" : "#6a1b9a",
                   }}
                 >
-                  {item.type === "Job" ? <Briefcase size={13} /> : <Newspaper size={13} />}
+                  {item.type === "Job" ? <Briefcase size={13} /> : item.type === "Event" ? <CalendarDays size={13} /> : <Newspaper size={13} />}
                   {item.type}
                 </span>
               </div>

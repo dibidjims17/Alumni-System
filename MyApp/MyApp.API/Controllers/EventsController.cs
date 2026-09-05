@@ -81,9 +81,35 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
-            var success = await _eventService.DeleteEventAsync(id);
+            var success = await _eventService.SoftDeleteEventAsync(id);
             if (!success) return NotFound();
-            return Ok(new { message = "Event deleted." });
+            return Ok(new { message = "Event moved to trash." });
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpGet("trash")]
+        public async Task<IActionResult> GetDeletedEvents()
+        {
+            var result = await _eventService.GetDeletedEventsAsync();
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPut("{id}/restore")]
+        public async Task<IActionResult> RestoreEvent(int id)
+        {
+            var success = await _eventService.RestoreEventAsync(id);
+            if (!success) return NotFound();
+            return Ok(new { message = "Event restored successfully." });
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpDelete("{id}/permanent")]
+        public async Task<IActionResult> PermanentlyDeleteEvent(int id)
+        {
+            var success = await _eventService.PermanentlyDeleteEventAsync(id);
+            if (!success) return NotFound();
+            return Ok(new { message = "Event permanently deleted." });
         }
 
         [Authorize(Roles = "SuperAdmin,Staff")]

@@ -10,6 +10,10 @@ namespace MyApp.Application.Interfaces
         Task<EventDto> CreateEventAsync(CreateEventRequest request, int adminId);
         Task<bool> UpdateEventAsync(int eventId, CreateEventRequest request);
         Task<bool> DeleteEventAsync(int eventId);
+        Task<bool> SoftDeleteEventAsync(int eventId);
+        Task<bool> RestoreEventAsync(int eventId);
+        Task<bool> PermanentlyDeleteEventAsync(int eventId);
+        Task<List<EventDto>> GetDeletedEventsAsync();
         Task<(bool Found, bool Rsvped)> ToggleRsvpAsync(int eventId, int studentId);
         Task<List<EventAttendeeDto>?> GetAttendeesAsync(int eventId);
     }

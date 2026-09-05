@@ -81,11 +81,42 @@ namespace MyApp.Application.Services
 
         public async Task<bool> DeleteEventAsync(int eventId)
         {
+            return await SoftDeleteEventAsync(eventId);
+        }
+
+        public async Task<bool> SoftDeleteEventAsync(int eventId)
+        {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
+            if (eventEntity == null) return false;
+
+            eventEntity.IsDeleted = true;
+            await _eventRepository.UpdateAsync(eventEntity);
+            return true;
+        }
+
+        public async Task<bool> RestoreEventAsync(int eventId)
+        {
+            var eventEntity = await _eventRepository.GetByIdIncludingDeletedAsync(eventId);
+            if (eventEntity == null || !eventEntity.IsDeleted) return false;
+
+            eventEntity.IsDeleted = false;
+            await _eventRepository.UpdateAsync(eventEntity);
+            return true;
+        }
+
+        public async Task<bool> PermanentlyDeleteEventAsync(int eventId)
+        {
+            var eventEntity = await _eventRepository.GetByIdIncludingDeletedAsync(eventId);
             if (eventEntity == null) return false;
 
             await _eventRepository.DeleteAsync(eventEntity);
             return true;
+        }
+
+        public async Task<List<EventDto>> GetDeletedEventsAsync()
+        {
+            var events = await _eventRepository.GetDeletedAsync();
+            return events.Select(e => Map(e, null)).ToList();
         }
 
         public async Task<(bool Found, bool Rsvped)> ToggleRsvpAsync(int eventId, int studentId)
