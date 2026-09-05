@@ -234,7 +234,7 @@ namespace MyApp.Application.Services
             return true;
         }
 
-        public async Task<bool> UpdateNewsAsync(int newsId, CreateNewsRequest request, string? imagePath)
+        public async Task<bool> UpdateNewsAsync(int newsId, CreateNewsRequest request, string? imagePath, int adminId)
         {
             var news = await _newsRepository.GetByIdAsync(newsId);
             if (news == null) return false;
@@ -246,7 +246,7 @@ namespace MyApp.Application.Services
             if (imagePath != null) news.ImagePath = imagePath;
 
             await _newsRepository.UpdateAsync(news);
-            await _activityLogRepository.LogAdminAsync(0, "UPDATE_NEWS", $"Updated news: {request.Title}", "system");
+            await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_NEWS", $"Updated news: {request.Title}", "system");
             return true;
         }
 
@@ -260,32 +260,35 @@ namespace MyApp.Application.Services
             return true;
         }
 
-        public async Task<bool> SoftDeleteNewsAsync(int id)
+        public async Task<bool> SoftDeleteNewsAsync(int id, int adminId)
         {
             var news = await _newsRepository.GetByIdAsync(id);
             if (news == null) return false;
 
             news.IsDeleted = true;
             await _newsRepository.UpdateAsync(news);
+            await _activityLogRepository.LogAdminAsync(adminId, "TRASH_NEWS", $"Moved news to trash: {news.Title}", "system");
             return true;
         }
 
-        public async Task<bool> RestoreNewsAsync(int id)
+        public async Task<bool> RestoreNewsAsync(int id, int adminId)
         {
             var news = await _newsRepository.GetByIdIncludingDeletedAsync(id);
             if (news == null || !news.IsDeleted) return false;
 
             news.IsDeleted = false;
             await _newsRepository.UpdateAsync(news);
+            await _activityLogRepository.LogAdminAsync(adminId, "RESTORE_NEWS", $"Restored news: {news.Title}", "system");
             return true;
         }
 
-        public async Task<bool> PermanentlyDeleteNewsAsync(int id)
+        public async Task<bool> PermanentlyDeleteNewsAsync(int id, int adminId)
         {
             var news = await _newsRepository.GetByIdIncludingDeletedAsync(id);
             if (news == null) return false;
 
             await _newsRepository.DeleteAsync(news);
+            await _activityLogRepository.LogAdminAsync(adminId, "DELETE_NEWS", $"Permanently deleted news: {news.Title}", "system");
             return true;
         }
 

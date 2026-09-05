@@ -81,7 +81,7 @@ namespace MyApp.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateJob(int id, [FromBody] CreateJobRequest request)
         {
-            var success = await _jobService.UpdateJobAsync(id, request);
+            var success = await _jobService.UpdateJobAsync(id, request, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "Job updated successfully." });
         }
@@ -90,7 +90,7 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteJob(int id)
         {
-            var success = await _jobService.SoftDeleteJobAsync(id);
+            var success = await _jobService.SoftDeleteJobAsync(id, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "Job moved to trash." });
         }
@@ -107,7 +107,7 @@ namespace MyApp.API.Controllers
         [HttpPut("{id}/restore")]
         public async Task<IActionResult> RestoreJob(int id)
         {
-            var success = await _jobService.RestoreJobAsync(id);
+            var success = await _jobService.RestoreJobAsync(id, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "Job restored successfully." });
         }
@@ -116,7 +116,7 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}/permanent")]
         public async Task<IActionResult> PermanentlyDeleteJob(int id)
         {
-            var success = await _jobService.PermanentlyDeleteJobAsync(id);
+            var success = await _jobService.PermanentlyDeleteJobAsync(id, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "Job permanently deleted." });
         }

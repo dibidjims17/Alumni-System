@@ -244,7 +244,7 @@ namespace MyApp.Application.Services
             await _activityLogRepository.LogStudentAsync(studentId, "ADD_WORK_EXPERIENCE", $"Added work experience at {request.Company}", ipAddress);
         }
 
-        public async Task<bool> UpdateWorkExperienceAsync(int studentId, int workExperienceId, WorkExperienceDto request)
+        public async Task<bool> UpdateWorkExperienceAsync(int studentId, int workExperienceId, WorkExperienceDto request, string ipAddress)
         {
             var work = await _workExperienceRepository.GetByIdAsync(workExperienceId);
             if (work == null || work.StudentId != studentId) return false;
@@ -256,14 +256,16 @@ namespace MyApp.Application.Services
             work.EndDate = request.EndDate;
             work.Description = request.Description;
             await _workExperienceRepository.UpdateAsync(work);
+            await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_WORK_EXPERIENCE", $"Updated work experience at {request.Company}", ipAddress);
             return true;
         }
 
-        public async Task<bool> DeleteWorkExperienceAsync(int studentId, int workExperienceId)
+        public async Task<bool> DeleteWorkExperienceAsync(int studentId, int workExperienceId, string ipAddress)
         {
             var work = await _workExperienceRepository.GetByIdAsync(workExperienceId);
             if (work == null || work.StudentId != studentId) return false;
             await _workExperienceRepository.DeleteAsync(work);
+            await _activityLogRepository.LogStudentAsync(studentId, "DELETE_WORK_EXPERIENCE", $"Deleted work experience at {work.Company}", ipAddress);
             return true;
         }
 
@@ -281,7 +283,7 @@ namespace MyApp.Application.Services
             await _activityLogRepository.LogStudentAsync(studentId, "ADD_EDUCATION", $"Added education at {request.School}", ipAddress);
         }
 
-        public async Task<bool> UpdateEducationAsync(int studentId, int educationId, EducationDto request)
+        public async Task<bool> UpdateEducationAsync(int studentId, int educationId, EducationDto request, string ipAddress)
         {
             var education = await _educationRepository.GetByIdAsync(educationId);
             if (education == null || education.StudentId != studentId) return false;
@@ -292,18 +294,20 @@ namespace MyApp.Application.Services
             education.StartYear = request.StartYear;
             education.EndYear = request.EndYear;
             await _educationRepository.UpdateAsync(education);
+            await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_EDUCATION", $"Updated education at {request.School}", ipAddress);
             return true;
         }
 
-        public async Task<bool> DeleteEducationAsync(int studentId, int educationId)
+        public async Task<bool> DeleteEducationAsync(int studentId, int educationId, string ipAddress)
         {
             var education = await _educationRepository.GetByIdAsync(educationId);
             if (education == null || education.StudentId != studentId) return false;
             await _educationRepository.DeleteAsync(education);
+            await _activityLogRepository.LogStudentAsync(studentId, "DELETE_EDUCATION", $"Deleted education at {education.School}", ipAddress);
             return true;
         }
 
-        public async Task UpdateSkillsAsync(int studentId, List<string> skills)
+        public async Task UpdateSkillsAsync(int studentId, List<string> skills, string ipAddress)
         {
             await _skillRepository.DeleteAllByStudentIdAsync(studentId);
             foreach (var skill in skills)
@@ -314,6 +318,7 @@ namespace MyApp.Application.Services
                     SkillName = skill
                 });
             }
+            await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_SKILLS", $"Updated skills ({skills.Count} listed)", ipAddress);
         }
     }
 }

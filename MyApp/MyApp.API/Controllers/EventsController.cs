@@ -44,7 +44,8 @@ namespace MyApp.API.Controllers
         [HttpPost("{id}/rsvp")]
         public async Task<IActionResult> ToggleRsvp(int id)
         {
-            var (found, rsvped) = await _eventService.ToggleRsvpAsync(id, GetStudentId());
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var (found, rsvped) = await _eventService.ToggleRsvpAsync(id, GetStudentId(), ipAddress);
             if (!found) return NotFound();
             return Ok(new { rsvped });
         }
@@ -72,7 +73,8 @@ namespace MyApp.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateEvent(int id, [FromBody] CreateEventRequest request)
         {
-            var success = await _eventService.UpdateEventAsync(id, request);
+            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var success = await _eventService.UpdateEventAsync(id, request, adminId);
             if (!success) return NotFound();
             return Ok(new { message = "Event updated successfully." });
         }
@@ -81,7 +83,8 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
-            var success = await _eventService.SoftDeleteEventAsync(id);
+            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var success = await _eventService.SoftDeleteEventAsync(id, adminId);
             if (!success) return NotFound();
             return Ok(new { message = "Event moved to trash." });
         }
@@ -98,7 +101,8 @@ namespace MyApp.API.Controllers
         [HttpPut("{id}/restore")]
         public async Task<IActionResult> RestoreEvent(int id)
         {
-            var success = await _eventService.RestoreEventAsync(id);
+            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var success = await _eventService.RestoreEventAsync(id, adminId);
             if (!success) return NotFound();
             return Ok(new { message = "Event restored successfully." });
         }
@@ -107,7 +111,8 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}/permanent")]
         public async Task<IActionResult> PermanentlyDeleteEvent(int id)
         {
-            var success = await _eventService.PermanentlyDeleteEventAsync(id);
+            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var success = await _eventService.PermanentlyDeleteEventAsync(id, adminId);
             if (!success) return NotFound();
             return Ok(new { message = "Event permanently deleted." });
         }

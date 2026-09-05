@@ -7,7 +7,7 @@ namespace MyApp.Application.Interfaces
         Task<(List<JobDto> Items, int TotalCount)> GetJobsAsync(int page, int studentId, string? search = null, decimal? minSalary = null, decimal? maxSalary = null);
         Task<JobDto?> GetJobByIdAsync(int jobId, int studentId);
         Task<JobDto> CreateJobAsync(CreateJobRequest request, int adminId);
-        Task<bool> UpdateJobAsync(int jobId, CreateJobRequest request);
+        Task<bool> UpdateJobAsync(int jobId, CreateJobRequest request, int adminId);
         Task<bool> DeleteJobAsync(int jobId);
 
         Task<(bool Success, string Message)> ApplyToJobAsync(int jobId, int studentId, ApplyJobRequest request, string ipAddress);
@@ -17,9 +17,9 @@ namespace MyApp.Application.Interfaces
         Task<List<JobApplicationHistoryDto>?> GetApplicationHistoryAsync(int applicationId);
         Task<List<JobApplicationHistoryDto>?> GetMyApplicationHistoryAsync(int applicationId, int studentId);
 
-        Task<bool> SoftDeleteJobAsync(int id);
-        Task<bool> RestoreJobAsync(int id);
-        Task<bool> PermanentlyDeleteJobAsync(int id);
+        Task<bool> SoftDeleteJobAsync(int id, int adminId);
+        Task<bool> RestoreJobAsync(int id, int adminId);
+        Task<bool> PermanentlyDeleteJobAsync(int id, int adminId);
         Task<List<JobDto>> GetDeletedJobsAsync();
 
         Task<List<ApplicantDto>?> GetApplicantsForExportAsync(int jobId, List<string>? statuses);

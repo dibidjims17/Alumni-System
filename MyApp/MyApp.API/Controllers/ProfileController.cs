@@ -73,7 +73,8 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> UpdateWorkExperience(int id, [FromBody] WorkExperienceDto request)
         {
             if (!IsGraduate()) return Forbid();
-            var success = await _profileService.UpdateWorkExperienceAsync(GetStudentId(), id, request);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var success = await _profileService.UpdateWorkExperienceAsync(GetStudentId(), id, request, ipAddress);
             if (!success) return NotFound();
             return Ok(new { message = "Work experience updated successfully." });
         }
@@ -82,7 +83,8 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> DeleteWorkExperience(int id)
         {
             if (!IsGraduate()) return Forbid();
-            var success = await _profileService.DeleteWorkExperienceAsync(GetStudentId(), id);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var success = await _profileService.DeleteWorkExperienceAsync(GetStudentId(), id, ipAddress);
             if (!success) return NotFound();
             return Ok(new { message = "Work experience deleted successfully." });
         }
@@ -100,7 +102,8 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> UpdateEducation(int id, [FromBody] EducationDto request)
         {
             if (!IsGraduate()) return Forbid();
-            var success = await _profileService.UpdateEducationAsync(GetStudentId(), id, request);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var success = await _profileService.UpdateEducationAsync(GetStudentId(), id, request, ipAddress);
             if (!success) return NotFound();
             return Ok(new { message = "Education updated successfully." });
         }
@@ -109,7 +112,8 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> DeleteEducation(int id)
         {
             if (!IsGraduate()) return Forbid();
-            var success = await _profileService.DeleteEducationAsync(GetStudentId(), id);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var success = await _profileService.DeleteEducationAsync(GetStudentId(), id, ipAddress);
             if (!success) return NotFound();
             return Ok(new { message = "Education deleted successfully." });
         }
@@ -118,7 +122,8 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> UpdateSkills([FromBody] List<string> skills)
         {
             if (!IsGraduate()) return Forbid();
-            await _profileService.UpdateSkillsAsync(GetStudentId(), skills);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            await _profileService.UpdateSkillsAsync(GetStudentId(), skills, ipAddress);
             return Ok(new { message = "Skills updated successfully." });
         }
 

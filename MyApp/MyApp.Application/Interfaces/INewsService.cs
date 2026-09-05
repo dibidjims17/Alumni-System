@@ -7,7 +7,7 @@ namespace MyApp.Application.Interfaces
         Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null);
         Task<NewsDetailDto?> GetNewsByIdAsync(int newsId, int studentId);
         Task<NewsDto> CreateNewsAsync(CreateNewsRequest request, int adminId, string? imagePath);
-        Task<bool> UpdateNewsAsync(int newsId, CreateNewsRequest request, string? imagePath);
+        Task<bool> UpdateNewsAsync(int newsId, CreateNewsRequest request, string? imagePath, int adminId);
         Task<bool> DeleteNewsAsync(int newsId);
         Task<bool> ToggleHeartAsync(int newsId, int studentId);
 
@@ -20,9 +20,9 @@ namespace MyApp.Application.Interfaces
         Task<bool> DeleteCommentAsAdminAsync(int commentId, int adminId);
 
         // Deleted
-        Task<bool> SoftDeleteNewsAsync(int id);
-        Task<bool> RestoreNewsAsync(int id);
-        Task<bool> PermanentlyDeleteNewsAsync(int id);
+        Task<bool> SoftDeleteNewsAsync(int id, int adminId);
+        Task<bool> RestoreNewsAsync(int id, int adminId);
+        Task<bool> PermanentlyDeleteNewsAsync(int id, int adminId);
         Task<List<NewsDto>> GetDeletedNewsAsync();
     }
 }

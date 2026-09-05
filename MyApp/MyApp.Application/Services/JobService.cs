@@ -113,7 +113,7 @@ namespace MyApp.Application.Services
             };
         }
 
-        public async Task<bool> UpdateJobAsync(int jobId, CreateJobRequest request)
+        public async Task<bool> UpdateJobAsync(int jobId, CreateJobRequest request, int adminId)
         {
             var job = await _jobRepository.GetByIdAsync(jobId);
             if (job == null) return false;
@@ -130,6 +130,7 @@ namespace MyApp.Application.Services
             job.IsActive = request.IsActive;
 
             await _jobRepository.UpdateAsync(job);
+            await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_JOB", $"Updated job: {request.JobTitle}", "system");
             return true;
         }
 
@@ -142,32 +143,35 @@ namespace MyApp.Application.Services
             return true;
         }
 
-        public async Task<bool> SoftDeleteJobAsync(int id)
+        public async Task<bool> SoftDeleteJobAsync(int id, int adminId)
         {
             var job = await _jobRepository.GetByIdAsync(id);
             if (job == null) return false;
 
             job.IsDeleted = true;
             await _jobRepository.UpdateAsync(job);
+            await _activityLogRepository.LogAdminAsync(adminId, "TRASH_JOB", $"Moved job to trash: {job.JobTitle}", "system");
             return true;
         }
 
-        public async Task<bool> RestoreJobAsync(int id)
+        public async Task<bool> RestoreJobAsync(int id, int adminId)
         {
             var job = await _jobRepository.GetByIdIncludingDeletedAsync(id);
             if (job == null || !job.IsDeleted) return false;
 
             job.IsDeleted = false;
             await _jobRepository.UpdateAsync(job);
+            await _activityLogRepository.LogAdminAsync(adminId, "RESTORE_JOB", $"Restored job: {job.JobTitle}", "system");
             return true;
         }
 
-        public async Task<bool> PermanentlyDeleteJobAsync(int id)
+        public async Task<bool> PermanentlyDeleteJobAsync(int id, int adminId)
         {
             var job = await _jobRepository.GetByIdIncludingDeletedAsync(id);
             if (job == null) return false;
 
             await _jobRepository.DeleteAsync(job);
+            await _activityLogRepository.LogAdminAsync(adminId, "DELETE_JOB", $"Permanently deleted job: {job.JobTitle}", "system");
             return true;
         }
 

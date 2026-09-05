@@ -63,7 +63,8 @@ namespace MyApp.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAdmin([FromBody] CreateAdminRequest request)
         {
-            var result = await _adminManagementService.CreateAdminAsync(request);
+            var requestingAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _adminManagementService.CreateAdminAsync(request, requestingAdminId);
             if (result == null)
                 return BadRequest(new { message = "Username already exists." });
             return Ok(result);
@@ -131,7 +132,8 @@ namespace MyApp.API.Controllers
             }
 
             var relativePath = $"Uploads/AdminPictures/{storedFileName}";
-            var (success, relative, message) = await _adminManagementService.UpdateAdminPictureAsync(id, relativePath, filePath);
+            var requestingAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var (success, relative, message) = await _adminManagementService.UpdateAdminPictureAsync(id, relativePath, filePath, requestingAdminId);
             if (!success) return NotFound(new { message });
             return Ok(new { profilePicturePath = relative });
         }

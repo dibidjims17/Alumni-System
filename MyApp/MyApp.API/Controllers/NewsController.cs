@@ -107,7 +107,7 @@ namespace MyApp.API.Controllers
             var (ok, imagePath, error) = await SaveNewsImageAsync(image);
             if (!ok) return BadRequest(new { message = error });
 
-            var success = await _newsService.UpdateNewsAsync(id, request, imagePath);
+            var success = await _newsService.UpdateNewsAsync(id, request, imagePath, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "News updated successfully." });
         }
@@ -116,7 +116,7 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNews(int id)
         {
-            var success = await _newsService.SoftDeleteNewsAsync(id);
+            var success = await _newsService.SoftDeleteNewsAsync(id, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "News moved to trash." });
         }
@@ -133,7 +133,7 @@ namespace MyApp.API.Controllers
         [HttpPut("{id}/restore")]
         public async Task<IActionResult> RestoreNews(int id)
         {
-            var success = await _newsService.RestoreNewsAsync(id);
+            var success = await _newsService.RestoreNewsAsync(id, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "News restored successfully." });
         }
@@ -142,7 +142,7 @@ namespace MyApp.API.Controllers
         [HttpDelete("{id}/permanent")]
         public async Task<IActionResult> PermanentlyDeleteNews(int id)
         {
-            var success = await _newsService.PermanentlyDeleteNewsAsync(id);
+            var success = await _newsService.PermanentlyDeleteNewsAsync(id, GetUserId());
             if (!success) return NotFound();
             return Ok(new { message = "News permanently deleted." });
         }

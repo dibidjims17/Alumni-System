@@ -11,11 +11,11 @@ namespace MyApp.Application.Interfaces
         Task<JobPreferenceDto?> GetJobPreferencesAsync(int studentId);
         Task<bool> UpdateJobPreferencesAsync(int studentId, JobPreferenceDto request, string ipAddress);
         Task AddWorkExperienceAsync(int studentId, WorkExperienceDto request, string ipAddress);
-        Task<bool> UpdateWorkExperienceAsync(int studentId, int workExperienceId, WorkExperienceDto request);
-        Task<bool> DeleteWorkExperienceAsync(int studentId, int workExperienceId);
+        Task<bool> UpdateWorkExperienceAsync(int studentId, int workExperienceId, WorkExperienceDto request, string ipAddress);
+        Task<bool> DeleteWorkExperienceAsync(int studentId, int workExperienceId, string ipAddress);
         Task AddEducationAsync(int studentId, EducationDto request, string ipAddress);
-        Task<bool> UpdateEducationAsync(int studentId, int educationId, EducationDto request);
-        Task<bool> DeleteEducationAsync(int studentId, int educationId);
-        Task UpdateSkillsAsync(int studentId, List<string> skills);
+        Task<bool> UpdateEducationAsync(int studentId, int educationId, EducationDto request, string ipAddress);
+        Task<bool> DeleteEducationAsync(int studentId, int educationId, string ipAddress);
+        Task UpdateSkillsAsync(int studentId, List<string> skills, string ipAddress);
     }
 }

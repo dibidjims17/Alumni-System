@@ -64,7 +64,7 @@ namespace MyApp.Application.Services
             return Map(eventEntity, null);
         }
 
-        public async Task<bool> UpdateEventAsync(int eventId, CreateEventRequest request)
+        public async Task<bool> UpdateEventAsync(int eventId, CreateEventRequest request, int adminId)
         {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
             if (eventEntity == null) return false;
@@ -76,40 +76,39 @@ namespace MyApp.Application.Services
             eventEntity.UpdatedAt = DateTime.UtcNow;
 
             await _eventRepository.UpdateAsync(eventEntity);
+            await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_EVENT", $"Updated event: {request.Title}", "system");
             return true;
         }
 
-        public async Task<bool> DeleteEventAsync(int eventId)
-        {
-            return await SoftDeleteEventAsync(eventId);
-        }
-
-        public async Task<bool> SoftDeleteEventAsync(int eventId)
+        public async Task<bool> SoftDeleteEventAsync(int eventId, int adminId)
         {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
             if (eventEntity == null) return false;
 
             eventEntity.IsDeleted = true;
             await _eventRepository.UpdateAsync(eventEntity);
+            await _activityLogRepository.LogAdminAsync(adminId, "TRASH_EVENT", $"Moved event to trash: {eventEntity.Title}", "system");
             return true;
         }
 
-        public async Task<bool> RestoreEventAsync(int eventId)
+        public async Task<bool> RestoreEventAsync(int eventId, int adminId)
         {
             var eventEntity = await _eventRepository.GetByIdIncludingDeletedAsync(eventId);
             if (eventEntity == null || !eventEntity.IsDeleted) return false;
 
             eventEntity.IsDeleted = false;
             await _eventRepository.UpdateAsync(eventEntity);
+            await _activityLogRepository.LogAdminAsync(adminId, "RESTORE_EVENT", $"Restored event: {eventEntity.Title}", "system");
             return true;
         }
 
-        public async Task<bool> PermanentlyDeleteEventAsync(int eventId)
+        public async Task<bool> PermanentlyDeleteEventAsync(int eventId, int adminId)
         {
             var eventEntity = await _eventRepository.GetByIdIncludingDeletedAsync(eventId);
             if (eventEntity == null) return false;
 
             await _eventRepository.DeleteAsync(eventEntity);
+            await _activityLogRepository.LogAdminAsync(adminId, "DELETE_EVENT", $"Permanently deleted event: {eventEntity.Title}", "system");
             return true;
         }
 
@@ -119,7 +118,7 @@ namespace MyApp.Application.Services
             return events.Select(e => Map(e, null)).ToList();
         }
 
-        public async Task<(bool Found, bool Rsvped)> ToggleRsvpAsync(int eventId, int studentId)
+        public async Task<(bool Found, bool Rsvped)> ToggleRsvpAsync(int eventId, int studentId, string ipAddress)
         {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
             if (eventEntity == null) return (false, false);
@@ -128,6 +127,7 @@ namespace MyApp.Application.Services
             if (existing != null)
             {
                 await _eventRepository.RemoveRsvpAsync(existing);
+                await _activityLogRepository.LogStudentAsync(studentId, "CANCEL_RSVP", $"Cancelled RSVP for event: {eventEntity.Title}", ipAddress);
                 return (true, false);
             }
 
@@ -137,6 +137,7 @@ namespace MyApp.Application.Services
                 StudentId = studentId,
                 CreatedAt = DateTime.UtcNow
             });
+            await _activityLogRepository.LogStudentAsync(studentId, "RSVP_EVENT", $"RSVPed for event: {eventEntity.Title}", ipAddress);
 
             return (true, true);
         }

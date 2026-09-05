@@ -14,15 +14,18 @@ namespace MyApp.Application.Services
         private readonly IAdminRepository _adminRepository;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
+        private readonly IActivityLogRepository _activityLogRepository;
 
         public AdminAuthService(
             IAdminRepository adminRepository,
             IConfiguration configuration,
-            IEmailService emailService)
+            IEmailService emailService,
+            IActivityLogRepository activityLogRepository)
         {
             _adminRepository = adminRepository;
             _configuration = configuration;
             _emailService = emailService;
+            _activityLogRepository = activityLogRepository;
         }
 
         public async Task<AdminLoginResponse?> LoginAsync(AdminLoginRequest request)
@@ -52,6 +55,8 @@ namespace MyApp.Application.Services
             // 3. Update last login
             admin.LastLoginAt = DateTime.UtcNow;
             await _adminRepository.UpdateAsync(admin);
+
+            await _activityLogRepository.LogAdminAsync(admin.Id, "ADMIN_LOGIN", $"Admin logged in: {admin.Username}", "system");
 
             // 4. Generate token
             var token = GenerateToken(admin);

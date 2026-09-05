@@ -8,11 +8,13 @@ namespace MyApp.Application.Services
     {
         private readonly IAdminRepository _adminRepository;
         private readonly IEmailService _emailService;
+        private readonly IActivityLogRepository _activityLogRepository;
 
-        public AdminManagementService(IAdminRepository adminRepository, IEmailService emailService)
+        public AdminManagementService(IAdminRepository adminRepository, IEmailService emailService, IActivityLogRepository activityLogRepository)
         {
             _adminRepository = adminRepository;
             _emailService = emailService;
+            _activityLogRepository = activityLogRepository;
         }
 
         public async Task<List<AdminDto>> GetAllAdminsAsync()
@@ -37,7 +39,7 @@ namespace MyApp.Application.Services
             };
         }
 
-        public async Task<AdminDto?> CreateAdminAsync(CreateAdminRequest request)
+        public async Task<AdminDto?> CreateAdminAsync(CreateAdminRequest request, int requestingAdminId)
         {
             var existing = await _adminRepository.GetByUsernameAsync(request.Username);
             if (existing != null) return null; // username already taken
@@ -54,6 +56,9 @@ namespace MyApp.Application.Services
             };
 
             await _adminRepository.CreateAsync(admin);
+
+            await _activityLogRepository.LogAdminAsync(requestingAdminId, "CREATE_ADMIN",
+                $"Created admin: {admin.Username} ({admin.Role})", "system");
 
             // Welcome email with the initial credentials — best effort, a
             // mail failure must not roll back the created account.
@@ -93,10 +98,12 @@ namespace MyApp.Application.Services
             admin.FullName = fullName;
             admin.Email = email;
             await _adminRepository.UpdateAsync(admin);
+            await _activityLogRepository.LogAdminAsync(requestingAdminId, "UPDATE_ADMIN_PROFILE",
+                $"Updated profile of {admin.Username}", "system");
             return (true, "Profile updated.");
         }
 
-        public async Task<(bool Success, string? RelativePath, string Message)> UpdateAdminPictureAsync(int adminId, string relativePath, string physicalPath)
+        public async Task<(bool Success, string? RelativePath, string Message)> UpdateAdminPictureAsync(int adminId, string relativePath, string physicalPath, int requestingAdminId)
         {
             var admin = await _adminRepository.GetByIdAsync(adminId);
             if (admin == null)
@@ -111,6 +118,8 @@ namespace MyApp.Application.Services
             var oldRelative = admin.ProfilePicturePath;
             admin.ProfilePicturePath = relativePath;
             await _adminRepository.UpdateAsync(admin);
+            await _activityLogRepository.LogAdminAsync(requestingAdminId, "UPDATE_ADMIN_PICTURE",
+                $"Updated profile picture of {admin.Username}", "system");
 
             if (!string.IsNullOrWhiteSpace(oldRelative))
             {
@@ -146,6 +155,9 @@ namespace MyApp.Application.Services
 
             admin.IsActive = !admin.IsActive;
             await _adminRepository.UpdateAsync(admin);
+            var action = admin.IsActive ? "ACTIVATE_ADMIN" : "DEACTIVATE_ADMIN";
+            await _activityLogRepository.LogAdminAsync(requestingAdminId, action,
+                $"Admin {admin.Username} {(admin.IsActive ? "activated" : "deactivated")}", "system");
             return true;
         }
 
@@ -171,6 +183,8 @@ namespace MyApp.Application.Services
 
             admin.Role = newRole;
             await _adminRepository.UpdateAsync(admin);
+            await _activityLogRepository.LogAdminAsync(requestingAdminId, "UPDATE_ADMIN_ROLE",
+                $"Changed role of {admin.Username} to {newRole}", "system");
             return true;
         }
     }
