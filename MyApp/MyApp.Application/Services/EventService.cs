@@ -170,6 +170,7 @@ namespace MyApp.Application.Services
                 Location = eventEntity.Location,
                 EventDate = eventEntity.EventDate,
                 PostedByAdminName = eventEntity.PostedByAdmin?.FullName ?? string.Empty,
+                PostedByAdminPicture = eventEntity.PostedByAdmin?.ProfilePicturePath,
                 AttendeeCount = eventEntity.Rsvps?.Count ?? 0,
                 IsRsvped = studentId.HasValue && (eventEntity.Rsvps?.Any(r => r.StudentId == studentId.Value) ?? false),
                 CreatedAt = eventEntity.CreatedAt

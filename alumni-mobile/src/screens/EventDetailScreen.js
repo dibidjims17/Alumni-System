@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import { assetUrl } from '../utils/media';
 import { alert as appAlert } from '../components/AppAlert';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
@@ -137,7 +139,21 @@ export default function EventDetailScreen({ route, navigation }) {
         </Text>
         <Text style={[styles.detail, { color: c.textMuted }]}>Location: {event.location}</Text>
         {event.postedByAdminName ? (
-          <Text style={[styles.detail, { color: c.textMuted }]}>Posted by {event.postedByAdminName}</Text>
+          <View style={styles.byline}>
+            {assetUrl(event.postedByAdminPicture) ? (
+              <Image
+                source={{ uri: assetUrl(event.postedByAdminPicture) }}
+                style={styles.bylineAvatar}
+              />
+            ) : (
+              <View style={[styles.bylineFallback, { backgroundColor: c.surfaceAlt }]}>
+                <Text style={[styles.bylineFallbackText, { color: c.primary }]}>
+                  {(event.postedByAdminName || '?').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <Text style={[styles.detail, { color: c.textMuted }]}>Posted by {event.postedByAdminName}</Text>
+          </View>
         ) : null}
       </View>
 
@@ -192,6 +208,28 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
   detail: { fontSize: 13, marginTop: 2 },
+  byline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+  },
+  bylineAvatar: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+  },
+  bylineFallback: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bylineFallbackText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   sectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
   description: { fontSize: 14, lineHeight: 21 },
   count: { fontSize: 13, marginBottom: 12 },

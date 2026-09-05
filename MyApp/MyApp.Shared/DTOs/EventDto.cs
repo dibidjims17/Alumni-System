@@ -8,6 +8,7 @@ namespace MyApp.Shared.DTOs
         public string Location { get; set; } = string.Empty;
         public DateTime EventDate { get; set; }
         public string PostedByAdminName { get; set; } = string.Empty;
+        public string? PostedByAdminPicture { get; set; }
         public int AttendeeCount { get; set; }
         public bool IsRsvped { get; set; }
         public DateTime CreatedAt { get; set; }

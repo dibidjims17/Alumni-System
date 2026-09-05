@@ -10,18 +10,39 @@ namespace MyApp.Application.Services
         private readonly IActivityLogRepository _activityLogRepository;
         private readonly INotificationService _notificationService;
         private readonly IStudentRepository _studentRepository;
+        private readonly IAlumniProfileRepository _alumniProfileRepository;
         private const int PageSize = 10;
 
         public NewsService(
             INewsRepository newsRepository,
             IActivityLogRepository activityLogRepository,
             INotificationService notificationService,
-            IStudentRepository studentRepository)
+            IStudentRepository studentRepository,
+            IAlumniProfileRepository alumniProfileRepository)
         {
             _newsRepository = newsRepository;
             _activityLogRepository = activityLogRepository;
             _notificationService = notificationService;
             _studentRepository = studentRepository;
+            _alumniProfileRepository = alumniProfileRepository;
+        }
+
+        private async Task<Dictionary<int, string?>> CommentPictureMapAsync(IEnumerable<NewsComment> comments)
+        {
+            var ids = new HashSet<int>();
+            void Collect(IEnumerable<NewsComment> list)
+            {
+                foreach (var c in list)
+                {
+                    ids.Add(c.StudentId);
+                    if (c.Replies != null) Collect(c.Replies);
+                }
+            }
+            Collect(comments);
+            if (ids.Count == 0) return new Dictionary<int, string?>();
+            var profiles = await _alumniProfileRepository.GetByStudentIdsAsync(ids);
+            return ids.ToDictionary(id => id,
+                id => profiles.TryGetValue(id, out var p) ? p.ProfilePicturePath : null);
         }
 
         public async Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null)
@@ -36,6 +57,7 @@ namespace MyApp.Application.Services
                 Content = n.Content,
                 ImagePath = NormalizeImageUrl(n.ImagePath),
                 PostedByAdminName = n.PostedByAdmin.FullName,
+                PostedByAdminPicture = n.PostedByAdmin.ProfilePicturePath,
                 PostedAt = n.PostedAt,
                 HeartCount = n.Hearts.Count,
                 IsHearted = n.Hearts.Any(h => h.StudentId == studentId),
@@ -50,6 +72,12 @@ namespace MyApp.Application.Services
             var news = await _newsRepository.GetByIdAsync(newsId);
             if (news == null) return null;
 
+            var topComments = news.Comments
+                .Where(c => !c.IsDeleted && c.ParentCommentId == null)
+                .OrderBy(c => c.CommentedAt)
+                .ToList();
+            var pictureMap = await CommentPictureMapAsync(topComments);
+
             return new NewsDetailDto
             {
                 Id = news.Id,
@@ -57,17 +85,17 @@ namespace MyApp.Application.Services
                 Content = news.Content,
                 ImagePath = news.ImagePath,
                 PostedByAdminName = news.PostedByAdmin.FullName,
+                PostedByAdminPicture = news.PostedByAdmin.ProfilePicturePath,
                 PostedAt = news.PostedAt,
                 HeartCount = news.Hearts.Count,
                 IsHearted = news.Hearts.Any(h => h.StudentId == studentId),
-                Comments = news.Comments
-                    .Where(c => !c.IsDeleted && c.ParentCommentId == null)
-                    .OrderBy(c => c.CommentedAt)
+                Comments = topComments
                     .Select(c => new NewsCommentDto
                     {
                         Id = c.Id,
                         StudentId = c.StudentId,
                         StudentName = c.Student.FullName,
+                        StudentPicturePath = pictureMap.GetValueOrDefault(c.StudentId),
                         Comment = c.Comment,
                         CommentedAt = c.CommentedAt,
                         LikeCount = c.Likes.Count,
@@ -81,6 +109,7 @@ namespace MyApp.Application.Services
                                 Id = r.Id,
                                 StudentId = r.StudentId,
                                 StudentName = r.Student.FullName,
+                                StudentPicturePath = pictureMap.GetValueOrDefault(r.StudentId),
                                 Comment = r.Comment,
                                 CommentedAt = r.CommentedAt,
                                 LikeCount = r.Likes.Count,
@@ -95,6 +124,7 @@ namespace MyApp.Application.Services
                                         Id = rr.Id,
                                         StudentId = rr.StudentId,
                                         StudentName = rr.Student.FullName,
+                                        StudentPicturePath = pictureMap.GetValueOrDefault(rr.StudentId),
                                         Comment = rr.Comment,
                                         CommentedAt = rr.CommentedAt,
                                         LikeCount = rr.Likes.Count,
@@ -210,11 +240,14 @@ namespace MyApp.Application.Services
                 }
             }
 
+            var authorProfiles = await _alumniProfileRepository.GetByStudentIdsAsync(new[] { studentId });
             return new NewsCommentDto
             {
                 Id = comment.Id,
                 StudentId = studentId,
                 StudentName = saved?.Student?.FullName ?? string.Empty,
+                StudentPicturePath = authorProfiles.TryGetValue(studentId, out var authorProfile)
+                    ? authorProfile.ProfilePicturePath : null,
                 Comment = comment.Comment,
                 CommentedAt = comment.CommentedAt,
                 LikeCount = 0,
@@ -302,6 +335,7 @@ namespace MyApp.Application.Services
                 Content = n.Content,
                 ImagePath = NormalizeImageUrl(n.ImagePath),
                 PostedByAdminName = n.PostedByAdmin.FullName,
+                PostedByAdminPicture = n.PostedByAdmin.ProfilePicturePath,
                 PostedAt = n.PostedAt,
                 HeartCount = n.Hearts.Count,
                 CommentCount = 0 // not needed in trash view

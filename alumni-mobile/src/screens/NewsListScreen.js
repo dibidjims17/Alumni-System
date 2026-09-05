@@ -126,10 +126,24 @@ export default function NewsListScreen({ navigation }) {
 
         <View style={[styles.actions, { borderColor: c.border }]}>
           <View style={styles.actionMeta}>
-            <Text style={[styles.author, { color: c.text }]}>{item.postedByAdminName}</Text>
-            <Text style={[styles.date, { color: c.textMuted }]}>
-              {item.postedAt ? new Date(item.postedAt).toLocaleDateString() : ''}
-            </Text>
+            {assetUrl(item.postedByAdminPicture) ? (
+              <Image
+                source={{ uri: assetUrl(item.postedByAdminPicture) }}
+                style={styles.authorAvatar}
+              />
+            ) : (
+              <View style={[styles.authorFallback, { backgroundColor: c.surfaceAlt }]}>
+                <Text style={[styles.authorFallbackText, { color: c.primary }]}>
+                  {(item.postedByAdminName || '?').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View style={styles.actionMetaText}>
+              <Text style={[styles.author, { color: c.text }]}>{item.postedByAdminName}</Text>
+              <Text style={[styles.date, { color: c.textMuted }]}>
+                {item.postedAt ? new Date(item.postedAt).toLocaleDateString() : ''}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.actionButtons}>
@@ -284,6 +298,28 @@ const styles = StyleSheet.create({
   actionMeta: {
     flex: 1,
     marginRight: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionMetaText: {
+    flex: 1,
+  },
+  authorAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  authorFallback: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  authorFallbackText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   author: {
     fontSize: 12,

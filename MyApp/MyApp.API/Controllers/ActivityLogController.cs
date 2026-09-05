@@ -11,10 +11,14 @@ namespace MyApp.API.Controllers
     public class ActivityLogController : ControllerBase
     {
         private readonly IActivityLogRepository _activityLogRepository;
+        private readonly IAlumniProfileRepository _alumniProfileRepository;
 
-        public ActivityLogController(IActivityLogRepository activityLogRepository)
+        public ActivityLogController(
+            IActivityLogRepository activityLogRepository,
+            IAlumniProfileRepository alumniProfileRepository)
         {
             _activityLogRepository = activityLogRepository;
+            _alumniProfileRepository = alumniProfileRepository;
         }
 
         [HttpGet]
@@ -23,6 +27,16 @@ namespace MyApp.API.Controllers
             var logs = await _activityLogRepository.GetAllAsync(page, 50);
             var total = await _activityLogRepository.GetTotalCountAsync();
 
+            // One batched lookup for student profile pictures on this page.
+            var studentIds = logs
+                .Where(l => l.Student != null)
+                .Select(l => l.StudentId!.Value)
+                .Distinct()
+                .ToList();
+            var profiles = studentIds.Count > 0
+                ? await _alumniProfileRepository.GetByStudentIdsAsync(studentIds)
+                : new Dictionary<int, MyApp.Domain.Entities.AlumniProfile>();
+
             var items = logs.Select(l => new ActivityLogDto
             {
                 Id = l.Id,
@@ -30,6 +44,9 @@ namespace MyApp.API.Controllers
                              l.Admin != null ? l.Admin.FullName : "System",
                 ActorType = l.Student != null ? "Student" :
                             l.Admin != null ? "Admin" : "System",
+                ActorPicturePath = l.Admin != null ? l.Admin.ProfilePicturePath :
+                    (l.Student != null && profiles.TryGetValue(l.Student.Id, out var profile)
+                        ? profile.ProfilePicturePath : null),
                 Action = l.Action,
                 Details = l.Details,
                 IpAddress = l.IpAddress,

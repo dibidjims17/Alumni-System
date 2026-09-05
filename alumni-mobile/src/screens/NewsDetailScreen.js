@@ -30,7 +30,21 @@ function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, current
   const c = theme.colors;
   return (
     <View style={[level === 0 ? styles.topCommentRow : styles.replyRow, level !== 0 && { backgroundColor: c.background }]}>
-      <Text style={[styles.commentAuthor, { color: c.text }]}>{comment.studentName}</Text>
+      <View style={styles.commentAuthorRow}>
+        {assetUrl(comment.studentPicturePath) ? (
+          <Image
+            source={{ uri: assetUrl(comment.studentPicturePath) }}
+            style={styles.commentAvatar}
+          />
+        ) : (
+          <View style={[styles.commentFallback, { backgroundColor: c.surfaceAlt }]}>
+            <Text style={[styles.commentFallbackText, { color: c.primary }]}>
+              {(comment.studentName || '?').charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        )}
+        <Text style={[styles.commentAuthor, { color: c.text }]}>{comment.studentName}</Text>
+      </View>
       <Text style={[styles.commentText, { color: c.text }]}>{comment.comment}</Text>
       <View style={styles.commentActions}>
         <TouchableOpacity onPress={() => onLike(comment.id)} style={styles.commentLikeBtn}>
@@ -286,9 +300,23 @@ export default function NewsDetailScreen({ route, navigation }) {
       >
         <View style={[styles.postCard, { backgroundColor: c.surface, borderColor: c.border }]}>
           <Text style={[styles.title, { color: c.text }]}>{news.title}</Text>
-          <Text style={[styles.meta, { color: c.textMuted }]}>
-            {news.postedByAdminName} - {new Date(news.postedAt).toLocaleDateString()}
-          </Text>
+          <View style={styles.byline}>
+            {assetUrl(news.postedByAdminPicture) ? (
+              <Image
+                source={{ uri: assetUrl(news.postedByAdminPicture) }}
+                style={styles.bylineAvatar}
+              />
+            ) : (
+              <View style={[styles.bylineFallback, { backgroundColor: c.surfaceAlt }]}>
+                <Text style={[styles.bylineFallbackText, { color: c.primary }]}>
+                  {(news.postedByAdminName || '?').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <Text style={[styles.meta, { color: c.textMuted }]}>
+              {news.postedByAdminName} - {new Date(news.postedAt).toLocaleDateString()}
+            </Text>
+          </View>
           {assetUrl(news.imagePath) && (
             <TouchableOpacity
               activeOpacity={0.85}
@@ -479,7 +507,29 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   title: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
-  meta: { fontSize: 12, marginBottom: 12 },
+  meta: { fontSize: 12 },
+  byline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  bylineAvatar: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+  },
+  bylineFallback: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bylineFallbackText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   image: {
     width: '100%',
     height: 200,
@@ -533,6 +583,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
+  commentAuthorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  commentAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  commentFallback: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  commentFallbackText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   commentAuthor: { fontSize: 13, fontWeight: '600' },
   commentText: { fontSize: 13, marginTop: 2, lineHeight: 18 },
   commentActions: {

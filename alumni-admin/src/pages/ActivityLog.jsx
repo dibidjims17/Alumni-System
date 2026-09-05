@@ -1,12 +1,20 @@
 import { useEffect, useState, useMemo } from "react";
 import { Activity, User } from "lucide-react";
 import { getAllActivityLogs } from "../services/activityLogApi";
+import { API_BASE_URL } from "../config";
 import { SearchBox, card, cardTitle, cardMeta, pill, selectStyle, btn } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { RotateCcw } from "lucide-react";
 import { notifyError } from "../components/toastBus";
 
 const PAGE_SIZE = 20;
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
+
+function actorPhotoUrl(path) {
+  if (!path) return null;
+  const clean = String(path).replace(/\\/g, "/").replace(/^\/+/, "");
+  return `${FILE_ROOT}/${clean}`;
+}
 
 export default function ActivityLog() {
   const [logs, setLogs] = useState([]);
@@ -117,13 +125,21 @@ export default function ActivityLog() {
               {pagedLogs.map((log) => (
                 <div key={log.id} style={card}>
                   <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: "50%", background: "#eef3ec",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 700, color: "var(--primary)", flexShrink: 0, fontSize: 15,
-                    }}>
-                      {(log.actorName || "?").charAt(0).toUpperCase()}
-                    </div>
+                    {actorPhotoUrl(log.actorPicturePath) ? (
+                      <img
+                        src={actorPhotoUrl(log.actorPicturePath)}
+                        alt=""
+                        style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: 36, height: 36, borderRadius: "50%", background: "#eef3ec",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontWeight: 700, color: "var(--primary)", flexShrink: 0, fontSize: 15,
+                      }}>
+                        {(log.actorName || "?").charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <strong style={{ ...cardTitle, fontSize: 14 }}>{log.actorName || "—"}</strong>
