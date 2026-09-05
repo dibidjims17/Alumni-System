@@ -235,7 +235,9 @@ export default function Students() {
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}
         />
+      </div>
 
+      <div style={{ ...filterRow, marginTop: -4 }}>
         <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Years</option>
           {YEAR_OPTIONS.map((y) => (
