@@ -48,6 +48,7 @@ export default function AppHeader({ title, navigation }) {
         <Text style={[styles.title, { color: c.text }]}>{title}</Text>
         <View style={styles.iconButton} />
       </View>
+      <View style={[styles.accent, { backgroundColor: c.primary }]} />
 
       <Modal visible={menuOpen} transparent animationType="slide" onRequestClose={() => setMenuOpen(false)}>
         <View style={[styles.modalBackdrop, { backgroundColor: c.overlay }]}>
@@ -97,6 +98,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   iconButton: { padding: 6, minWidth: 36 },
+  accent: { height: 2, opacity: 0.9 },
   title: { fontSize: 19, fontWeight: '800', letterSpacing: 0.3 },
   modalBackdrop: { flex: 1, justifyContent: 'flex-end' },
   modalBackdropTouch: { flex: 1 },
