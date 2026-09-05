@@ -54,7 +54,8 @@ export default function LoginScreen({ navigation }) {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={[styles.title, { color: c.text }]}>Alumni Login</Text>
+      <Text style={[styles.kicker, { color: c.primary }]}>REUNIO · ALUMNI CONNECT</Text>
+      <Text style={[styles.title, { color: c.text }]}>Welcome back</Text>
 
       <TextInput
         style={[
@@ -109,6 +110,13 @@ const styles = StyleSheet.create({
     height: 130,
     alignSelf: 'center',
     marginBottom: 8,
+  },
+  kicker: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    textAlign: 'center',
+    marginBottom: 4,
   },
   title: {
     fontSize: 24,
