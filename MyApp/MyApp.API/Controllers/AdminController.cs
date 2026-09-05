@@ -32,6 +32,25 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("forgot-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            await _adminAuthService.ForgotPasswordAsync(request);
+            return Ok(new { message = "If that email is registered, a reset code has been sent." });
+        }
+
+        [HttpPost("reset-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var success = await _adminAuthService.ResetPasswordAsync(request);
+            if (!success)
+                return BadRequest(new { message = "Invalid or expired reset code." });
+
+            return Ok(new { message = "Password reset successfully." });
+        }
+
         [Authorize(Roles = "SuperAdmin")]
         [HttpGet]
         public async Task<IActionResult> GetAllAdmins()
@@ -64,8 +83,9 @@ namespace MyApp.API.Controllers
         [HttpPut("{id}/role")]
         public async Task<IActionResult> UpdateAdminRole(int id, [FromBody] UpdateAdminRoleRequest request)
         {
-            var success = await _adminManagementService.UpdateAdminRoleAsync(id, request.Role);
-            if (!success) return BadRequest(new { message = "Invalid role or admin not found." });
+            var requestingAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var success = await _adminManagementService.UpdateAdminRoleAsync(id, request.Role, requestingAdminId);
+            if (!success) return BadRequest(new { message = "Cannot change your own role, remove the last SuperAdmin, or invalid role." });
             return Ok(new { message = "Admin role updated." });
         }
     }

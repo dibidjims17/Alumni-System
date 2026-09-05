@@ -15,6 +15,36 @@ export async function loginAdmin(username, password) {
   return response.json();
 }
 
+export async function adminForgotPassword(email) {
+  const response = await fetch(`${API_BASE_URL}/admin/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier: email }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to send reset code");
+  }
+
+  return response.json();
+}
+
+export async function adminResetPassword(email, code, newPassword) {
+  const response = await fetch(`${API_BASE_URL}/admin/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier: email, code, newPassword }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to reset password");
+  }
+
+  return response.json();
+}
+
 export function saveSession(data) {
   localStorage.setItem("adminToken", data.token);
   localStorage.setItem("adminInfo", JSON.stringify({

@@ -4,6 +4,7 @@ namespace MyApp.Application.Interfaces
     public interface IAdminRepository
     {
         Task<Admin?> GetByUsernameAsync(string username);
+        Task<Admin?> GetByEmailAsync(string email);
         Task<Admin?> GetByIdAsync(int id);
         Task<List<Admin>> GetAllAsync();
         Task CreateAsync(Admin admin);

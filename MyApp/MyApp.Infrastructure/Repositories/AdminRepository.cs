@@ -16,6 +16,11 @@ namespace MyApp.Infrastructure.Repositories
             return await _context.Admins
                 .FirstOrDefaultAsync(a => a.Username == username);
         }
+        public async Task<Admin?> GetByEmailAsync(string email)
+        {
+            return await _context.Admins
+                .FirstOrDefaultAsync(a => a.Email == email);
+        }
         public async Task<Admin?> GetByIdAsync(int id)
         {
             return await _context.Admins

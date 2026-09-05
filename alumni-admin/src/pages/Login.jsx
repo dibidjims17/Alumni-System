@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { School, LogIn, Sun, Moon, Eye, EyeOff } from "lucide-react";
-import { loginAdmin, saveSession } from "../services/api";
+import { loginAdmin, saveSession, adminForgotPassword, adminResetPassword } from "../services/api";
 import { useAdminTheme } from "../theme";
 
 export default function Login() {
@@ -10,6 +10,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Recovery flow: "login" -> "forgot" (send code) -> "reset" (code + new password)
+  const [mode, setMode] = useState("login");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [notice, setNotice] = useState("");
   const navigate = useNavigate();
   const { isDark, toggle } = useAdminTheme();
 
@@ -33,6 +40,48 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Invalid username or password");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function enterForgot() {
+    setMode("forgot");
+    setError("");
+    setNotice("");
+    setResetEmail("");
+    setResetCode("");
+    setNewPassword("");
+  }
+
+  async function handleSendCode(e) {
+    e.preventDefault();
+    setError("");
+    setNotice("");
+    setLoading(true);
+    try {
+      const data = await adminForgotPassword(resetEmail.trim());
+      setNotice(data.message || "If that email is registered, a reset code has been sent.");
+      setMode("reset");
+    } catch (err) {
+      setError(err.message || "Failed to send reset code");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    setError("");
+    setNotice("");
+    setLoading(true);
+    try {
+      await adminResetPassword(resetEmail.trim(), resetCode.trim(), newPassword);
+      setMode("login");
+      setPassword("");
+      setNotice("Password reset successfully. You can now log in.");
+    } catch (err) {
+      setError(err.message || "Invalid or expired reset code");
     } finally {
       setLoading(false);
     }
@@ -79,63 +128,199 @@ export default function Login() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 13, color: "var(--muted)" }}>Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoComplete="username"
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 13, color: "var(--muted)" }}>Password</label>
-            <div style={{ position: "relative" }}>
+        {mode === "login" && (
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: "var(--muted)" }}>Username</label>
               <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                autoComplete="current-password"
-                style={{ ...inputStyle, paddingRight: 40 }}
+                autoComplete="username"
+                style={inputStyle}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                title={showPassword ? "Hide password" : "Show password"}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                style={{
-                  position: "absolute", right: 6, top: "50%",
-                  transform: "translateY(-50%)",
-                  border: "none", background: "none", cursor: "pointer",
-                  display: "flex", color: "var(--muted)", padding: 4,
-                }}
-              >
-                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-              </button>
             </div>
-          </div>
 
-          {error && <p style={{ color: "var(--danger)", fontSize: 13, margin: "4px 0" }}>{error}</p>}
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: "var(--muted)" }}>Password</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  style={{ ...inputStyle, paddingRight: 40 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  style={{
+                    position: "absolute", right: 6, top: "50%",
+                    transform: "translateY(-50%)",
+                    border: "none", background: "none", cursor: "pointer",
+                    display: "flex", color: "var(--muted)", padding: 4,
+                  }}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%", marginTop: 12, padding: "11px 0",
-              border: "none", borderRadius: 8, cursor: "pointer",
-              background: "var(--primary)", color: "var(--on-primary)",
-              fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            }}
-          >
-            <LogIn size={16} />
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
+            {error && <p style={{ color: "var(--danger)", fontSize: 13, margin: "4px 0" }}>{error}</p>}
+            {notice && <p style={{ color: "var(--success)", fontSize: 13, margin: "4px 0" }}>{notice}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%", marginTop: 12, padding: "11px 0",
+                border: "none", borderRadius: 8, cursor: "pointer",
+                background: "var(--primary)", color: "var(--on-primary)",
+                fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              <LogIn size={16} />
+              {loading ? "Logging in..." : "Login"}
+            </button>
+
+            <button
+              type="button"
+              onClick={enterForgot}
+              style={{
+                width: "100%", marginTop: 8, padding: "8px 0",
+                border: "none", background: "none", cursor: "pointer",
+                color: "var(--primary)", fontSize: 13, fontWeight: 600,
+              }}
+            >
+              Forgot password?
+            </button>
+          </form>
+        )}
+
+        {mode === "forgot" && (
+          <form onSubmit={handleSendCode}>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>
+              Enter your admin email and we'll send a 6-digit reset code (valid 15 minutes).
+            </p>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: "var(--muted)" }}>Admin email</label>
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                autoComplete="email"
+                style={inputStyle}
+              />
+            </div>
+
+            {error && <p style={{ color: "var(--danger)", fontSize: 13, margin: "4px 0" }}>{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%", marginTop: 12, padding: "11px 0",
+                border: "none", borderRadius: 8, cursor: "pointer",
+                background: "var(--primary)", color: "var(--on-primary)",
+                fontWeight: 600,
+              }}
+            >
+              {loading ? "Sending..." : "Send reset code"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMode("login"); setError(""); }}
+              style={{
+                width: "100%", marginTop: 8, padding: "8px 0",
+                border: "none", background: "none", cursor: "pointer",
+                color: "var(--muted)", fontSize: 13, fontWeight: 600,
+              }}
+            >
+              ← Back to login
+            </button>
+          </form>
+        )}
+
+        {mode === "reset" && (
+          <form onSubmit={handleReset}>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>
+              Code sent to <strong>{resetEmail}</strong>. Enter it below with your new password.
+            </p>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: "var(--muted)" }}>6-digit code</label>
+              <input
+                type="text"
+                value={resetCode}
+                onChange={(e) => setResetCode(e.target.value)}
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: "var(--muted)" }}>New password</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  style={{ ...inputStyle, paddingRight: 40 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((v) => !v)}
+                  title={showNewPassword ? "Hide password" : "Show password"}
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  style={{
+                    position: "absolute", right: 6, top: "50%",
+                    transform: "translateY(-50%)",
+                    border: "none", background: "none", cursor: "pointer",
+                    display: "flex", color: "var(--muted)", padding: 4,
+                  }}
+                >
+                  {showNewPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+            </div>
+
+            {error && <p style={{ color: "var(--danger)", fontSize: 13, margin: "4px 0" }}>{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%", marginTop: 12, padding: "11px 0",
+                border: "none", borderRadius: 8, cursor: "pointer",
+                background: "var(--primary)", color: "var(--on-primary)",
+                fontWeight: 600,
+              }}
+            >
+              {loading ? "Resetting..." : "Reset password"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMode("login"); setError(""); }}
+              style={{
+                width: "100%", marginTop: 8, padding: "8px 0",
+                border: "none", background: "none", cursor: "pointer",
+                color: "var(--muted)", fontSize: 13, fontWeight: 600,
+              }}
+            >
+              ← Back to login
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
