@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck, UserCheck, UserX, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, UserCheck, UserX } from "lucide-react";
 import { getAdmins, createAdmin, toggleAdminStatus, updateAdminRole } from "../services/adminApi";
 import { getSession } from "../services/api";
 import Toast from "../components/Toast";
 import {
   ModalShell, Field, textInput, selectStyle,
   cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton,
-  btn, btnPrimary,
+  btn, btnPrimary, PasswordInput,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
@@ -20,7 +20,6 @@ export default function ManageAdmins() {
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
-  const [showFormPassword, setShowFormPassword] = useState(false);
 
   async function loadAdmins() {
     setLoading(true);
@@ -40,7 +39,6 @@ export default function ManageAdmins() {
 
   function openCreateModal() {
     setForm(emptyForm);
-    setShowFormPassword(false);
     setShowModal(true);
   }
 
@@ -272,30 +270,12 @@ export default function ManageAdmins() {
               />
             </Field>
             <Field label="Password">
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showFormPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  autoComplete="new-password"
-                  style={{ ...textInput, paddingRight: 40 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowFormPassword((v) => !v)}
-                  title={showFormPassword ? "Hide password" : "Show password"}
-                  aria-label={showFormPassword ? "Hide password" : "Show password"}
-                  style={{
-                    position: "absolute", right: 6, top: "50%",
-                    transform: "translateY(-50%)",
-                    border: "none", background: "none", cursor: "pointer",
-                    display: "flex", color: "var(--muted)", padding: 4,
-                  }}
-                >
-                  {showFormPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </div>
+              <PasswordInput
+                value={form.password}
+                onChange={(value) => setForm({ ...form, password: value })}
+                autoComplete="new-password"
+                style={textInput}
+              />
             </Field>
             <Field label="Role">
               <select

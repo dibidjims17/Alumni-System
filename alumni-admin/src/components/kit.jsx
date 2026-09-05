@@ -2,7 +2,7 @@
 // All colors read CSS variables set by the theme provider so both light and
 // dark modes work without touching every call site.
 import { useEffect, useState, useRef } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Eye, EyeOff } from "lucide-react";
 import { requestDiscardConfirm } from "./discardBus";
 
 // Icon search input with a clear (X) button.
@@ -28,6 +28,43 @@ export function SearchBox({ placeholder, value, onChange, onSubmit, onReset }) {
           <X size={16} />
         </button>
       )}
+    </div>
+  );
+}
+
+// Password input with an eye toggle. The toggle is centered against the
+// input itself: any marginTop/margin on `style` is hoisted to the wrapper
+// so the icon never drifts off-center (the classic 3px-low bug).
+export function PasswordInput({ value, onChange, autoComplete = "current-password", required = true, placeholder, style, ariaLabel = "Password" }) {
+  const [show, setShow] = useState(false);
+  const { marginTop, margin, ...inputRest } = style || {};
+  return (
+    <div style={{ position: "relative", marginTop, margin }}>
+      <input
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        aria-label={ariaLabel}
+        style={{ ...textInput, ...inputRest, paddingRight: 40 }}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        title={show ? "Hide password" : "Show password"}
+        aria-label={show ? "Hide password" : "Show password"}
+        style={{
+          position: "absolute", right: 6, top: "50%",
+          transform: "translateY(-50%)",
+          border: "none", background: "none", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "var(--muted)", padding: 4, height: 28, width: 28,
+        }}
+      >
+        {show ? <EyeOff size={17} /> : <Eye size={17} />}
+      </button>
     </div>
   );
 }
