@@ -322,14 +322,6 @@ export default function Students() {
                     <button type="button" style={{ ...btnPrimary, padding: "6px 12px" }} onClick={() => openEditModal(s)}>
                       <Pencil size={15} /> Edit
                     </button>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <Link to={`/documents/${s.id}`} style={{ ...btn, padding: "6px 12px", textDecoration: "none" }}>
-                      <FileText size={15} /> Documents
-                    </Link>
-                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => setConfirmResetId(s.id)}>
-                      <KeyRound size={15} /> Reset PW
-                    </button>
                     <button
                       type="button"
                       style={{ ...btn, padding: "6px 12px" }}
@@ -361,6 +353,14 @@ export default function Students() {
                       }}
                     >
                       <Send size={15} /> Invite
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <Link to={`/documents/${s.id}`} style={{ ...btn, padding: "6px 12px", textDecoration: "none" }}>
+                      <FileText size={15} /> Documents
+                    </Link>
+                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => setConfirmResetId(s.id)}>
+                      <KeyRound size={15} /> Reset PW
                     </button>
                     <button
                       type="button"
