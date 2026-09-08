@@ -1,7 +1,7 @@
 // src/navigation/AppNavigator.js
 import React from 'react';
 import { View, ActivityIndicator, StatusBar } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, StackActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { House, Users, Briefcase, User, GraduationCap } from 'lucide-react-native';
@@ -152,6 +152,20 @@ function YearStack() {
   );
 }
 
+// Re-pressing the active tab always pops its stack back to root —
+// explicit instead of relying on the default tabPress behavior.
+function popToTopOnRepress({ navigation, route }) {
+  return {
+    tabPress: () => {
+      const tabState = navigation.getState();
+      const tabRoute = tabState.routes.find((r) => r.key === route.key);
+      if (tabRoute?.state && tabRoute.state.index > 0) {
+        navigation.dispatch(StackActions.popToTop());
+      }
+    },
+  };
+}
+
 function AppTabs() {
   const { theme } = useTheme();
   const { student } = useAuth();
@@ -182,15 +196,15 @@ function AppTabs() {
         },
       })}
     >
-      <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="CommunityTab" component={CommunityStack} options={{ tabBarLabel: 'Community' }} />
+      <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} listeners={popToTopOnRepress} />
+      <Tab.Screen name="CommunityTab" component={CommunityStack} options={{ tabBarLabel: 'Community' }} listeners={popToTopOnRepress} />
       {isGraduate ? (
         <>
-          <Tab.Screen name="CareerTab" component={CareerStack} options={{ tabBarLabel: 'Career' }} />
-          <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ tabBarLabel: 'Profile' }} />
+          <Tab.Screen name="CareerTab" component={CareerStack} options={{ tabBarLabel: 'Career' }} listeners={popToTopOnRepress} />
+          <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ tabBarLabel: 'Profile' }} listeners={popToTopOnRepress} />
         </>
       ) : (
-        <Tab.Screen name="YearTab" component={YearStack} options={{ tabBarLabel: 'Correction' }} />
+        <Tab.Screen name="YearTab" component={YearStack} options={{ tabBarLabel: 'Correction' }} listeners={popToTopOnRepress} />
       )}
     </Tab.Navigator>
   );

@@ -109,7 +109,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.iconButton, { backgroundColor: c.surface, borderColor: c.border }]}
-            onPress={() => navigation.navigate('Notifications')}
+            onPress={() => navigation.navigate('HomeTab', { screen: 'Notifications' })}
             accessibilityLabel="Notifications"
           >
             <Bell size={22} color={c.primary} />
