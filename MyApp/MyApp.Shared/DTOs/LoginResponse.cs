@@ -9,5 +9,6 @@ namespace MyApp.Shared.DTOs
         public string Program { get; set; } = string.Empty;
         public string SchoolYear { get; set; } = string.Empty;
         public bool MustChangePassword { get; set; }
+        public bool TemporaryPasswordExpired { get; set; }
     }
 }

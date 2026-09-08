@@ -27,6 +27,9 @@ namespace MyApp.API.Controllers
             if (result == null)
                 return Unauthorized(new { message = "Invalid student number or password." });
 
+            if (result.TemporaryPasswordExpired)
+                return Unauthorized(new { message = "Temporary password expired. Use Forgot Password to set a new one." });
+
             return Ok(result);
         }
 
@@ -39,12 +42,12 @@ namespace MyApp.API.Controllers
                 return Unauthorized();
 
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            var success = await _authService.ChangePasswordAsync(studentId, request, ipAddress);
+            var (success, message) = await _authService.ChangePasswordAsync(studentId, request, ipAddress);
 
             if (!success)
-                return BadRequest(new { message = "Current password is incorrect." });
+                return BadRequest(new { message });
 
-            return Ok(new { message = "Password changed successfully." });
+            return Ok(new { message });
         }
 
         [HttpPost("forgot-password")]

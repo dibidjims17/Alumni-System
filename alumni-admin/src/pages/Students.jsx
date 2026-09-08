@@ -365,8 +365,9 @@ export default function Students() {
             )}
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
               Expected columns: StudentNumber, FullName, Email, Program, SchoolYear.
-              Existing student numbers are updated; new ones are created with the
-              student number as the default password.
+              Existing student numbers are updated; new ones get a unique
+              12-character temporary password (valid 7 days) emailed to them
+              with the app download link, once Site:WebsiteUrl is configured.
             </p>
             <div style={{ marginTop: 16, textAlign: "right" }}>
               <button onClick={closeImportModal} style={btn}>Close</button>
@@ -655,8 +656,9 @@ export default function Students() {
               {resetResult.temporaryPassword}
             </p>
             <p style={{ fontSize: 13, color: "#555" }}>
-              Relay this to the student. It is shown only once — they must
-              change it on next login.
+              Relay this to the student. It is shown only once, expires in
+              7 days, and must be changed on next login — afterwards they
+              can use Forgot Password.
             </p>
             <button onClick={() => setResetResult(null)} style={btnPrimary}>Done</button>
           </div>

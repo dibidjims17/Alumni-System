@@ -15,5 +15,6 @@ namespace MyApp.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? PasswordResetCode { get; set; }
         public DateTime? PasswordResetCodeExpiry { get; set; }
+        public DateTime? TemporaryPasswordExpiry { get; set; }
     }
 }

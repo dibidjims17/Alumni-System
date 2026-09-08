@@ -64,7 +64,7 @@ namespace MyApp.Application.Services
         public async Task<ImportResultDto> ImportStudentsAsync(List<ImportStudentDto> students, int adminId)
         {
             var result = new ImportResultDto();
-            var newcomers = new List<Student>();
+            var newcomers = new List<(Student Student, string TemporaryPassword)>();
 
             foreach (var dto in students)
             {
@@ -91,7 +91,7 @@ namespace MyApp.Application.Services
                         continue;
                     }
 
-                    var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.StudentNumber);
+                    var temporaryPassword = GenerateTemporaryPassword();
 
                     var student = new Student
                     {
@@ -100,9 +100,10 @@ namespace MyApp.Application.Services
                         Email = dto.Email,
                         Program = dto.Program,
                         SchoolYear = dto.SchoolYear,
-                        PasswordHash = passwordHash,
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword),
                         IsActive = true,
                         MustChangePassword = true,
+                        TemporaryPasswordExpiry = DateTime.UtcNow.AddDays(TemporaryPasswordValidDays),
                         CreatedAt = DateTime.UtcNow
                     };
 
@@ -114,7 +115,7 @@ namespace MyApp.Application.Services
                         await _documentService.InitializeDocumentsAsync(student.Id, adminId);
                     }
 
-                    newcomers.Add(student);
+                    newcomers.Add((student, temporaryPassword));
                     result.Imported++;
                 }
                 catch (Exception ex)
@@ -135,21 +136,53 @@ namespace MyApp.Application.Services
             return result;
         }
 
-        private async Task<int> SendInviteEmailsAsync(List<Student> newcomers)
+        // Temporary credentials live 7 days: long enough to onboard, short
+        // enough that a leaked CSV row goes stale. Afterwards the holder
+        // must use Forgot Password.
+        private const int TemporaryPasswordValidDays = 7;
+
+        // 12 chars from an unambiguous alphabet (no 0/O/1/l/I): upper +
+        // lower + digits + symbols in every password by construction below.
+        private static string GenerateTemporaryPassword()
+        {
+            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const string lower = "abcdefghijkmnopqrstuvwxyz";
+            const string digits = "23456789";
+            const string symbols = "!@#$%&*";
+            const string all = upper + lower + digits + symbols;
+            var chars = new char[12];
+            chars[0] = upper[System.Security.Cryptography.RandomNumberGenerator.GetInt32(upper.Length)];
+            chars[1] = lower[System.Security.Cryptography.RandomNumberGenerator.GetInt32(lower.Length)];
+            chars[2] = digits[System.Security.Cryptography.RandomNumberGenerator.GetInt32(digits.Length)];
+            chars[3] = symbols[System.Security.Cryptography.RandomNumberGenerator.GetInt32(symbols.Length)];
+            for (var i = 4; i < chars.Length; i++)
+                chars[i] = all[System.Security.Cryptography.RandomNumberGenerator.GetInt32(all.Length)];
+            // Fisher–Yates so the class positions aren't predictable.
+            for (var i = chars.Length - 1; i > 0; i--)
+            {
+                var j = System.Security.Cryptography.RandomNumberGenerator.GetInt32(i + 1);
+                (chars[i], chars[j]) = (chars[j], chars[i]);
+            }
+            return new string(chars);
+        }
+
+        private async Task<int> SendInviteEmailsAsync(List<(Student Student, string TemporaryPassword)> newcomers)
         {
             var websiteUrl = (_configuration["Site:WebsiteUrl"] ?? string.Empty).Trim().TrimEnd('/');
             if (newcomers.Count == 0 || string.IsNullOrWhiteSpace(websiteUrl))
                 return 0;
 
             var sent = 0;
-            foreach (var student in newcomers)
+            foreach (var (student, temporaryPassword) in newcomers)
             {
                 try
                 {
                     var body = $"Hello {student.FullName},\n\n" +
                         $"Your school has created your Reunio alumni account.\n\n" +
-                        $"Sign in with your student number as both username and temporary password: {student.StudentNumber}\n" +
-                        $"You will be asked to change it on first login.\n\n" +
+                        $"Username (student number): {student.StudentNumber}\n" +
+                        $"Temporary password: {temporaryPassword}\n" +
+                        $"This password expires in {TemporaryPasswordValidDays} days — please log in and change it right away. " +
+                        $"If it expires first, use Forgot Password on the login screen to set a new one.\n\n" +
                         $"Get the mobile app here: {websiteUrl}\n\n" +
                         $"Welcome aboard!";
                     await _emailService.SendEmailAsync(student.Email, "Your Reunio alumni account + mobile app", body);
@@ -201,14 +234,11 @@ namespace MyApp.Application.Services
             if (student == null) return null;
 
             // Crypto-random temporary password, shown to the admin once.
-            const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-            var chars = new char[10];
-            for (var i = 0; i < chars.Length; i++)
-                chars[i] = alphabet[System.Security.Cryptography.RandomNumberGenerator.GetInt32(alphabet.Length)];
-            var temporaryPassword = new string(chars);
+            var temporaryPassword = GenerateTemporaryPassword();
 
             student.PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword);
             student.MustChangePassword = true;
+            student.TemporaryPasswordExpiry = DateTime.UtcNow.AddDays(TemporaryPasswordValidDays);
             student.PasswordResetCode = null;
             student.PasswordResetCodeExpiry = null;
             await _studentRepository.UpdateAsync(student);

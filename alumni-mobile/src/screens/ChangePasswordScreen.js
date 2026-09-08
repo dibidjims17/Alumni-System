@@ -34,6 +34,10 @@ export default function ChangePasswordScreen({ navigation }) {
       appAlert('Too short', 'New password should be at least 6 characters.');
       return;
     }
+    if (newPassword === currentPassword) {
+      appAlert('Same password', 'New password must be different from the current password.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {

@@ -50,6 +50,16 @@ namespace MyApp.Application.Services
             if (!passwordOk)
                 return null;
 
+            // Temporary passwords die after their window — the holder must go
+            // through Forgot Password instead. Signalled explicitly (not a
+            // generic null) so the client can explain why.
+            if (student.MustChangePassword
+                && student.TemporaryPasswordExpiry != null
+                && student.TemporaryPasswordExpiry < DateTime.UtcNow)
+            {
+                return new LoginResponse { TemporaryPasswordExpired = true };
+            }
+
             // 3. Log the activity
             await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN", "Student logged in", ipAddress);
 
@@ -93,27 +103,43 @@ namespace MyApp.Application.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<bool> ChangePasswordAsync(int studentId, ChangePasswordRequest request, string ipAddress)
+        public async Task<(bool Success, string Message)> ChangePasswordAsync(int studentId, ChangePasswordRequest request, string ipAddress)
         {
             // 1. Find student
             var student = await _studentRepository.GetByIdAsync(studentId);
             if (student == null || !student.IsActive)
-                return false;
+                return (false, "Account not found.");
 
             // 2. Verify current password
-            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, student.PasswordHash))
-                return false;
+            bool currentOk;
+            try
+            {
+                currentOk = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, student.PasswordHash);
+            }
+            catch
+            {
+                return (false, "Current password is incorrect.");
+            }
+            if (!currentOk)
+                return (false, "Current password is incorrect.");
 
-            // 3. Hash and set new password
+            // 3. Validate the replacement (mirrors the mobile client rules)
+            if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+                return (false, "New password must be at least 6 characters.");
+            if (request.NewPassword == request.CurrentPassword)
+                return (false, "New password must be different from the current password.");
+
+            // 4. Hash and set new password
             student.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             student.MustChangePassword = false;
+            student.TemporaryPasswordExpiry = null;
 
             await _studentRepository.UpdateAsync(student);
 
-            // 4. Log the activity
+            // 5. Log the activity
             await _activityLogRepository.LogStudentAsync(studentId, "CHANGE_PASSWORD", "Student changed password", ipAddress);
 
-            return true;
+            return (true, "Password changed successfully.");
         }
 
         public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
@@ -153,6 +179,7 @@ namespace MyApp.Application.Services
             student.MustChangePassword = false;
             student.PasswordResetCode = null;
             student.PasswordResetCodeExpiry = null;
+            student.TemporaryPasswordExpiry = null;
             await _studentRepository.UpdateAsync(student);
 
             return true;
