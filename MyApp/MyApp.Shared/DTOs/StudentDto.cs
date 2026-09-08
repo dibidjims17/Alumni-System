@@ -11,5 +11,8 @@ namespace MyApp.Shared.DTOs
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? ProfilePicturePath { get; set; }
+        // Populated only on creation responses so the admin can relay it.
+        public string? TemporaryPassword { get; set; }
+        public bool InviteEmailSent { get; set; }
     }
 }

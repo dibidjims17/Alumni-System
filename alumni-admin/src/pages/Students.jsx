@@ -58,9 +58,14 @@ export default function Students() {
     setSavingAdd(true);
     setError("");
     try {
-      await createStudent(addForm);
+      const created = await createStudent(addForm);
       closeAddModal();
       loadStudents();
+      setResetResult({
+        student: { fullName: created.fullName, studentNumber: created.studentNumber },
+        temporaryPassword: created.temporaryPassword,
+        inviteEmailSent: created.inviteEmailSent,
+      });
     } catch (err) {
       notifyError(err.message);
     } finally {
@@ -659,6 +664,14 @@ export default function Students() {
               Relay this to the student. It is shown only once, expires in
               7 days, and must be changed on next login — afterwards they
               can use Forgot Password.
+              {resetResult.inviteEmailSent !== undefined && (
+                <>
+                  <br />
+                  {resetResult.inviteEmailSent
+                    ? "An invite email with this password and the app download link was sent."
+                    : "No invite email was sent (promo site link not configured)."}
+                </>
+              )}
             </p>
             <button onClick={() => setResetResult(null)} style={btnPrimary}>Done</button>
           </div>

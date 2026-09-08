@@ -254,6 +254,8 @@ namespace MyApp.Application.Services
             var existing = await _studentRepository.GetByStudentNumberAsync(request.StudentNumber);
             if (existing != null) return null;
 
+            var temporaryPassword = GenerateTemporaryPassword();
+
             var student = new Student
             {
                 StudentNumber = request.StudentNumber,
@@ -261,9 +263,10 @@ namespace MyApp.Application.Services
                 Email = request.Email,
                 Program = request.Program,
                 SchoolYear = request.SchoolYear,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.StudentNumber),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword),
                 IsActive = true,
                 MustChangePassword = true,
+                TemporaryPasswordExpiry = DateTime.UtcNow.AddDays(TemporaryPasswordValidDays),
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -278,6 +281,9 @@ namespace MyApp.Application.Services
             await _activityLogRepository.LogAdminAsync(adminId, "CREATE_STUDENT",
                 $"Created student: {request.StudentNumber}", "system");
 
+            var inviteSent = await SendInviteEmailsAsync(
+                new List<(Student Student, string TemporaryPassword)> { (student, temporaryPassword) });
+
             return new StudentDto
             {
                 Id = student.Id,
@@ -287,7 +293,9 @@ namespace MyApp.Application.Services
                 Program = student.Program,
                 SchoolYear = student.SchoolYear,
                 IsActive = student.IsActive,
-                CreatedAt = student.CreatedAt
+                CreatedAt = student.CreatedAt,
+                TemporaryPassword = temporaryPassword,
+                InviteEmailSent = inviteSent == 1
             };
         }
     }
