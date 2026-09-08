@@ -180,7 +180,8 @@ namespace MyApp.Application.Services
                 return (false, "Invites are only sent to Graduate accounts.", null);
 
             var websiteUrl = (_configuration["Site:WebsiteUrl"] ?? string.Empty).Trim().TrimEnd('/');
-            if (string.IsNullOrWhiteSpace(websiteUrl))
+            var apkUrl = (_configuration["Site:ApkUrl"] ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(websiteUrl) && string.IsNullOrWhiteSpace(apkUrl))
                 return (false, "Promo site link is not configured.", null);
 
             var temporaryPassword = GenerateTemporaryPassword();
@@ -195,7 +196,7 @@ namespace MyApp.Application.Services
             {
                 var (plain, html) = EmailTemplates.Invite(
                     student.FullName, student.Email, student.StudentNumber, temporaryPassword,
-                    TemporaryPasswordValidDays, websiteUrl);
+                    TemporaryPasswordValidDays, websiteUrl, apkUrl);
                 await _emailService.SendEmailAsync(student.Email,
                     "Your Reunio alumni account + mobile app",
                     plain, html);
@@ -214,9 +215,10 @@ namespace MyApp.Application.Services
         private async Task<int> SendInviteEmailsAsync(List<(Student Student, string TemporaryPassword)> newcomers)
         {
             var websiteUrl = (_configuration["Site:WebsiteUrl"] ?? string.Empty).Trim().TrimEnd('/');
+            var apkUrl = (_configuration["Site:ApkUrl"] ?? string.Empty).Trim();
             // Invites go to Graduate accounts only — the app is an alumni product.
             var graduates = newcomers.Where(n => IsGraduate(n.Student)).ToList();
-            if (graduates.Count == 0 || string.IsNullOrWhiteSpace(websiteUrl))
+            if (graduates.Count == 0 || (string.IsNullOrWhiteSpace(websiteUrl) && string.IsNullOrWhiteSpace(apkUrl)))
                 return 0;
 
             var sent = 0;
@@ -226,7 +228,7 @@ namespace MyApp.Application.Services
                 {
                     var (plain, html) = EmailTemplates.Invite(
                         student.FullName, student.Email, student.StudentNumber, temporaryPassword,
-                        TemporaryPasswordValidDays, websiteUrl);
+                        TemporaryPasswordValidDays, websiteUrl, apkUrl);
                     await _emailService.SendEmailAsync(student.Email,
                         "Your Reunio alumni account + mobile app",
                         plain, html);

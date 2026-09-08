@@ -40,7 +40,8 @@ namespace MyApp.Shared
             $@"<p style=""margin:0 0 12px;"">{text}</p>";
 
         public static (string Plain, string Html) Invite(
-            string fullName, string email, string studentNumber, string temporaryPassword, int validDays, string siteUrl)
+            string fullName, string email, string studentNumber, string temporaryPassword,
+            int validDays, string siteUrl, string? apkUrl)
         {
             var name = WebUtility.HtmlEncode(fullName);
             var mail = WebUtility.HtmlEncode(email);
@@ -50,7 +51,9 @@ namespace MyApp.Shared
                 $"Sign in with your email: {email} (student number {studentNumber} works too)\nTemporary password: {temporaryPassword}\n" +
                 $"This password expires in {validDays} days — please log in and change it right away. " +
                 $"If it expires first, use Forgot Password on the login screen to set a new one.\n\n" +
-                $"Get the mobile app here: {siteUrl}\n\nWelcome aboard!";
+                (string.IsNullOrWhiteSpace(siteUrl) ? "" : $"Learn more and get the app on our website: {siteUrl}\n") +
+                (string.IsNullOrWhiteSpace(apkUrl) ? "" : $"Or download the app directly: {apkUrl}\n") +
+                "\nWelcome aboard!";
             var html = Layout("Welcome to Reunio 🎓",
                 P($"Hello <strong>{name}</strong>,") +
                 P("Your school has created your Reunio alumni account. Here are your sign-in details:") +
@@ -60,7 +63,8 @@ namespace MyApp.Shared
                 $@"<div style=""margin-top:4px;"">Temporary password: <strong>{WebUtility.HtmlEncode(temporaryPassword)}</strong></div>" +
                 $@"</td></tr></table>" +
                 P($"This password expires in <strong>{validDays} days</strong> — please log in and change it right away. If it expires first, use <strong>Forgot Password</strong> on the login screen.") +
-                Button(siteUrl, "⬇ Get the mobile app"),
+                (string.IsNullOrWhiteSpace(siteUrl) ? "" : Button(siteUrl, "🌐 Explore Reunio on the web")) +
+                (string.IsNullOrWhiteSpace(apkUrl) ? "" : P($@"Prefer a direct download? <a href=""{apkUrl}"" style=""color:#1B5E20;font-weight:bold;"">Get the APK here</a>.")),
                 "Jobs, news, events, and batchmates — one alumni home.");
             return (plain, html);
         }
