@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using MyApp.Application.Interfaces;
 using MyApp.Domain.Entities;
 using MyApp.Shared.DTOs;
@@ -10,17 +11,23 @@ namespace MyApp.Application.Services
         private readonly IActivityLogRepository _activityLogRepository;
         private readonly IAlumniDocumentService _documentService;
         private readonly IAlumniProfileRepository _profileRepository;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
         public StudentService(
             IStudentRepository studentRepository,
             IActivityLogRepository activityLogRepository,
             IAlumniDocumentService documentService,
-            IAlumniProfileRepository profileRepository)
+            IAlumniProfileRepository profileRepository,
+            IEmailService emailService,
+            IConfiguration configuration)
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
             _documentService = documentService;
             _profileRepository = profileRepository;
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<List<StudentDto>> GetAllStudentsAsync()
@@ -57,6 +64,7 @@ namespace MyApp.Application.Services
         public async Task<ImportResultDto> ImportStudentsAsync(List<ImportStudentDto> students, int adminId)
         {
             var result = new ImportResultDto();
+            var newcomers = new List<Student>();
 
             foreach (var dto in students)
             {
@@ -106,6 +114,7 @@ namespace MyApp.Application.Services
                         await _documentService.InitializeDocumentsAsync(student.Id, adminId);
                     }
 
+                    newcomers.Add(student);
                     result.Imported++;
                 }
                 catch (Exception ex)
@@ -118,7 +127,40 @@ namespace MyApp.Application.Services
             await _activityLogRepository.LogAdminAsync(adminId, "BULK_IMPORT",
                 $"Imported {result.Imported} students, {result.Skipped} updated, {result.Errors} errors", "system");
 
+            // Invite every newly created account to the promo site so they can
+            // download the app. Best effort per address — one bad email must
+            // not fail the import or block the rest.
+            result.EmailsSent = await SendInviteEmailsAsync(newcomers);
+
             return result;
+        }
+
+        private async Task<int> SendInviteEmailsAsync(List<Student> newcomers)
+        {
+            var websiteUrl = (_configuration["Site:WebsiteUrl"] ?? string.Empty).Trim().TrimEnd('/');
+            if (newcomers.Count == 0 || string.IsNullOrWhiteSpace(websiteUrl))
+                return 0;
+
+            var sent = 0;
+            foreach (var student in newcomers)
+            {
+                try
+                {
+                    var body = $"Hello {student.FullName},\n\n" +
+                        $"Your school has created your Reunio alumni account.\n\n" +
+                        $"Sign in with your student number as both username and temporary password: {student.StudentNumber}\n" +
+                        $"You will be asked to change it on first login.\n\n" +
+                        $"Get the mobile app here: {websiteUrl}\n\n" +
+                        $"Welcome aboard!";
+                    await _emailService.SendEmailAsync(student.Email, "Your Reunio alumni account + mobile app", body);
+                    sent++;
+                }
+                catch
+                {
+                    // Per-address failure — counted by omission, import stands.
+                }
+            }
+            return sent;
         }
 
         public async Task<bool> ToggleStudentStatusAsync(int studentId, int adminId)

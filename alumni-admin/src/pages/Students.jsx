@@ -106,7 +106,9 @@ export default function Students() {
         setImportResult(null);
         try {
           const result = await importStudents(results.data);
-          setImportResult({ success: true, message: `Imported successfully.`, detail: result });
+          const summary = `Imported ${result.imported ?? 0}, updated ${result.skipped ?? 0}, ` +
+            `${result.errors ?? 0} errors, ${result.emailsSent ?? 0} invites sent.`;
+          setImportResult({ success: true, message: summary, detail: result });
           loadStudents();
         } catch (err) {
           setImportResult({ success: false, message: err.message });
