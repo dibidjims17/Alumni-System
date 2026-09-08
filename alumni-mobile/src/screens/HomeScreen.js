@@ -1,6 +1,6 @@
 // src/screens/HomeScreen.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import {
   Newspaper,
   Briefcase,
@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
+import { assetUrl } from '../utils/media';
 
 const TILES = [
   { key: 'news', label: 'News', sub: 'Updates & stories', Icon: Newspaper, target: ['CommunityTab', 'NewsList'] },
@@ -44,6 +45,7 @@ export default function HomeScreen({ navigation }) {
   const numColumns = width >= 900 ? 3 : width >= 600 ? 2 : 2;
   const tileBasis = numColumns === 3 ? '31%' : '48%';
   const [unreadCount, setUnreadCount] = useState(0);
+  const [photoUrl, setPhotoUrl] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -51,6 +53,11 @@ export default function HomeScreen({ navigation }) {
         .get('/Notification/unread-count')
         .then((res) => setUnreadCount(res.data.count || 0))
         .catch(() => {});
+      // Fresh photo every visit (updates right after a Profile change).
+      apiClient
+        .get('/Profile')
+        .then((res) => setPhotoUrl(assetUrl(res.data?.profilePictureUrl)))
+        .catch(() => setPhotoUrl(null));
     }, [])
   );
 
@@ -63,9 +70,13 @@ export default function HomeScreen({ navigation }) {
       edges={['top', 'left', 'right']}
     >
       <View style={styles.header}>
-        <View style={[styles.avatar, { backgroundColor: c.primary }]}>
-          <Text style={styles.avatarText}>{initial}</Text>
-        </View>
+        {photoUrl ? (
+          <Image source={{ uri: photoUrl }} style={styles.avatarPhoto} />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: c.primary }]}>
+            <Text style={styles.avatarText}>{initial}</Text>
+          </View>
+        )}
         <View style={styles.headerText}>
           <Text style={[styles.greet, { color: c.textMuted }]}>
             {greeting()},
@@ -183,6 +194,12 @@ const styles = StyleSheet.create({
     borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 12,
+  },
+  avatarPhoto: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     marginRight: 12,
   },
   avatarText: {
