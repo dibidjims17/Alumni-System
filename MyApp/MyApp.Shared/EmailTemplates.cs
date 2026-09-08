@@ -40,13 +40,14 @@ namespace MyApp.Shared
             $@"<p style=""margin:0 0 12px;"">{text}</p>";
 
         public static (string Plain, string Html) Invite(
-            string fullName, string studentNumber, string temporaryPassword, int validDays, string siteUrl)
+            string fullName, string email, string studentNumber, string temporaryPassword, int validDays, string siteUrl)
         {
             var name = WebUtility.HtmlEncode(fullName);
+            var mail = WebUtility.HtmlEncode(email);
             var number = WebUtility.HtmlEncode(studentNumber);
             var plain =
                 $"Hello {fullName},\n\nYour school has created your Reunio alumni account.\n\n" +
-                $"Username (student number): {studentNumber}\nTemporary password: {temporaryPassword}\n" +
+                $"Sign in with your email: {email} (student number {studentNumber} works too)\nTemporary password: {temporaryPassword}\n" +
                 $"This password expires in {validDays} days — please log in and change it right away. " +
                 $"If it expires first, use Forgot Password on the login screen to set a new one.\n\n" +
                 $"Get the mobile app here: {siteUrl}\n\nWelcome aboard!";
@@ -54,7 +55,8 @@ namespace MyApp.Shared
                 P($"Hello <strong>{name}</strong>,") +
                 P("Your school has created your Reunio alumni account. Here are your sign-in details:") +
                 $@"<table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""width:100%;background-color:#F2F5F0;border-radius:10px;margin:14px 0;""><tr><td style=""padding:14px 16px;font-size:13px;"">" +
-                $@"<div>Username (student number): <strong>{number}</strong></div>" +
+                $@"<div>Email: <strong>{mail}</strong></div>" +
+                $@"<div style=""margin-top:4px;"">Student number: <strong>{number}</strong> (also works as username)</div>" +
                 $@"<div style=""margin-top:4px;"">Temporary password: <strong>{WebUtility.HtmlEncode(temporaryPassword)}</strong></div>" +
                 $@"</td></tr></table>" +
                 P($"This password expires in <strong>{validDays} days</strong> — please log in and change it right away. If it expires first, use <strong>Forgot Password</strong> on the login screen.") +

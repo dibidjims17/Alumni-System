@@ -194,7 +194,7 @@ namespace MyApp.Application.Services
             try
             {
                 var (plain, html) = EmailTemplates.Invite(
-                    student.FullName, student.StudentNumber, temporaryPassword,
+                    student.FullName, student.Email, student.StudentNumber, temporaryPassword,
                     TemporaryPasswordValidDays, websiteUrl);
                 await _emailService.SendEmailAsync(student.Email,
                     "Your Reunio alumni account + mobile app",
@@ -225,7 +225,7 @@ namespace MyApp.Application.Services
                 try
                 {
                     var (plain, html) = EmailTemplates.Invite(
-                        student.FullName, student.StudentNumber, temporaryPassword,
+                        student.FullName, student.Email, student.StudentNumber, temporaryPassword,
                         TemporaryPasswordValidDays, websiteUrl);
                     await _emailService.SendEmailAsync(student.Email,
                         "Your Reunio alumni account + mobile app",
