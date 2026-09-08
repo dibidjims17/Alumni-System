@@ -178,6 +178,14 @@ export default function ProfileScreen({ navigation }) {
         <Text style={[styles.subtext, { color: c.textMuted }]}>
           {profile.studentNumber} - {profile.program}
         </Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('YearCorrection')}
+          accessibilityLabel="Request year level correction"
+        >
+          <Text style={[styles.yearLine, { color: c.primary }]}>
+            Year level: {student?.schoolYear || '—'} — wrong? Request a correction
+          </Text>
+        </TouchableOpacity>
         {profile.headline ? (
           <Text style={[styles.headline, { color: c.text }]}>{profile.headline}</Text>
         ) : null}
@@ -281,6 +289,7 @@ const styles = StyleSheet.create({
   removePhotoText: { fontSize: 12, textAlign: 'center', marginBottom: 10 },
   name: { fontSize: 21, fontWeight: '700', textAlign: 'center' },
   subtext: { fontSize: 13, marginTop: 2, textAlign: 'center' },
+  yearLine: { fontSize: 12.5, marginTop: 6, textAlign: 'center', fontWeight: '600' },
   headline: { fontSize: 14, marginTop: 6, textAlign: 'center', fontStyle: 'italic' },
   actionCard: {
     borderRadius: 12,

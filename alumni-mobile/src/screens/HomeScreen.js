@@ -85,7 +85,7 @@ export default function HomeScreen({ navigation }) {
             {firstName}
           </Text>
           <Text style={[styles.detail, { color: c.textMuted }]} numberOfLines={1}>
-            {student?.studentNumber} • {student?.program}
+            {student?.studentNumber} • {student?.program} • {student?.schoolYear || '—'}
           </Text>
         </View>
         <View style={styles.headerActions}>
