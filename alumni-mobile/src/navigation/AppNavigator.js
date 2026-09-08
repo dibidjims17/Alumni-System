@@ -4,12 +4,13 @@ import { View, ActivityIndicator, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { House, Users, Briefcase, User } from 'lucide-react-native';
+import { House, Users, Briefcase, User, GraduationCap } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 
 import LoginScreen from '../screens/LoginScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import YearCorrectionScreen from '../screens/YearCorrectionScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NewsListScreen from '../screens/NewsListScreen';
 import NewsDetailScreen from '../screens/NewsDetailScreen';
@@ -18,7 +19,6 @@ import EventDetailScreen from '../screens/EventDetailScreen';
 import DirectoryScreen from '../screens/DirectoryScreen';
 
 import ProfileScreen from '../screens/ProfileScreen';
-import YearCorrectionScreen from '../screens/YearCorrectionScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import JobPreferencesScreen from '../screens/JobPreferencesScreen';
 import EditSkillsScreen from '../screens/EditSkillsScreen';
@@ -40,6 +40,7 @@ const HomeStackNav = createNativeStackNavigator();
 const CommunityStackNav = createNativeStackNavigator();
 const CareerStackNav = createNativeStackNavigator();
 const ProfileStackNav = createNativeStackNavigator();
+const YearStackNav = createNativeStackNavigator();
 
 // Shared colors for the tab bar and stack headers.
 const TAB_ICONS = {
@@ -47,6 +48,7 @@ const TAB_ICONS = {
   CommunityTab: Users,
   CareerTab: Briefcase,
   ProfileTab: User,
+  YearTab: GraduationCap,
 };
 
 function headerOptions(c) {
@@ -136,9 +138,27 @@ function ProfileStack() {
   );
 }
 
+function YearStack() {
+  const { theme } = useTheme();
+  return (
+    <YearStackNav.Navigator screenOptions={headerOptions(theme.colors)}>
+      <YearStackNav.Screen
+        name="YearCorrection"
+        component={YearCorrectionScreen}
+        options={{ headerShown: false }}
+      />
+      <YearStackNav.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
+    </YearStackNav.Navigator>
+  );
+}
+
 function AppTabs() {
   const { theme } = useTheme();
+  const { student } = useAuth();
   const c = theme.colors;
+  // Career and Profile are graduate-only; non-graduates get a dedicated
+  // Year Correction tab instead. (schoolYear refreshes on next login.)
+  const isGraduate = student?.schoolYear === 'Graduate';
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -159,8 +179,14 @@ function AppTabs() {
     >
       <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="CommunityTab" component={CommunityStack} options={{ tabBarLabel: 'Community' }} />
-      <Tab.Screen name="CareerTab" component={CareerStack} options={{ tabBarLabel: 'Career' }} />
-      <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ tabBarLabel: 'Profile' }} />
+      {isGraduate ? (
+        <>
+          <Tab.Screen name="CareerTab" component={CareerStack} options={{ tabBarLabel: 'Career' }} />
+          <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ tabBarLabel: 'Profile' }} />
+        </>
+      ) : (
+        <Tab.Screen name="YearTab" component={YearStack} options={{ tabBarLabel: 'Correction' }} />
+      )}
     </Tab.Navigator>
   );
 }

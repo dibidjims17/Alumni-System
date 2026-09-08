@@ -1,42 +1,68 @@
 // src/components/AppHeader.js
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { Menu } from 'lucide-react-native';
+import { Moon, Sun, Bell } from 'lucide-react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
-import MenuSheet from './MenuSheet';
+import apiClient from '../api/client';
 
-// Shared themed header bar with a hamburger menu. Used by every tab root
-// so headers blend in; the menu itself lives in MenuSheet (also used by
-// the custom Home header).
+// Shared themed header bar: title left, dark-mode toggle + notifications
+// right. Used by every tab root so headers stay identical.
 export default function AppHeader({ title, navigation }) {
-  const { theme } = useTheme();
+  const { theme, isDark, toggleDarkMode } = useTheme();
   const c = theme.colors;
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      apiClient
+        .get('/Notification/unread-count')
+        .then((res) => setUnreadCount(res.data.count || 0))
+        .catch(() => {});
+    }, [])
+  );
+
+  function goToNotifications() {
+    // Notifications lives in the Home stack — route through its tab.
+    navigation.navigate('HomeTab', { screen: 'Notifications' });
+  }
 
   return (
     <>
       <View style={[styles.bar, { borderBottomColor: c.border, backgroundColor: c.surface }]}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => setMenuOpen(true)}
-          accessibilityLabel="Menu"
-        >
-          <Menu size={24} color={c.text} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-        <View style={styles.iconButton} />
+        <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
+          {title}
+        </Text>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={toggleDarkMode}
+            accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun size={22} color={c.primary} /> : <Moon size={22} color={c.primary} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={goToNotifications}
+            accessibilityLabel="Notifications"
+          >
+            <Bell size={22} color={c.primary} />
+            {unreadCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: c.badge }]}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 99 ? '99+' : String(unreadCount)}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={[styles.accent, { backgroundColor: c.primary }]} />
-      <MenuSheet
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        navigation={navigation}
-      />
     </>
   );
 }
@@ -50,7 +76,28 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  iconButton: { padding: 6, minWidth: 36 },
+  title: { flex: 1, fontSize: 19, fontWeight: '800', letterSpacing: 0.3 },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  iconButton: { padding: 6, minWidth: 36, alignItems: 'center' },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
+  },
   accent: { height: 2, opacity: 0.9 },
-  title: { fontSize: 19, fontWeight: '800', letterSpacing: 0.3 },
 });

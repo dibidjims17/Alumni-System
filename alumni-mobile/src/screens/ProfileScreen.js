@@ -206,6 +206,13 @@ export default function ProfileScreen({ navigation }) {
 
         <TouchableOpacity
           style={[styles.actionCard, { backgroundColor: c.surface, borderColor: c.border }]}
+          onPress={() => navigation.navigate('ChangePassword')}
+        >
+          <Text style={[styles.actionCardText, { color: c.text }]}>Change Password</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionCard, { backgroundColor: c.surface, borderColor: c.border }]}
           onPress={() => navigation.navigate('Resume')}
         >
           <Text style={[styles.actionCardText, { color: c.text }]}>Resume</Text>

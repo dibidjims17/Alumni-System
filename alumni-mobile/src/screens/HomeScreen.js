@@ -12,7 +12,6 @@ import {
   CheckCheck,
   Moon,
   Sun,
-  Menu,
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,7 +19,6 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
 import { assetUrl } from '../utils/media';
-import MenuSheet from '../components/MenuSheet';
 
 const TILES = [
   { key: 'news', label: 'News', sub: 'Updates & stories', Icon: Newspaper, target: ['CommunityTab', 'NewsList'] },
@@ -48,7 +46,6 @@ export default function HomeScreen({ navigation }) {
   const tileBasis = numColumns === 3 ? '31%' : '48%';
   const [unreadCount, setUnreadCount] = useState(0);
   const [photoUrl, setPhotoUrl] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -72,15 +69,7 @@ export default function HomeScreen({ navigation }) {
       style={[styles.container, { backgroundColor: c.background }]}
       edges={['top', 'left', 'right']}
     >
-      <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} navigation={navigation} />
       <View style={styles.header}>
-        <TouchableOpacity
-          style={[styles.iconButton, styles.menuButton, { backgroundColor: c.surface, borderColor: c.border }]}
-          onPress={() => setMenuOpen(true)}
-          accessibilityLabel="Menu"
-        >
-          <Menu size={22} color={c.text} />
-        </TouchableOpacity>
         {photoUrl ? (
           <Image source={{ uri: photoUrl }} style={styles.avatarPhoto} />
         ) : (
@@ -247,9 +236,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  menuButton: {
-    marginRight: 10,
   },
   badge: {
     position: 'absolute',

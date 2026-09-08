@@ -185,6 +185,12 @@ export default function YearCorrectionScreen({ navigation }) {
             })}
           </View>
         )}
+
+        <TouchableOpacity onPress={() => navigation.navigate('ChangePassword')}>
+          <Text style={[styles.changePwLink, { color: c.primary }]}>
+            Need to change your password instead?
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -236,4 +242,5 @@ const styles = StyleSheet.create({
   historySub: { fontSize: 12, marginTop: 2, lineHeight: 17 },
   pill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   pillText: { fontSize: 11, fontWeight: '700' },
+  changePwLink: { textAlign: 'center', fontSize: 13, fontWeight: '600', marginTop: 6 },
 });
