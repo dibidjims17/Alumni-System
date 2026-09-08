@@ -13,6 +13,7 @@ import {
   Moon,
   Sun,
   GraduationCap,
+  LogOut,
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
 import { assetUrl } from '../utils/media';
+import { alert as appAlert } from '../components/AppAlert';
 
 const GRADUATE_TILES = [
   { key: 'news', label: 'News', sub: 'Updates & stories', Icon: Newspaper, target: ['CommunityTab', 'NewsList'] },
@@ -45,9 +47,16 @@ function greeting() {
 }
 
 export default function HomeScreen({ navigation }) {
-  const { student } = useAuth();
+  const { student, logout } = useAuth();
   const { theme, isDark, toggleDarkMode } = useTheme();
   const c = theme.colors;
+
+  function confirmSignOut() {
+    appAlert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: logout },
+    ]);
+  }
   const { width } = useWindowDimensions();
   const isGraduate = student?.schoolYear === 'Graduate';
   const tiles = isGraduate ? GRADUATE_TILES : UNDERGRAD_TILES;
@@ -159,6 +168,17 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE</Text>
+
+        {!isGraduate && (
+          <TouchableOpacity
+            style={[styles.signOutRow, { borderColor: c.border }]}
+            onPress={confirmSignOut}
+            accessibilityLabel="Sign out"
+          >
+            <LogOut size={18} color={c.danger} />
+            <Text style={[styles.signOutText, { color: c.danger }]}>Sign Out</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.grid}>
           {tiles.map(({ key, label, sub, Icon, target }) => (
@@ -333,6 +353,17 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 10,
   },
+  signOutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginBottom: 14,
+  },
+  signOutText: { fontSize: 14, fontWeight: '700' },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

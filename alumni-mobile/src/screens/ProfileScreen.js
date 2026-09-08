@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import apiClient from '../api/client';
 import { API_BASE_URL } from '../config';
+import { LogOut } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import ProfileCompleteness from '../components/ProfileCompleteness';
@@ -26,8 +27,15 @@ const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
 
 export default function ProfileScreen({ navigation }) {
   const { theme } = useTheme();
-  const { student } = useAuth();
+  const { student, logout } = useAuth();
   const c = theme.colors;
+
+  function confirmSignOut() {
+    appAlert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: logout },
+    ]);
+  }
 
   const [profile, setProfile] = useState(null);
   const [jobPreferences, setJobPreferences] = useState(null);
@@ -213,6 +221,13 @@ export default function ProfileScreen({ navigation }) {
 
         <TouchableOpacity
           style={[styles.actionCard, { backgroundColor: c.surface, borderColor: c.border }]}
+          onPress={confirmSignOut}
+        >
+          <Text style={[styles.signOutText, { color: c.danger }]}>Sign Out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionCard, { backgroundColor: c.surface, borderColor: c.border }]}
           onPress={() => navigation.navigate('Resume')}
         >
           <Text style={[styles.actionCardText, { color: c.text }]}>Resume</Text>
@@ -306,6 +321,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   actionCardText: { fontSize: 15, fontWeight: '600' },
+  signOutText: { fontSize: 15, fontWeight: '700', textAlign: 'center' },
   sectionHeader: { fontSize: 13, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.8 },
   sectionHeaderRow: {
     flexDirection: 'row',
