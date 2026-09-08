@@ -11,6 +11,8 @@ namespace MyApp.Application.Interfaces
         Task<bool> UpdateStudentAsync(int studentId, UpdateStudentRequest request, int adminId);
         Task<string?> ResetStudentPasswordAsync(int studentId, int adminId);
         Task<(bool Success, string Message, string? TemporaryPassword)> SendInviteAsync(int studentId, int adminId);
+        Task<List<YearChangeRequestDto>> GetYearChangeRequestsAsync(string? status);
+        Task<(bool Success, string Message)> ReviewYearChangeRequestAsync(int id, bool approve, string? note, int adminId);
         Task<StudentDto?> CreateStudentAsync(CreateStudentRequest request, int adminId);
     }
 }

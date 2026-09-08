@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Menu, X, Moon, Sun, KeyRound, LogOut } from 'lucide-react-native';
+import { Menu, X, Moon, Sun, KeyRound, LogOut, GraduationCap } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { alert as appAlert } from './AppAlert';
@@ -33,6 +33,11 @@ export default function AppHeader({ title, navigation }) {
   function goToChangePassword() {
     setMenuOpen(false);
     navigation.navigate('ProfileTab', { screen: 'ChangePassword' });
+  }
+
+  function goToYearCorrection() {
+    setMenuOpen(false);
+    navigation.navigate('ProfileTab', { screen: 'YearCorrection' });
   }
 
   return (
@@ -75,6 +80,11 @@ export default function AppHeader({ title, navigation }) {
             <TouchableOpacity style={[styles.menuRow, { borderBottomColor: c.border }]} onPress={goToChangePassword}>
               <KeyRound size={20} color={c.textMuted} />
               <Text style={[styles.menuLabel, { color: c.text }]}>Change Password</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.menuRow, { borderBottomColor: c.border }]} onPress={goToYearCorrection}>
+              <GraduationCap size={20} color={c.textMuted} />
+              <Text style={[styles.menuLabel, { color: c.text }]}>Year Level Correction</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuRow} onPress={confirmSignOut}>

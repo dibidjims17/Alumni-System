@@ -93,6 +93,24 @@ namespace MyApp.API.Controllers
             return Ok(new { temporaryPassword });
         }
 
+        // Year-correction review queue.
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpGet("year-change-requests")]
+        public async Task<IActionResult> GetYearChangeRequests([FromQuery] string? status = null)
+        {
+            var result = await _studentService.GetYearChangeRequestsAsync(status);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpPut("year-change-requests/{id}/review")]
+        public async Task<IActionResult> ReviewYearChangeRequest(int id, [FromBody] ReviewYearChangeRequest request)
+        {
+            var (success, message) = await _studentService.ReviewYearChangeRequestAsync(id, request.Approve, request.Note, GetUserId());
+            if (!success) return BadRequest(new { message });
+            return Ok(new { message });
+        }
+
         // Manual single-student creation (not just bulk CSV import).
         // Unique temporary password (7-day expiry), forced change on first login.
         [Authorize(Roles = "SuperAdmin,Staff")]

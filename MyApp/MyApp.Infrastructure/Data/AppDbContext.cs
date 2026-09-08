@@ -30,6 +30,7 @@ namespace MyApp.Infrastructure.Data
         public DbSet<EventRsvp> EventRsvps { get; set; }
         public DbSet<JobApplicationHistory> JobApplicationHistory { get; set; }
         public DbSet<PushToken> PushTokens { get; set; }
+        public DbSet<YearLevelChangeRequest> YearLevelChangeRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

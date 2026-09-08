@@ -63,6 +63,26 @@ export async function resetStudentPassword(id) {
   return response.json();
 }
 
+export async function getYearChangeRequests(status = "Pending") {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const response = await fetch(`${API_BASE_URL}/Students/year-change-requests${query}`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch correction requests");
+  return response.json();
+}
+
+export async function reviewYearChangeRequest(id, approve, note = null) {
+  const response = await fetch(`${API_BASE_URL}/Students/year-change-requests/${id}/review`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({ approve, note }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || "Failed to review request");
+  return data;
+}
+
 export async function sendInvite(id) {
   const response = await fetch(`${API_BASE_URL}/Students/${id}/send-invite`, {
     method: "POST",

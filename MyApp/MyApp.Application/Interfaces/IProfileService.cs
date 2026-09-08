@@ -17,5 +17,7 @@ namespace MyApp.Application.Interfaces
         Task<bool> UpdateEducationAsync(int studentId, int educationId, EducationDto request, string ipAddress);
         Task<bool> DeleteEducationAsync(int studentId, int educationId, string ipAddress);
         Task UpdateSkillsAsync(int studentId, List<string> skills, string ipAddress);
+        Task<(bool Success, string Message, YearChangeRequestDto? Request)> CreateYearChangeRequestAsync(int studentId, CreateYearChangeRequest request, string ipAddress);
+        Task<List<YearChangeRequestDto>> GetMyYearChangeRequestsAsync(int studentId);
     }
 }

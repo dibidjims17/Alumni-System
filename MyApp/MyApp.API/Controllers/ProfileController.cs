@@ -33,6 +33,26 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        // Year-level correction requests — intentionally NOT graduate-gated:
+        // this is precisely the path for students whose year is wrong.
+        [Authorize(Roles = "Student")]
+        [HttpPost("year-change-requests")]
+        public async Task<IActionResult> CreateYearChangeRequest([FromBody] CreateYearChangeRequest request)
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var (success, message, created) = await _profileService.CreateYearChangeRequestAsync(GetStudentId(), request, ipAddress);
+            if (!success) return BadRequest(new { message });
+            return Ok(new { message, request = created });
+        }
+
+        [Authorize(Roles = "Student")]
+        [HttpGet("year-change-requests")]
+        public async Task<IActionResult> GetMyYearChangeRequests()
+        {
+            var result = await _profileService.GetMyYearChangeRequestsAsync(GetStudentId());
+            return Ok(result);
+        }
+
         [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
         {

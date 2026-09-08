@@ -14,6 +14,7 @@ namespace MyApp.Application.Services
         private readonly IAlumniProfileRepository _profileRepository;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly IYearLevelChangeRepository _yearChangeRepository;
 
         public StudentService(
             IStudentRepository studentRepository,
@@ -21,7 +22,8 @@ namespace MyApp.Application.Services
             IAlumniDocumentService documentService,
             IAlumniProfileRepository profileRepository,
             IEmailService emailService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IYearLevelChangeRepository yearChangeRepository)
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
@@ -29,6 +31,7 @@ namespace MyApp.Application.Services
             _profileRepository = profileRepository;
             _emailService = emailService;
             _configuration = configuration;
+            _yearChangeRepository = yearChangeRepository;
         }
 
         public async Task<List<StudentDto>> GetAllStudentsAsync()
@@ -343,6 +346,85 @@ namespace MyApp.Application.Services
                 TemporaryPassword = temporaryPassword,
                 InviteEmailSent = inviteSent == 1
             };
+        }
+
+        public async Task<List<YearChangeRequestDto>> GetYearChangeRequestsAsync(string? status)
+        {
+            var list = await _yearChangeRepository.GetByStatusAsync(status);
+            return list.Select(r => new YearChangeRequestDto
+            {
+                Id = r.Id,
+                StudentId = r.StudentId,
+                StudentName = r.Student?.FullName ?? string.Empty,
+                StudentNumber = r.Student?.StudentNumber ?? string.Empty,
+                CurrentSchoolYear = r.CurrentSchoolYear,
+                RequestedSchoolYear = r.RequestedSchoolYear,
+                Reason = r.Reason,
+                Status = r.Status,
+                ReviewedByAdminName = r.ReviewedByAdmin?.FullName,
+                ReviewNote = r.ReviewNote,
+                CreatedAt = r.CreatedAt,
+                ReviewedAt = r.ReviewedAt
+            }).ToList();
+        }
+
+        public async Task<(bool Success, string Message)> ReviewYearChangeRequestAsync(
+            int id, bool approve, string? note, int adminId)
+        {
+            var request = await _yearChangeRepository.GetByIdAsync(id);
+            if (request == null)
+                return (false, "Request not found.");
+            if (request.Status != "Pending")
+                return (false, "This request has already been reviewed.");
+
+            var student = await _studentRepository.GetByIdAsync(request.StudentId);
+            if (student == null)
+                return (false, "Student not found.");
+
+            request.Status = approve ? "Approved" : "Declined";
+            request.ReviewNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+            request.ReviewedByAdminId = adminId;
+            request.ReviewedAt = DateTime.UtcNow;
+
+            if (approve)
+            {
+                student.SchoolYear = request.RequestedSchoolYear;
+                await _studentRepository.UpdateAsync(student);
+
+                // A newly recognized graduate gets documents + the app invite.
+                if (request.RequestedSchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase))
+                {
+                    await _documentService.InitializeDocumentsAsync(student.Id, adminId);
+                    await SendGraduationNoticeAsync(student);
+                }
+            }
+
+            await _yearChangeRepository.UpdateAsync(request);
+
+            await _activityLogRepository.LogAdminAsync(adminId, "REVIEW_YEAR_CHANGE",
+                $"{(approve ? "Approved" : "Declined")} year change for {student.StudentNumber}: " +
+                $"{request.CurrentSchoolYear} → {request.RequestedSchoolYear}", "system");
+
+            return (true, approve ? "Request approved." : "Request declined.");
+        }
+
+        private async Task SendGraduationNoticeAsync(Student student)
+        {
+            try
+            {
+                var websiteUrl = (_configuration["Site:WebsiteUrl"] ?? string.Empty).Trim().TrimEnd('/');
+                var apkUrl = (_configuration["Site:ApkUrl"] ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(websiteUrl) && string.IsNullOrWhiteSpace(apkUrl))
+                    return;
+                var (plain, html) = EmailTemplates.YearApproved(
+                    student.FullName, student.SchoolYear, websiteUrl, apkUrl);
+                await _emailService.SendEmailAsync(student.Email,
+                    "Your year level was updated — welcome, graduate", plain, html);
+            }
+            catch
+            {
+                // Notice mail is best effort; the approval itself stands.
+            }
         }
     }
 }

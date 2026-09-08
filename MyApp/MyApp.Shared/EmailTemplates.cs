@@ -88,6 +88,27 @@ namespace MyApp.Shared
             return (plain, html);
         }
 
+        public static (string Plain, string Html) YearApproved(
+            string fullName, string newYear, string siteUrl, string? apkUrl)
+        {
+            var plain =
+                $"Hello {fullName},\n\nGood news — your year level has been updated to: {newYear}.\n\n" +
+                (newYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase)
+                    ? "You now have access to graduate jobs, events, and document services. If your password no longer works, use Forgot Password on the login screen.\n\n"
+                    : "Please log in to see the change reflected in your account.\n\n") +
+                (string.IsNullOrWhiteSpace(siteUrl) ? "" : $"Get the mobile app here: {siteUrl}\n") +
+                (string.IsNullOrWhiteSpace(apkUrl) ? "" : $"Or download directly: {apkUrl}\n");
+            var html = Layout("Year level updated ✅",
+                P($"Hello <strong>{WebUtility.HtmlEncode(fullName)}</strong>,") +
+                P($"Good news — your year level is now <strong>{WebUtility.HtmlEncode(newYear)}</strong>.") +
+                (newYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase)
+                    ? P("You now have access to graduate jobs, events, and document services. If your password no longer works, use <strong>Forgot Password</strong> on the login screen.")
+                    : P("Please log in to see the change reflected in your account.")) +
+                (string.IsNullOrWhiteSpace(siteUrl) ? "" : Button(siteUrl, "🌐 Explore Reunio on the web")) +
+                (string.IsNullOrWhiteSpace(apkUrl) ? "" : P($@"Prefer a direct download? <a href=""{apkUrl}"" style=""color:#1B5E20;font-weight:bold;"">Get the APK here</a>.")));
+            return (plain, html);
+        }
+
         public static (string Plain, string Html) ResetCode(string code, bool forAdmin)
         {
             var who = forAdmin ? "admin" : "";

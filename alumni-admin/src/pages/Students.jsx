@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import Papa from "papaparse";
 import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send } from "lucide-react";
 import { API_BASE_URL } from "../config";
-import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite } from "../services/studentsApi";
+import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite, getYearChangeRequests, reviewYearChangeRequest } from "../services/studentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, btnDanger, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -39,6 +39,33 @@ export default function Students() {
 
   const [confirmResetId, setConfirmResetId] = useState(null);
   const [resetResult, setResetResult] = useState(null);
+
+  const [yearRequests, setYearRequests] = useState([]);
+
+  async function loadYearRequests() {
+    try {
+      setYearRequests(await getYearChangeRequests("Pending"));
+    } catch {
+      // Queue is auxiliary — never block the directory on it.
+    }
+  }
+
+  async function handleReviewYearRequest(req, approve) {
+    const ok = await askConfirm(
+      `${approve ? "Approve" : "Decline"} year change for ${req.studentName} (${req.studentNumber}): ${req.currentSchoolYear} → ${req.requestedSchoolYear}?` +
+      (approve && req.requestedSchoolYear === "Graduate" ? " Documents will initialize and an invite email will be sent." : ""),
+      { confirmLabel: approve ? "Approve" : "Decline", danger: !approve }
+    );
+    if (!ok) return;
+    try {
+      const res = await reviewYearChangeRequest(req.id, approve);
+      notifySuccess(res.message || (approve ? "Request approved." : "Request declined."));
+      loadYearRequests();
+      loadStudents();
+    } catch (err) {
+      notifyError(err.message);
+    }
+  }
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState(emptyAddForm);
@@ -88,6 +115,7 @@ export default function Students() {
 
   useEffect(() => {
     loadStudents();
+    loadYearRequests();
   }, []);
 
   function openImportModal() {
@@ -271,6 +299,57 @@ export default function Students() {
           Reset
         </button>
       </div>
+
+      {yearRequests.length > 0 && (
+        <div style={{ ...card, borderLeft: "4px solid #B45309", marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <h4 style={{ ...cardTitle, margin: 0 }}>
+              Year correction requests ({yearRequests.length})
+            </h4>
+            <span style={{ ...pill, background: "rgba(239,108,0,0.14)", color: "#B45309" }}>
+              Needs review
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+            {yearRequests.map((req) => (
+              <div
+                key={req.id}
+                style={{
+                  display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap",
+                  borderTop: "1px solid var(--border)", paddingTop: 10,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>
+                    {req.studentName}{" "}
+                    <span style={{ ...cardMeta, fontWeight: 400 }}>({req.studentNumber})</span>
+                  </div>
+                  <div style={{ fontSize: 13, marginTop: 2 }}>
+                    {req.currentSchoolYear} → <strong>{req.requestedSchoolYear}</strong>
+                  </div>
+                  <div style={{ ...cardMeta, marginTop: 2 }}>
+                    “{req.reason}” • {req.createdAt ? new Date(req.createdAt).toLocaleDateString() : ""}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  style={{ ...btnPrimary, padding: "6px 12px" }}
+                  onClick={() => handleReviewYearRequest(req, true)}
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  style={{ ...btnDanger, padding: "6px 12px" }}
+                  onClick={() => handleReviewYearRequest(req, false)}
+                >
+                  Decline
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading && <GridSkeleton count={8} />}
       {error && <p style={{ color: "red" }}>{error}</p>}

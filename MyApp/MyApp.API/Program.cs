@@ -33,6 +33,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAlumniDocumentRepository, AlumniDocumentRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IPushTokenRepository, PushTokenRepository>();
+builder.Services.AddScoped<IYearLevelChangeRepository, YearLevelChangeRepository>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();

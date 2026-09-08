@@ -13,6 +13,7 @@ namespace MyApp.Application.Services
         private readonly IWorkExperienceRepository _workExperienceRepository;
         private readonly IEducationRepository _educationRepository;
         private readonly ISkillRepository _skillRepository;
+        private readonly IYearLevelChangeRepository _yearChangeRepository;
 
         public ProfileService(
             IAlumniProfileRepository profileRepository,
@@ -21,7 +22,8 @@ namespace MyApp.Application.Services
             IActivityLogRepository activityLogRepository,
             IWorkExperienceRepository workExperienceRepository,
             IEducationRepository educationRepository,
-            ISkillRepository skillRepository)
+            ISkillRepository skillRepository,
+            IYearLevelChangeRepository yearChangeRepository)
         {
             _profileRepository = profileRepository;
             _jobPreferenceRepository = jobPreferenceRepository;
@@ -30,6 +32,79 @@ namespace MyApp.Application.Services
             _workExperienceRepository = workExperienceRepository;
             _educationRepository = educationRepository;
             _skillRepository = skillRepository;
+            _yearChangeRepository = yearChangeRepository;
+        }
+
+        private static readonly HashSet<string> ValidSchoolYears = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "1", "2", "3", "4", "Graduate"
+        };
+
+        public async Task<(bool Success, string Message, YearChangeRequestDto? Request)> CreateYearChangeRequestAsync(
+            int studentId, CreateYearChangeRequest request, string ipAddress)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId);
+            if (student == null)
+                return (false, "Account not found.", null);
+
+            var wanted = (request.RequestedSchoolYear ?? string.Empty).Trim();
+            if (!ValidSchoolYears.Contains(wanted))
+                return (false, "Invalid year level.", null);
+
+            if (wanted.Equals(student.SchoolYear.Trim(), StringComparison.OrdinalIgnoreCase))
+                return (false, "That is already your recorded year level.", null);
+
+            if (string.IsNullOrWhiteSpace(request.Reason))
+                return (false, "Please tell us why the record is wrong.", null);
+
+            var pending = await _yearChangeRepository.GetPendingByStudentAsync(studentId);
+            if (pending != null)
+                return (false, "You already have a pending request under review.", null);
+
+            var entity = new YearLevelChangeRequest
+            {
+                StudentId = studentId,
+                CurrentSchoolYear = student.SchoolYear,
+                RequestedSchoolYear = wanted,
+                Reason = request.Reason.Trim(),
+                Status = "Pending"
+            };
+            await _yearChangeRepository.CreateAsync(entity);
+
+            await _activityLogRepository.LogStudentAsync(studentId, "REQUEST_YEAR_CHANGE",
+                $"Requested year change: {student.SchoolYear} → {wanted}", ipAddress);
+
+            return (true, "Request submitted. An administrator will review it.", MapYearChange(entity, student.FullName, student.StudentNumber, null));
+        }
+
+        public async Task<List<YearChangeRequestDto>> GetMyYearChangeRequestsAsync(int studentId)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId);
+            var list = await _yearChangeRepository.GetByStudentAsync(studentId);
+            return list.Select(r => MapYearChange(r,
+                student?.FullName ?? string.Empty,
+                student?.StudentNumber ?? string.Empty,
+                r.ReviewedByAdmin?.FullName)).ToList();
+        }
+
+        private static YearChangeRequestDto MapYearChange(
+            YearLevelChangeRequest r, string studentName, string studentNumber, string? reviewerName)
+        {
+            return new YearChangeRequestDto
+            {
+                Id = r.Id,
+                StudentId = r.StudentId,
+                StudentName = studentName,
+                StudentNumber = studentNumber,
+                CurrentSchoolYear = r.CurrentSchoolYear,
+                RequestedSchoolYear = r.RequestedSchoolYear,
+                Reason = r.Reason,
+                Status = r.Status,
+                ReviewedByAdminName = reviewerName,
+                ReviewNote = r.ReviewNote,
+                CreatedAt = r.CreatedAt,
+                ReviewedAt = r.ReviewedAt
+            };
         }
 
         public async Task<AlumniProfileDto?> GetProfileAsync(int studentId)
