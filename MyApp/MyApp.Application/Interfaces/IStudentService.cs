@@ -10,6 +10,7 @@ namespace MyApp.Application.Interfaces
         Task<(int Total, int Active, int Graduate)> GetStatsAsync();
         Task<bool> UpdateStudentAsync(int studentId, UpdateStudentRequest request, int adminId);
         Task<string?> ResetStudentPasswordAsync(int studentId, int adminId);
+        Task<(bool Success, string Message, string? TemporaryPassword)> SendInviteAsync(int studentId, int adminId);
         Task<StudentDto?> CreateStudentAsync(CreateStudentRequest request, int adminId);
     }
 }

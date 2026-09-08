@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
-import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload } from "lucide-react";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send } from "lucide-react";
 import { API_BASE_URL } from "../config";
-import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent } from "../services/studentsApi";
+import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite } from "../services/studentsApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
-import { notifyError } from "../components/toastBus";
+import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
@@ -332,6 +332,38 @@ export default function Students() {
                     </button>
                     <button
                       type="button"
+                      style={{ ...btn, padding: "6px 12px" }}
+                      title="Send app invite with a fresh temporary password (Graduates only)"
+                      onClick={async () => {
+                        if (await askConfirm(
+                          `Send the app invite + a fresh temporary password to ${s.fullName} (${s.email})?`,
+                          { confirmLabel: "Send invite" }
+                        )) {
+                          try {
+                            const res = await sendInvite(s.id);
+                            notifySuccess(res.message || "Invite sent.");
+                            setResetResult({
+                              student: { fullName: s.fullName, studentNumber: s.studentNumber },
+                              temporaryPassword: res.temporaryPassword,
+                              inviteEmailSent: true,
+                            });
+                          } catch (err) {
+                            notifyError(err.message);
+                            if (err.temporaryPassword) {
+                              setResetResult({
+                                student: { fullName: s.fullName, studentNumber: s.studentNumber },
+                                temporaryPassword: err.temporaryPassword,
+                                inviteEmailSent: false,
+                              });
+                            }
+                          }
+                        }
+                      }}
+                    >
+                      <Send size={15} /> Invite
+                    </button>
+                    <button
+                      type="button"
                       style={{ ...btn, padding: "6px 12px", color: s.isActive ? "var(--danger)" : "var(--success)" }}
                       onClick={async () => {
                         if (await askConfirm(
@@ -370,9 +402,9 @@ export default function Students() {
             )}
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
               Expected columns: StudentNumber, FullName, Email, Program, SchoolYear.
-              Existing student numbers are updated; new ones get a unique
-              12-character temporary password (valid 7 days) emailed to them
-              with the app download link, once Site:WebsiteUrl is configured.
+              Existing student numbers are updated; new Graduate accounts get a
+              unique 12-character temporary password (valid 7 days) emailed to
+              them with the app download link, once Site:WebsiteUrl is configured.
             </p>
             <div style={{ marginTop: 16, textAlign: "right" }}>
               <button onClick={closeImportModal} style={btn}>Close</button>

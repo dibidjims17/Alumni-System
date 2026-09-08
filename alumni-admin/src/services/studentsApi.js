@@ -63,6 +63,20 @@ export async function resetStudentPassword(id) {
   return response.json();
 }
 
+export async function sendInvite(id) {
+  const response = await fetch(`${API_BASE_URL}/Students/${id}/send-invite`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.message || "Failed to send invite");
+    error.temporaryPassword = data.temporaryPassword;
+    throw error;
+  }
+  return data;
+}
+
 export async function createStudent(payload) {
   const response = await fetch(`${API_BASE_URL}/Students`, {
     method: "POST",
