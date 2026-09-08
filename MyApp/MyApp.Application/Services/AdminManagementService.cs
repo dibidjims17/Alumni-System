@@ -64,8 +64,9 @@ namespace MyApp.Application.Services
             // mail failure must not roll back the created account.
             try
             {
-                var body = $"Hello {admin.FullName},\n\nAn administrator account has been created for you on the School Alumni Portal.\n\nUsername: {admin.Username}\nTemporary password: {request.Password}\nRole: {admin.Role}\n\nPlease log in and change your password. If you did not expect this account, contact your administrator.";
-                await _emailService.SendEmailAsync(admin.Email, "Your Alumni Portal admin account", body);
+                var (plain, html) = MyApp.Shared.EmailTemplates.AdminWelcome(
+                    admin.FullName, admin.Username, request.Password, admin.Role);
+                await _emailService.SendEmailAsync(admin.Email, "Your Alumni Portal admin account", plain, html);
             }
             catch
             {

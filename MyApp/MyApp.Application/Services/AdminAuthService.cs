@@ -85,8 +85,8 @@ namespace MyApp.Application.Services
             admin.PasswordResetCodeExpiry = DateTime.UtcNow.AddMinutes(15);
             await _adminRepository.UpdateAsync(admin);
 
-            var body = $"Your admin password reset code is: {code}\n\nThis code expires in 15 minutes. If you did not request this, you can safely ignore this email.";
-            await _emailService.SendEmailAsync(admin.Email, "Admin Password Reset Code", body);
+            var (plain, html) = MyApp.Shared.EmailTemplates.ResetCode(code, forAdmin: true);
+            await _emailService.SendEmailAsync(admin.Email, "Admin Password Reset Code", plain, html);
         }
 
         public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)

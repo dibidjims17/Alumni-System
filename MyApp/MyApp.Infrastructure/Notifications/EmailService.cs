@@ -15,7 +15,10 @@ namespace MyApp.Infrastructure.Notifications
             _configuration = configuration;
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        public Task SendEmailAsync(string toEmail, string subject, string body) =>
+            SendEmailAsync(toEmail, subject, body, null);
+
+        public async Task SendEmailAsync(string toEmail, string subject, string plainBody, string? htmlBody)
         {
             try
             {
@@ -25,7 +28,18 @@ namespace MyApp.Infrastructure.Notifications
                     _configuration["Email:SenderEmail"]));
                 message.To.Add(MailboxAddress.Parse(toEmail));
                 message.Subject = subject;
-                message.Body = new TextPart("plain") { Text = body };
+
+                if (string.IsNullOrWhiteSpace(htmlBody))
+                {
+                    message.Body = new TextPart("plain") { Text = plainBody };
+                }
+                else
+                {
+                    var alternative = new Multipart("alternative");
+                    alternative.Add(new TextPart("plain") { Text = plainBody });
+                    alternative.Add(new TextPart("html") { Text = htmlBody });
+                    message.Body = alternative;
+                }
 
                 using var client = new SmtpClient();
                 await client.ConnectAsync(

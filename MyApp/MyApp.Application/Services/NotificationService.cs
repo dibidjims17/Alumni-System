@@ -88,10 +88,9 @@ namespace MyApp.Application.Services
 
             // 2. Send email
             var subject = $"Update on your application for {jobTitle}";
-            var body = $"Hello,\n\nYour application for \"{jobTitle}\" has been updated to: {status}.\n\n" +
-                       $"Please check the alumni app for more details.\n\nThank you.";
+            var (plain, html) = MyApp.Shared.EmailTemplates.ApplicationStatus(jobTitle, status);
 
-            await _emailService.SendEmailAsync(studentEmail, subject, body);
+            await _emailService.SendEmailAsync(studentEmail, subject, plain, html);
 
             // 3. Send device push
             var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(studentId);
@@ -115,9 +114,10 @@ namespace MyApp.Application.Services
             await _notificationRepository.CreateAsync(notification);
 
             // Email
+            var (replyPlain, replyHtml) = MyApp.Shared.EmailTemplates.CommentReply(replierName, newsTitle);
             await _emailService.SendEmailAsync(parentAuthorEmail,
                 $"New reply on \"{newsTitle}\"",
-                $"{replierName} replied to your comment on \"{newsTitle}\".\n\nCheck the alumni app for details.");
+                replyPlain, replyHtml);
 
             // Device push
             var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(parentAuthorStudentId);
@@ -139,9 +139,10 @@ namespace MyApp.Application.Services
             };
             await _notificationRepository.CreateAsync(notification);
 
+            var (mentionPlain, mentionHtml) = MyApp.Shared.EmailTemplates.Mention(mentionerName, newsTitle);
             await _emailService.SendEmailAsync(mentionedStudentEmail,
                 $"You were mentioned in \"{newsTitle}\"",
-                $"{mentionerName} mentioned you in a comment on \"{newsTitle}\".\n\nCheck the alumni app for details.");
+                mentionPlain, mentionHtml);
 
             var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(mentionedStudentId);
             await _pushService.SendAsync(tokens, notification.Title, notification.Message,

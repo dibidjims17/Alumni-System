@@ -157,8 +157,8 @@ namespace MyApp.Application.Services
             student.PasswordResetCodeExpiry = DateTime.UtcNow.AddMinutes(15);
             await _studentRepository.UpdateAsync(student);
 
-            var body = $"Your password reset code is: {code}\n\nThis code expires in 15 minutes. If you did not request this, you can safely ignore this email.";
-            await _emailService.SendEmailAsync(student.Email, "Password Reset Code", body);
+            var (plain, html) = MyApp.Shared.EmailTemplates.ResetCode(code, forAdmin: false);
+            await _emailService.SendEmailAsync(student.Email, "Password Reset Code", plain, html);
         }
 
         public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)

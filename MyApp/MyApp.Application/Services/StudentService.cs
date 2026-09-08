@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using MyApp.Application.Interfaces;
 using MyApp.Domain.Entities;
+using MyApp.Shared;
 using MyApp.Shared.DTOs;
 
 namespace MyApp.Application.Services
@@ -192,9 +193,12 @@ namespace MyApp.Application.Services
 
             try
             {
+                var (plain, html) = EmailTemplates.Invite(
+                    student.FullName, student.StudentNumber, temporaryPassword,
+                    TemporaryPasswordValidDays, websiteUrl);
                 await _emailService.SendEmailAsync(student.Email,
                     "Your Reunio alumni account + mobile app",
-                    InviteBody(student, temporaryPassword, websiteUrl));
+                    plain, html);
             }
             catch
             {
@@ -206,16 +210,6 @@ namespace MyApp.Application.Services
 
             return (true, "Invite sent.", temporaryPassword);
         }
-
-        private static string InviteBody(Student student, string temporaryPassword, string websiteUrl) =>
-            $"Hello {student.FullName},\n\n" +
-            $"Your school has created your Reunio alumni account.\n\n" +
-            $"Username (student number): {student.StudentNumber}\n" +
-            $"Temporary password: {temporaryPassword}\n" +
-            $"This password expires in {TemporaryPasswordValidDays} days — please log in and change it right away. " +
-            $"If it expires first, use Forgot Password on the login screen to set a new one.\n\n" +
-            $"Get the mobile app here: {websiteUrl}\n\n" +
-            $"Welcome aboard!";
 
         private async Task<int> SendInviteEmailsAsync(List<(Student Student, string TemporaryPassword)> newcomers)
         {
@@ -230,9 +224,12 @@ namespace MyApp.Application.Services
             {
                 try
                 {
+                    var (plain, html) = EmailTemplates.Invite(
+                        student.FullName, student.StudentNumber, temporaryPassword,
+                        TemporaryPasswordValidDays, websiteUrl);
                     await _emailService.SendEmailAsync(student.Email,
                         "Your Reunio alumni account + mobile app",
-                        InviteBody(student, temporaryPassword, websiteUrl));
+                        plain, html);
                     sent++;
                 }
                 catch
