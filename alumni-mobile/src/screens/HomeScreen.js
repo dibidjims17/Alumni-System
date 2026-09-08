@@ -12,6 +12,7 @@ import {
   CheckCheck,
   Moon,
   Sun,
+  GraduationCap,
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,12 +21,20 @@ import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
 import { assetUrl } from '../utils/media';
 
-const TILES = [
+const GRADUATE_TILES = [
   { key: 'news', label: 'News', sub: 'Updates & stories', Icon: Newspaper, target: ['CommunityTab', 'NewsList'] },
   { key: 'jobs', label: 'Jobs', sub: 'Openings & applications', Icon: Briefcase, target: ['CareerTab', 'JobsList'] },
   { key: 'events', label: 'Events', sub: 'Reunions & fairs', Icon: CalendarDays, target: ['CommunityTab', 'EventsList'] },
   { key: 'directory', label: 'Find Alumni', sub: 'Batchmates & directory', Icon: Users, target: ['CommunityTab', 'Directory'] },
   { key: 'profile', label: 'Profile', sub: 'You & your résumé', Icon: User, target: ['ProfileTab', 'Profile'] },
+];
+
+// Non-graduates see community teasers plus the correction path — never
+// links into hidden tabs (Career/Profile would dead-end).
+const UNDERGRAD_TILES = [
+  { key: 'news', label: 'News', sub: 'Updates & stories', Icon: Newspaper, target: ['CommunityTab', 'NewsList'] },
+  { key: 'events', label: 'Events', sub: 'Reunions & fairs', Icon: CalendarDays, target: ['CommunityTab', 'EventsList'] },
+  { key: 'correction', label: 'Year Correction', sub: 'Fix your year level', Icon: GraduationCap, target: ['YearTab', 'YearCorrection'] },
 ];
 
 function greeting() {
@@ -40,6 +49,8 @@ export default function HomeScreen({ navigation }) {
   const { theme, isDark, toggleDarkMode } = useTheme();
   const c = theme.colors;
   const { width } = useWindowDimensions();
+  const isGraduate = student?.schoolYear === 'Graduate';
+  const tiles = isGraduate ? GRADUATE_TILES : UNDERGRAD_TILES;
   // Column count follows the actual window width so phones, landscape
   // tablets, and split-screen windows all get a fitting grid.
   const numColumns = width >= 900 ? 3 : width >= 600 ? 2 : 2;
@@ -150,7 +161,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE</Text>
 
         <View style={styles.grid}>
-          {TILES.map(({ key, label, sub, Icon, target }) => (
+          {tiles.map(({ key, label, sub, Icon, target }) => (
             <TouchableOpacity
               key={key}
               style={[

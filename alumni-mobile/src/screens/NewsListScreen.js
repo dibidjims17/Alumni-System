@@ -13,6 +13,7 @@ import { Heart, MessageCircle } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
@@ -29,7 +30,13 @@ const COMMUNITY_TABS = [
 
 export default function NewsListScreen({ navigation }) {
   const { theme } = useTheme();
+  const { student } = useAuth();
   const c = theme.colors;
+  // The alumni directory is graduate-only; news and events stay open
+  // as community teasers.
+  const tabs = student?.schoolYear === 'Graduate'
+    ? COMMUNITY_TABS
+    : COMMUNITY_TABS.filter((t) => t.screen !== 'Directory');
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -182,7 +189,7 @@ export default function NewsListScreen({ navigation }) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
       <AppHeader title="Community" navigation={navigation} />
-      <SectionTabs items={COMMUNITY_TABS} active="NewsList" navigation={navigation} />
+      <SectionTabs items={tabs} active="NewsList" navigation={navigation} />
       {error && <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>}
       <View style={styles.searchRow}>
         <SearchBar

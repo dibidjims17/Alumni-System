@@ -4,6 +4,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { alert as appAlert } from '../components/AppAlert';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
@@ -19,7 +20,11 @@ const COMMUNITY_TABS = [
 
 export default function EventsListScreen({ navigation }) {
   const { theme } = useTheme();
+  const { student } = useAuth();
   const c = theme.colors;
+  const tabs = student?.schoolYear === 'Graduate'
+    ? COMMUNITY_TABS
+    : COMMUNITY_TABS.filter((t) => t.screen !== 'Directory');
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -134,7 +139,7 @@ export default function EventsListScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <AppHeader title="Community" navigation={navigation} />
-      <SectionTabs items={COMMUNITY_TABS} active="EventsList" navigation={navigation} />
+      <SectionTabs items={tabs} active="EventsList" navigation={navigation} />
       <View style={styles.searchRow}>
         <SearchBar
           placeholder="Search events or locations"
