@@ -6,6 +6,6 @@ namespace MyApp.Application.Interfaces
     {
         Task<AdminLoginResponse?> LoginAsync(AdminLoginRequest request);
         Task ForgotPasswordAsync(ForgotPasswordRequest request);
-        Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
+        Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

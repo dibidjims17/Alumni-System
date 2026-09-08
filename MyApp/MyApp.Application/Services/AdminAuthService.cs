@@ -89,26 +89,30 @@ namespace MyApp.Application.Services
             await _emailService.SendEmailAsync(admin.Email, "Admin Password Reset Code", plain, html);
         }
 
-        public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request)
         {
             var admin = await _adminRepository.GetByEmailAsync(request.Identifier);
             if (admin == null || !admin.IsActive)
-                return false;
+                return (false, "Invalid or expired reset code.");
 
             if (admin.PasswordResetCode == null
                 || string.IsNullOrWhiteSpace(request.Code)
                 || !VerifyResetCode(request.Code, admin.PasswordResetCode))
-                return false;
+                return (false, "Invalid or expired reset code.");
 
             if (admin.PasswordResetCodeExpiry == null || admin.PasswordResetCodeExpiry < DateTime.UtcNow)
-                return false;
+                return (false, "Invalid or expired reset code.");
+
+            var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(request.NewPassword);
+            if (!ruleOk)
+                return (false, ruleMessage);
 
             admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             admin.PasswordResetCode = null;
             admin.PasswordResetCodeExpiry = null;
             await _adminRepository.UpdateAsync(admin);
 
-            return true;
+            return (true, "Password reset successfully.");
         }
 
         // Only the SHA-256 hash of the code is stored, so a database leak never

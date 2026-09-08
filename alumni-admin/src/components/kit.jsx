@@ -2,7 +2,7 @@
 // All colors read CSS variables set by the theme provider so both light and
 // dark modes work without touching every call site.
 import { useEffect, useState, useRef } from "react";
-import { Search, X, Eye, EyeOff } from "lucide-react";
+import { Search, X, Eye, EyeOff, Check } from "lucide-react";
 import { requestDiscardConfirm } from "./discardBus";
 
 // Icon search input with a clear (X) button.
@@ -65,6 +65,41 @@ export function PasswordInput({ value, onChange, autoComplete = "current-passwor
       >
         {show ? <EyeOff size={17} /> : <Eye size={17} />}
       </button>
+    </div>
+  );
+}
+
+// Password strength checklist — mirrors MyApp.Shared.PasswordRules and the
+// mobile PasswordChecklist: 8+ chars with upper, lower, digit, special.
+export const passwordRules = [
+  { key: "length", label: "At least 8 characters", test: (pw) => pw.length >= 8 },
+  { key: "upper", label: "One uppercase letter (A–Z)", test: (pw) => /[A-Z]/.test(pw) },
+  { key: "lower", label: "One lowercase letter (a–z)", test: (pw) => /[a-z]/.test(pw) },
+  { key: "digit", label: "One number (0–9)", test: (pw) => /[0-9]/.test(pw) },
+  { key: "special", label: "One special character (!@#$…)", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+];
+
+export function passwordMeetsAll(password) {
+  const pw = password || "";
+  return passwordRules.every((rule) => rule.test(pw));
+}
+
+export function PasswordChecklist({ password }) {
+  const pw = password || "";
+  const untouched = pw.length === 0;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, margin: "8px 0 12px" }} aria-label="Password requirements">
+      {passwordRules.map((rule) => {
+        const met = rule.test(pw);
+        const color = met ? "var(--success)" : untouched ? "var(--muted)" : "var(--danger)";
+        const Icon = met ? Check : X;
+        return (
+          <div key={rule.key} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color }}>
+            <Icon size={14} />
+            {rule.label}
+          </div>
+        );
+      })}
     </div>
   );
 }

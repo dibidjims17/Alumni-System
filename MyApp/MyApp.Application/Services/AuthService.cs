@@ -123,11 +123,10 @@ namespace MyApp.Application.Services
             if (!currentOk)
                 return (false, "Current password is incorrect.");
 
-            // 3. Validate the replacement (mirrors the mobile client rules)
-            if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
-                return (false, "New password must be at least 6 characters.");
-            if (request.NewPassword == request.CurrentPassword)
-                return (false, "New password must be different from the current password.");
+            // 3. Validate the replacement (mirrors the client checklist rules)
+            var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(request.NewPassword, request.CurrentPassword);
+            if (!ruleOk)
+                return (false, ruleMessage);
 
             // 4. Hash and set new password
             student.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
@@ -161,19 +160,23 @@ namespace MyApp.Application.Services
             await _emailService.SendEmailAsync(student.Email, "Password Reset Code", plain, html);
         }
 
-        public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request)
         {
             var student = await _studentRepository.GetByEmailAsync(request.Identifier);
             if (student == null || !student.IsActive)
-                return false;
+                return (false, "Invalid or expired reset code.");
 
             if (student.PasswordResetCode == null
                 || string.IsNullOrWhiteSpace(request.Code)
                 || !VerifyResetCode(request.Code, student.PasswordResetCode))
-                return false;
+                return (false, "Invalid or expired reset code.");
 
             if (student.PasswordResetCodeExpiry == null || student.PasswordResetCodeExpiry < DateTime.UtcNow)
-                return false;
+                return (false, "Invalid or expired reset code.");
+
+            var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(request.NewPassword);
+            if (!ruleOk)
+                return (false, ruleMessage);
 
             student.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             student.MustChangePassword = false;
@@ -182,7 +185,7 @@ namespace MyApp.Application.Services
             student.TemporaryPasswordExpiry = null;
             await _studentRepository.UpdateAsync(student);
 
-            return true;
+            return (true, "Password reset successfully.");
         }
 
         // Only the SHA-256 hash of the code is stored, so a database leak never

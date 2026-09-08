@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import PasswordField from '../components/ui/PasswordField';
+import PasswordChecklist, { passwordMeetsAll } from '../components/ui/PasswordChecklist';
 
 export default function ChangePasswordScreen({ navigation }) {
   const { student, changePassword, logout } = useAuth();
@@ -30,8 +31,8 @@ export default function ChangePasswordScreen({ navigation }) {
       appAlert('Mismatch', 'New password and confirmation do not match.');
       return;
     }
-    if (newPassword.length < 6) {
-      appAlert('Too short', 'New password should be at least 6 characters.');
+    if (!passwordMeetsAll(newPassword)) {
+      appAlert('Weak password', 'Please meet all the password requirements below.');
       return;
     }
     if (newPassword === currentPassword) {
@@ -84,6 +85,8 @@ export default function ChangePasswordScreen({ navigation }) {
         onChangeText={setNewPassword}
         style={styles.field}
       />
+
+      <PasswordChecklist password={newPassword} />
 
       <PasswordField
         placeholder="Confirm New Password"

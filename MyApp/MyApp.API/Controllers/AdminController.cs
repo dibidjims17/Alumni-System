@@ -44,11 +44,11 @@ namespace MyApp.API.Controllers
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            var success = await _adminAuthService.ResetPasswordAsync(request);
+            var (success, message) = await _adminAuthService.ResetPasswordAsync(request);
             if (!success)
-                return BadRequest(new { message = "Invalid or expired reset code." });
+                return BadRequest(new { message });
 
-            return Ok(new { message = "Password reset successfully." });
+            return Ok(new { message });
         }
 
         [Authorize(Roles = "SuperAdmin")]

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { School, LogIn, Sun, Moon } from "lucide-react";
 import { loginAdmin, saveSession, adminForgotPassword, adminResetPassword } from "../services/api";
-import { PasswordInput, CodeInput } from "../components/kit";
+import { PasswordInput, CodeInput, PasswordChecklist, passwordMeetsAll } from "../components/kit";
 import { useAdminTheme } from "../theme";
 
 export default function Login() {
@@ -75,6 +75,10 @@ export default function Login() {
     setNotice("");
     if (resetCode.trim().length !== 6) {
       setError("Please enter the full 6-digit code.");
+      return;
+    }
+    if (!passwordMeetsAll(newPassword)) {
+      setError("Please meet all the password requirements below.");
       return;
     }
     setLoading(true);
@@ -243,7 +247,7 @@ export default function Login() {
               <CodeInput value={resetCode} onChange={setResetCode} />
             </div>
 
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 4 }}>
               <label style={{ fontSize: 13, color: "var(--muted)" }}>New password</label>
               <PasswordInput
                 value={newPassword}
@@ -252,6 +256,8 @@ export default function Login() {
                 style={inputStyle}
               />
             </div>
+
+            <PasswordChecklist password={newPassword} />
 
             {error && <p style={{ color: "var(--danger)", fontSize: 13, margin: "4px 0" }}>{error}</p>}
 

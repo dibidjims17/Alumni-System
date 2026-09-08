@@ -12,6 +12,7 @@ import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import PasswordField from '../components/ui/PasswordField';
+import PasswordChecklist, { passwordMeetsAll } from '../components/ui/PasswordChecklist';
 import { alert as appAlert } from '../components/AppAlert';
 
 export default function ResetPasswordScreen({ route, navigation }) {
@@ -64,8 +65,8 @@ export default function ResetPasswordScreen({ route, navigation }) {
       appAlert('Mismatch', 'New password and confirmation do not match.');
       return;
     }
-    if (newPassword.length < 6) {
-      appAlert('Too short', 'New password should be at least 6 characters.');
+    if (!passwordMeetsAll(newPassword)) {
+      appAlert('Weak password', 'Please meet all the password requirements below.');
       return;
     }
 
@@ -132,6 +133,8 @@ export default function ResetPasswordScreen({ route, navigation }) {
         onChangeText={setNewPassword}
         style={styles.field}
       />
+
+      <PasswordChecklist password={newPassword} />
 
       <PasswordField
         placeholder="Confirm New Password"
