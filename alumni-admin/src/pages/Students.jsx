@@ -687,7 +687,9 @@ export default function Students() {
             </p>
             <p style={{
               fontSize: 20, fontFamily: "monospace",
-              background: "#f4f4f4", padding: 12, textAlign: "center",
+              background: "var(--surface-alt)", color: "var(--text)",
+              border: "1px solid var(--border)", borderRadius: 8,
+              padding: 12, textAlign: "center",
               userSelect: "all",
             }}>
               {resetResult.temporaryPassword}
