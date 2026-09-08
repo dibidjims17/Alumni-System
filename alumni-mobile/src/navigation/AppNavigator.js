@@ -161,8 +161,13 @@ function AppTabs() {
   const isGraduate = student?.schoolYear === 'Graduate';
   return (
     <Tab.Navigator
+      // Back always exits toward Home first (never walks tab history), and
+      // each tab resets when left — returning to a tab always lands on its
+      // root screen, never a stale pushed screen like Notifications.
+      backBehavior="initialRoute"
       screenOptions={({ route }) => ({
         headerShown: false,
+        unmountOnBlur: true,
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
