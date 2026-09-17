@@ -14,6 +14,7 @@ import Events from "./pages/Events";
 import ActivityLog from "./pages/ActivityLog";
 import ManageAdmins from "./pages/ManageAdmins";
 import Trash from "./pages/Trash";
+import Profile from "./pages/Profile";
 
 function ProtectedRoute({ children }) {
   const session = getSession();
@@ -56,6 +57,7 @@ export default function App() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/students" element={<Students />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/documents/:id" element={<StudentDocuments />} />

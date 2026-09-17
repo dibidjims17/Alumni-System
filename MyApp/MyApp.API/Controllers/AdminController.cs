@@ -59,6 +59,68 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        // Self-service profile endpoints — any signed-in admin or staffer,
+        // always scoped to the caller's own account.
+        private int GetOwnId() =>
+            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var result = await _adminManagementService.GetAdminByIdAsync(GetOwnId());
+            if (result == null) return NotFound(new { message = "Account not found." });
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpPut("me/profile")]
+        public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateAdminProfileRequest request)
+        {
+            var ownId = GetOwnId();
+            var (success, message) = await _adminManagementService.UpdateAdminProfileAsync(
+                ownId, request, ownId, User.IsInRole("SuperAdmin"));
+            if (!success) return BadRequest(new { message });
+            var updated = await _adminManagementService.GetAdminByIdAsync(ownId);
+            return Ok(updated);
+        }
+
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpPost("me/picture")]
+        public async Task<IActionResult> UploadMyPicture(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file provided." });
+
+            // Max 5MB
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "Image size must not exceed 5MB." });
+
+            // Only allow image extensions
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
+            if (!allowedExtensions.Contains(ext))
+                return BadRequest(new { message = "Only JPG, PNG, GIF, WEBP and BMP images are allowed." });
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "AdminPictures");
+            Directory.CreateDirectory(uploadsFolder);
+
+            // Server-side name is generated (never trust the client filename for the path)
+            var ownId = GetOwnId();
+            var storedFileName = $"admin_{ownId}_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsFolder, storedFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"Uploads/AdminPictures/{storedFileName}";
+            var (success, relative, message) = await _adminManagementService.UpdateAdminPictureAsync(ownId, relativePath, filePath, ownId);
+            if (!success) return NotFound(new { message });
+            return Ok(new { profilePicturePath = relative });
+        }
+
         [Authorize(Roles = "SuperAdmin")]
         [HttpPost]
         public async Task<IActionResult> CreateAdmin([FromBody] CreateAdminRequest request)

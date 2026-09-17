@@ -23,6 +23,12 @@ namespace MyApp.Application.Services
             return admins.Select(Map).ToList();
         }
 
+        public async Task<AdminDto?> GetAdminByIdAsync(int adminId)
+        {
+            var admin = await _adminRepository.GetByIdAsync(adminId);
+            return admin == null ? null : Map(admin);
+        }
+
         private static AdminDto Map(Admin admin)
         {
             return new AdminDto

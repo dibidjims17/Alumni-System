@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, Newspaper, Briefcase, CalendarDays,
-  UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu,
+  UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu, User,
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
 import { API_BASE_URL } from "../config";
@@ -30,6 +30,7 @@ const SEGMENT_TITLES = {
   "activity-log": "Activity Log",
   "manage-admins": "Manage Admins",
   trash: "Trash",
+  profile: "Profile",
 };
 
 function titleFor(pathname) {
@@ -78,6 +79,14 @@ const SUPER_ADMIN_GROUP = {
   ],
 };
 
+// Self-service profile — every signed-in role gets this.
+const ACCOUNT_GROUP = {
+  label: "Account",
+  items: [
+    { path: "/profile", label: "Profile", Icon: User },
+  ],
+};
+
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,9 +100,8 @@ export default function Layout() {
   }
 
   const isSuperAdmin = session?.role === "SuperAdmin";
-  const groups = isSuperAdmin
-    ? [...GROUPS, MODERATION_GROUP, SUPER_ADMIN_GROUP]
-    : [...GROUPS, MODERATION_GROUP];
+  const groups = [...GROUPS, MODERATION_GROUP, ACCOUNT_GROUP];
+  if (isSuperAdmin) groups.push(SUPER_ADMIN_GROUP);
 
   // Responsive shell: under ~960px the sidebar becomes an overlay drawer
   // so half/quarter windows keep full content width; under ~600px the
@@ -255,7 +263,11 @@ export default function Layout() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: tiny ? 8 : 14, flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link
+              to="/profile"
+              title="View your profile"
+              style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "inherit" }}
+            >
               {adminPhotoUrl(session?.profilePicturePath) ? (
                 <img
                   src={adminPhotoUrl(session?.profilePicturePath)}
@@ -278,7 +290,7 @@ export default function Layout() {
                   <div style={{ fontSize: 11, color: "var(--muted)" }}>{session?.role}</div>
                 </div>
               )}
-            </div>
+            </Link>
 
             <button
               onClick={toggle}

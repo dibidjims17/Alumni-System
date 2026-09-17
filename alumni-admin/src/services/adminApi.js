@@ -61,6 +61,44 @@ export async function updateAdminProfile(id, { fullName, email }) {
   return response.json();
 }
 
+export async function getMyProfile() {
+  const response = await fetch(`${API_BASE_URL}/Admin/me`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to load profile");
+  return response.json();
+}
+
+export async function updateMyProfile({ fullName, email }) {
+  const response = await fetch(`${API_BASE_URL}/Admin/me/profile`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({ fullName, email }),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || "Failed to update profile");
+  }
+  return response.json();
+}
+
+export async function uploadMyPicture(file) {
+  const token = localStorage.getItem("adminToken");
+  const formData = new FormData();
+  formData.append("file", file);
+  // No Content-Type header — the browser sets the multipart boundary.
+  const response = await fetch(`${API_BASE_URL}/Admin/me/picture`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || "Failed to upload picture");
+  }
+  return response.json();
+}
+
 export async function uploadAdminPicture(id, file) {
   const token = localStorage.getItem("adminToken");
   const formData = new FormData();
