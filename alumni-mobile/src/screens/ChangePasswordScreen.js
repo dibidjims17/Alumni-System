@@ -13,7 +13,10 @@ import PrimaryButton from '../components/ui/PrimaryButton';
 import PasswordField from '../components/ui/PasswordField';
 import PasswordChecklist, { passwordMeetsAll } from '../components/ui/PasswordChecklist';
 
-export default function ChangePasswordScreen({ navigation }) {
+export default function ChangePasswordScreen({ navigation, route }) {
+  // Correction-tab entry hides the native header back button and opts
+  // into this in-screen one instead (see navigator options).
+  const inScreenBack = route?.params?.inScreenBack === true;
   const { student, changePassword, logout } = useAuth();
   const { theme } = useTheme();
   const c = theme.colors;
@@ -108,6 +111,17 @@ export default function ChangePasswordScreen({ navigation }) {
         loading={isSubmitting}
         style={{ marginTop: 8 }}
       />
+      {inScreenBack && !student?.mustChangePassword && (
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          disabled={isSubmitting}
+          style={styles.backLink}
+        >
+          <Text style={[styles.backLinkText, { color: c.textMuted }]}>
+            ← Back
+          </Text>
+        </TouchableOpacity>
+      )}
       {student?.mustChangePassword && (
         <TouchableOpacity
           onPress={logout}

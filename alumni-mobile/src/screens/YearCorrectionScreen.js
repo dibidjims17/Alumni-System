@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import AppHeader from '../components/AppHeader';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import Skeleton from '../components/ui/Skeleton';
 import { alert as appAlert } from '../components/AppAlert';
@@ -92,7 +93,8 @@ export default function YearCorrectionScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['left', 'right']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
+      <AppHeader title="Year Correction" navigation={navigation} />
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[c.primary]} tintColor={c.primary} />}
@@ -184,7 +186,7 @@ export default function YearCorrectionScreen({ navigation }) {
           </View>
         )}
 
-        <TouchableOpacity onPress={() => navigation.navigate('ChangePassword')}>
+        <TouchableOpacity onPress={() => navigation.navigate('ChangePassword', { inScreenBack: true })}>
           <Text style={[styles.changePwLink, { color: c.primary }]}>
             Change Password
           </Text>
