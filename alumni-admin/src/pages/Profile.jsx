@@ -157,7 +157,7 @@ export default function Profile() {
             <div style={{ padding: "0 24px 20px" }}>
               <div style={{
                 display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap",
-                marginTop: -60,
+                marginTop: -60, position: "relative", zIndex: 1,
               }}>
                 {profilePictureUrl(profile.profilePicturePath) ? (
                   <img
@@ -168,6 +168,7 @@ export default function Profile() {
                       border: "4px solid var(--surface)",
                       background: "var(--surface)",
                       boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                      position: "relative", zIndex: 2,
                     }}
                   />
                 ) : (
@@ -178,6 +179,7 @@ export default function Profile() {
                     fontWeight: 800, fontSize: 46, flexShrink: 0,
                     border: "4px solid var(--surface)",
                     boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                    position: "relative", zIndex: 2,
                   }}>
                     {avatarInitial(profile)}
                   </div>
