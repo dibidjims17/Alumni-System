@@ -72,7 +72,9 @@ export default function ChangePasswordScreen({ navigation, route }) {
 
   const form = (
     <>
-      <Text style={[styles.title, { color: c.text }]}>Change Password</Text>
+      {!inScreenBack && (
+        <Text style={[styles.title, { color: c.text }]}>Change Password</Text>
+      )}
       {student.mustChangePassword && (
         <Text style={[styles.subtitle, { color: c.textMuted }]}>
           Welcome, {student?.fullName}. Please set a new password to continue.
