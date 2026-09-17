@@ -7,6 +7,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
+import { getSession } from "../services/api";
 
 export default function Trash() {
   const [deletedJobs, setDeletedJobs] = useState([]);
@@ -18,6 +19,9 @@ export default function Trash() {
 
   const [typeFilter, setTypeFilter] = useState("all"); // "all" | "jobs" | "news" | "events"
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Staff monitor the trash; only SuperAdmins may restore or purge.
+  const canManage = getSession()?.role === "SuperAdmin";
 
   async function loadTrash() {
     setLoading(true);
@@ -239,16 +243,23 @@ export default function Trash() {
         onCancel={() => setConfirmAction(null)}
       />
 
-      <div style={{ ...toolbar, justifyContent: "flex-end" }}>
-        <button
-          style={btnDanger}
-          onClick={askEmptyTrash}
-          disabled={loading || trashCount === 0}
-          title={trashCount === 0 ? "Trash is empty" : `Permanently delete all ${trashCount} items`}
-        >
-          <Trash2 size={15} />
-          Empty Trash{trashCount > 0 ? ` (${trashCount})` : ""}
-        </button>
+      <div style={{ ...toolbar, justifyContent: "space-between" }}>
+        <span style={{ ...cardMeta }}>
+          {canManage
+            ? "Restore or permanently delete items below."
+            : "Read-only monitoring view — a SuperAdmin can restore or delete items."}
+        </span>
+        {canManage && (
+          <button
+            style={btnDanger}
+            onClick={askEmptyTrash}
+            disabled={loading || trashCount === 0}
+            title={trashCount === 0 ? "Trash is empty" : `Permanently delete all ${trashCount} items`}
+          >
+            <Trash2 size={15} />
+            Empty Trash{trashCount > 0 ? ` (${trashCount})` : ""}
+          </button>
+        )}
       </div>
 
       <div style={filterRow}>
@@ -320,23 +331,25 @@ export default function Trash() {
                 </span>
               </div>
 
-              <div
-                style={{
-                  borderTop: "1px solid var(--border)",
-                  paddingTop: 12,
-                  marginTop: 8,
-                  display: "flex",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
-                {iconButton("Restore", RotateCcw)(item.onRestore)}
-                {iconButton("Delete Forever", Trash2)(item.onDeleteForever, {
-                  color: "var(--danger)",
-                  borderColor: "var(--danger)",
-                })}
-              </div>
+              {canManage && (
+                <div
+                  style={{
+                    borderTop: "1px solid var(--border)",
+                    paddingTop: 12,
+                    marginTop: 8,
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
+                  {iconButton("Restore", RotateCcw)(item.onRestore)}
+                  {iconButton("Delete Forever", Trash2)(item.onDeleteForever, {
+                    color: "var(--danger)",
+                    borderColor: "var(--danger)",
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>

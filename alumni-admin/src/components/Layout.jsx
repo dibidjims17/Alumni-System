@@ -61,12 +61,20 @@ const GROUPS = [
   },
 ];
 
+// Monitoring surfaces — visible to Staff and SuperAdmin alike.
+const MODERATION_GROUP = {
+  label: "Moderation",
+  items: [
+    { path: "/activity-log", label: "Activity Log", Icon: Activity },
+    { path: "/trash", label: "Trash", Icon: Trash2 },
+  ],
+};
+
+// Account administration stays SuperAdmin-only.
 const SUPER_ADMIN_GROUP = {
   label: "Administration",
   items: [
-    { path: "/activity-log", label: "Activity Log", Icon: Activity },
     { path: "/manage-admins", label: "Manage Admins", Icon: UserCog },
-    { path: "/trash", label: "Trash", Icon: Trash2 },
   ],
 };
 
@@ -84,8 +92,8 @@ export default function Layout() {
 
   const isSuperAdmin = session?.role === "SuperAdmin";
   const groups = isSuperAdmin
-    ? [...GROUPS, SUPER_ADMIN_GROUP]
-    : GROUPS;
+    ? [...GROUPS, MODERATION_GROUP, SUPER_ADMIN_GROUP]
+    : [...GROUPS, MODERATION_GROUP];
 
   // Responsive shell: under ~960px the sidebar becomes an overlay drawer
   // so half/quarter windows keep full content width; under ~600px the

@@ -121,7 +121,9 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "News moved to trash." });
         }
 
-        [Authorize(Roles = "SuperAdmin")]
+        // Staff may review the trash (monitoring); restoring and permanent
+        // deletion stay SuperAdmin-only.
+        [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("trash")]
         public async Task<IActionResult> GetDeletedNews()
         {
