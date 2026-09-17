@@ -138,7 +138,7 @@ function ProfileStack() {
         component={ChangePasswordScreen}
         options={({ route }) => ({
           title: 'Change Password',
-          headerLeft: route.params?.inScreenBack ? () => null : undefined,
+          headerShown: !route.params?.inScreenBack,
         })}
       />
     </ProfileStackNav.Navigator>

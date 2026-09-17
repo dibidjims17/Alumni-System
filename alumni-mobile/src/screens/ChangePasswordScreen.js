@@ -9,6 +9,8 @@ import {
 import { alert as appAlert } from '../components/AppAlert';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppHeader from '../components/AppHeader';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import PasswordField from '../components/ui/PasswordField';
 import PasswordChecklist, { passwordMeetsAll } from '../components/ui/PasswordChecklist';
@@ -68,11 +70,8 @@ export default function ChangePasswordScreen({ navigation, route }) {
     }
   }
 
-  return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: c.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+  const form = (
+    <>
       <Text style={[styles.title, { color: c.text }]}>Change Password</Text>
       {student.mustChangePassword && (
         <Text style={[styles.subtitle, { color: c.textMuted }]}>
@@ -133,6 +132,29 @@ export default function ChangePasswordScreen({ navigation, route }) {
           </Text>
         </TouchableOpacity>
       )}
+    </>
+  );
+
+  if (inScreenBack) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+        <AppHeader title="Change Password" navigation={navigation} />
+        <KeyboardAvoidingView
+          style={[styles.container, { backgroundColor: c.background }]}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          {form}
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: c.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      {form}
     </KeyboardAvoidingView>
   );
 }
