@@ -184,7 +184,7 @@ export default function Profile() {
                     {avatarInitial(profile)}
                   </div>
                 )}
-                <div style={{ flex: 1, minWidth: 200, paddingBottom: 2 }}>
+                <div style={{ flex: 1, minWidth: 200, paddingBottom: 2, paddingTop: 24 }}>
                   <h4 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>{profile.fullName}</h4>
                   <p style={{ ...cardMeta, margin: "2px 0 0" }}>@{profile.username}</p>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
