@@ -146,9 +146,9 @@ export default function Profile() {
                 background: "rgba(255,255,255,0.06)", pointerEvents: "none",
               }} />
               <div style={{
-                position: "absolute", left: 24, bottom: 12,
+                position: "absolute", right: 24, bottom: 12,
                 fontSize: 12, fontWeight: 700, letterSpacing: 1.5,
-                color: "rgba(255,255,255,0.65)",
+                color: "rgba(255,255,255,0.65)", textAlign: "right",
               }}>
                 REUNIO · ADMIN CONSOLE
               </div>
