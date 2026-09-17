@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config";
 import Toast from "../components/Toast";
 import {
   ModalShell, Field, textInput,
-  card, cardTitle, cardMeta, actionsRow,
+  card, cardMeta, actionsRow,
   btn, btnPrimary,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
@@ -22,12 +22,6 @@ function profilePictureUrl(path) {
 
 function avatarInitial(admin) {
   return (admin.fullName || admin.username || "?").charAt(0).toUpperCase();
-}
-
-function rolePillStyle(role) {
-  return role === "SuperAdmin"
-    ? { background: "#ede7f6", color: "#5e35b1" }
-    : { background: "#e3f2fd", color: "#1565c0" };
 }
 
 function statusPillStyle(isActive) {
