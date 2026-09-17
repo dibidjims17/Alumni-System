@@ -110,21 +110,30 @@ namespace MyApp.Application.Services
             if (student == null || !student.IsActive)
                 return (false, "Account not found.");
 
-            // 2. Verify current password
-            bool currentOk;
-            try
+            // 2. Verify current password — skipped in forced-change mode
+            // (the user just proved identity with the temporary password
+            // at login, seconds ago).
+            bool forcedMode = student.MustChangePassword;
+            if (!forcedMode)
             {
-                currentOk = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, student.PasswordHash);
+                if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+                    return (false, "Current password is incorrect.");
+                bool currentOk;
+                try
+                {
+                    currentOk = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, student.PasswordHash);
+                }
+                catch
+                {
+                    return (false, "Current password is incorrect.");
+                }
+                if (!currentOk)
+                    return (false, "Current password is incorrect.");
             }
-            catch
-            {
-                return (false, "Current password is incorrect.");
-            }
-            if (!currentOk)
-                return (false, "Current password is incorrect.");
 
             // 3. Validate the replacement (mirrors the client checklist rules)
-            var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(request.NewPassword, request.CurrentPassword);
+            var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(
+                request.NewPassword, forcedMode ? null : request.CurrentPassword);
             if (!ruleOk)
                 return (false, ruleMessage);
 

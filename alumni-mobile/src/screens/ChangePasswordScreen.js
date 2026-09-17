@@ -22,8 +22,12 @@ export default function ChangePasswordScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Forced flow (temporary-password login): no current password to ask
+  // for — identity was just proven at login. Voluntary flow keeps it.
+  const voluntary = !student?.mustChangePassword;
+
   async function handleSubmit() {
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if ((voluntary && !currentPassword) || !newPassword || !confirmPassword) {
       appAlert('Missing info', 'Please fill in all fields.');
       return;
     }
@@ -35,14 +39,14 @@ export default function ChangePasswordScreen({ navigation }) {
       appAlert('Weak password', 'Please meet all the password requirements below.');
       return;
     }
-    if (newPassword === currentPassword) {
+    if (voluntary && newPassword === currentPassword) {
       appAlert('Same password', 'New password must be different from the current password.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await changePassword(currentPassword, newPassword);
+      await changePassword(voluntary ? currentPassword : '', newPassword);
       // Forced flow (first login) auto-redirects once mustChangePassword flips.
       // Voluntary flow from Profile: confirm and go back.
       if (!student.mustChangePassword) {
@@ -72,12 +76,14 @@ export default function ChangePasswordScreen({ navigation }) {
         </Text>
       )}
 
-      <PasswordField
-        placeholder="Current Password"
-        value={currentPassword}
-        onChangeText={setCurrentPassword}
-        style={styles.field}
-      />
+      {voluntary && (
+        <PasswordField
+          placeholder="Current Password"
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          style={styles.field}
+        />
+      )}
 
       <PasswordField
         placeholder="New Password"
