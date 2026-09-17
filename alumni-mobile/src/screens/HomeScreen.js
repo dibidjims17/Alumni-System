@@ -169,17 +169,6 @@ export default function HomeScreen({ navigation }) {
 
         <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE</Text>
 
-        {!isGraduate && (
-          <TouchableOpacity
-            style={[styles.signOutRow, { borderColor: c.border }]}
-            onPress={confirmSignOut}
-            accessibilityLabel="Sign out"
-          >
-            <LogOut size={18} color={c.danger} />
-            <Text style={[styles.signOutText, { color: c.danger }]}>Sign Out</Text>
-          </TouchableOpacity>
-        )}
-
         <View style={styles.grid}>
           {tiles.map(({ key, label, sub, Icon, target }) => (
             <TouchableOpacity
@@ -204,6 +193,17 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           ))}
         </View>
+
+        {!isGraduate && (
+          <TouchableOpacity
+            style={[styles.signOutRow, { borderColor: c.border }]}
+            onPress={confirmSignOut}
+            accessibilityLabel="Sign out"
+          >
+            <LogOut size={18} color={c.danger} />
+            <Text style={[styles.signOutText, { color: c.danger }]}>Sign Out</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingVertical: 12,
-    marginBottom: 14,
+    marginTop: 16,
   },
   signOutText: { fontSize: 14, fontWeight: '700' },
   grid: {
