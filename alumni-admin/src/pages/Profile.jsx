@@ -157,7 +157,7 @@ export default function Profile() {
             <div style={{ padding: "0 24px 20px" }}>
               <div style={{
                 display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap",
-                marginTop: -60, position: "relative", zIndex: 1,
+                marginTop: -32, position: "relative", zIndex: 1,
               }}>
                 {profilePictureUrl(profile.profilePicturePath) ? (
                   <img
@@ -184,7 +184,7 @@ export default function Profile() {
                     {avatarInitial(profile)}
                   </div>
                 )}
-                <div style={{ flex: 1, minWidth: 200, paddingBottom: 2, paddingTop: 24 }}>
+                <div style={{ flex: 1, minWidth: 200, paddingBottom: 2, paddingTop: 8 }}>
                   <h4 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>{profile.fullName}</h4>
                   <p style={{ ...cardMeta, margin: "2px 0 0" }}>@{profile.username}</p>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
