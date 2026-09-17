@@ -157,7 +157,7 @@ function YearStack() {
       <YearStackNav.Screen
         name="ChangePassword"
         component={ChangePasswordScreen}
-        options={{ title: 'Change Password', headerLeft: () => null }}
+        options={{ headerShown: false }}
       />
     </YearStackNav.Navigator>
   );
