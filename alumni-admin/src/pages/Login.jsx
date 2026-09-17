@@ -156,6 +156,7 @@ export default function Login() {
                 value={password}
                 onChange={setPassword}
                 autoComplete="current-password"
+                placeholder="Password"
                 style={inputStyle}
               />
             </div>
@@ -253,6 +254,7 @@ export default function Login() {
                 value={newPassword}
                 onChange={setNewPassword}
                 autoComplete="new-password"
+                placeholder="New password"
                 style={inputStyle}
               />
             </div>
