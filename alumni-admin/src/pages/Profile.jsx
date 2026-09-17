@@ -127,7 +127,7 @@ export default function Profile() {
       ) : !profile ? (
         <p>Could not load your profile.</p>
       ) : (
-        <div style={{ ...card, maxWidth: 640, padding: 0, overflow: "hidden" }}>
+        <div style={{ ...card, padding: 0, overflow: "hidden" }}>
           <div style={{
             position: "relative",
             background: "linear-gradient(120deg, var(--primary-strong), var(--primary))",
