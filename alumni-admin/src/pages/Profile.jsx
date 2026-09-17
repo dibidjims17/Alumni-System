@@ -127,72 +127,94 @@ export default function Profile() {
       ) : !profile ? (
         <p>Could not load your profile.</p>
       ) : (
-        <div style={{ ...card, padding: 0, overflow: "hidden" }}>
-          <div style={{
-            position: "relative",
-            background: "linear-gradient(120deg, var(--primary-strong), var(--primary))",
-            padding: "20px 20px 0",
-            overflow: "hidden",
-          }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ ...card, padding: 0, overflow: "hidden" }}>
             <div style={{
-              position: "absolute", right: -60, top: -60,
-              width: 200, height: 200, borderRadius: "50%",
-              background: "rgba(255,255,255,0.09)", pointerEvents: "none",
-            }} />
-            <div style={{
-              position: "absolute", right: 70, bottom: -90,
-              width: 170, height: 170, borderRadius: "50%",
-              background: "rgba(255,255,255,0.06)", pointerEvents: "none",
-            }} />
-            <div style={{ position: "relative", display: "flex", alignItems: "flex-end", gap: 14 }}>
-              {profilePictureUrl(profile.profilePicturePath) ? (
-                <img
-                  src={profilePictureUrl(profile.profilePicturePath)}
-                  alt=""
-                  style={{
-                    width: 88, height: 88, borderRadius: "50%", objectFit: "cover", flexShrink: 0,
-                    border: "3px solid rgba(255,255,255,0.85)", marginBottom: -28,
-                    background: "var(--surface)",
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: 88, height: 88, borderRadius: "50%", background: "var(--surface)",
-                  color: "var(--primary)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 800, fontSize: 34, flexShrink: 0,
-                  border: "3px solid rgba(255,255,255,0.85)", marginBottom: -28,
-                }}>
-                  {avatarInitial(profile)}
-                </div>
-              )}
-              <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <h4 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff" }}>{profile.fullName}</h4>
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    fontSize: 12, fontWeight: 600, padding: "3px 10px",
-                    borderRadius: 999, whiteSpace: "nowrap",
-                    background: "rgba(255,255,255,0.16)", color: "#fff",
-                  }}>
-                    <ShieldCheck size={13} />
-                    {profile.role}
-                  </span>
-                </div>
-                <p style={{ margin: "2px 0 0", fontSize: 13, color: "rgba(255,255,255,0.8)" }}>@{profile.username}</p>
-              </div>
-              <span style={{
-                flexShrink: 0, marginBottom: 8,
-                fontSize: 12, fontWeight: 600, padding: "2px 10px",
-                borderRadius: 999, whiteSpace: "nowrap", ...statusPillStyle(profile.isActive),
-                background: profile.isActive ? "#e6f4ea" : "#fdecea",
+              position: "relative",
+              height: 200,
+              background: "linear-gradient(120deg, var(--primary-strong), var(--primary))",
+              overflow: "hidden",
+            }}>
+              <div style={{
+                position: "absolute", right: -60, top: -70,
+                width: 240, height: 240, borderRadius: "50%",
+                background: "rgba(255,255,255,0.09)", pointerEvents: "none",
+              }} />
+              <div style={{
+                position: "absolute", right: 90, bottom: -110,
+                width: 200, height: 200, borderRadius: "50%",
+                background: "rgba(255,255,255,0.06)", pointerEvents: "none",
+              }} />
+              <div style={{
+                position: "absolute", left: 24, bottom: 12,
+                fontSize: 12, fontWeight: 700, letterSpacing: 1.5,
+                color: "rgba(255,255,255,0.65)",
               }}>
-                {profile.isActive ? "Active" : "Inactive"}
-              </span>
+                REUNIO · ADMIN CONSOLE
+              </div>
+            </div>
+
+            <div style={{ padding: "0 24px 20px" }}>
+              <div style={{
+                display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap",
+                marginTop: -60,
+              }}>
+                {profilePictureUrl(profile.profilePicturePath) ? (
+                  <img
+                    src={profilePictureUrl(profile.profilePicturePath)}
+                    alt=""
+                    style={{
+                      width: 120, height: 120, borderRadius: "50%", objectFit: "cover", flexShrink: 0,
+                      border: "4px solid var(--surface)",
+                      background: "var(--surface)",
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 120, height: 120, borderRadius: "50%",
+                    background: "var(--primary)", color: "var(--on-primary)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 800, fontSize: 46, flexShrink: 0,
+                    border: "4px solid var(--surface)",
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                  }}>
+                    {avatarInitial(profile)}
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 200, paddingBottom: 2 }}>
+                  <h4 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>{profile.fullName}</h4>
+                  <p style={{ ...cardMeta, margin: "2px 0 0" }}>@{profile.username}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      fontSize: 12, fontWeight: 600, padding: "3px 10px",
+                      borderRadius: 999, whiteSpace: "nowrap",
+                      background: "rgba(46,125,50,0.13)", color: "var(--success)",
+                    }}>
+                      <ShieldCheck size={13} />
+                      {profile.role}
+                    </span>
+                    <span style={{
+                      fontSize: 12, fontWeight: 600, padding: "3px 10px",
+                      borderRadius: 999, whiteSpace: "nowrap", ...statusPillStyle(profile.isActive),
+                    }}>
+                      {profile.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ paddingBottom: 2 }}>
+                  <button type="button" onClick={openEditModal} style={btnPrimary}>
+                    <Pencil size={15} />
+                    Edit profile
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div style={{ padding: "40px 20px 16px" }}>
+          <div style={{ ...card }}>
+            <h4 style={{ ...cardTitle, margin: "0 0 12px", fontSize: 15 }}>About</h4>
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
@@ -217,24 +239,6 @@ export default function Profile() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            <div
-              style={{
-                borderTop: "1px solid var(--border)",
-                paddingTop: 12,
-                marginTop: 16,
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-                alignItems: "center",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button type="button" onClick={openEditModal} style={btnPrimary}>
-                <Pencil size={15} />
-                Edit profile
-              </button>
             </div>
           </div>
         </div>
