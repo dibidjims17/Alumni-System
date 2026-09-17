@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ShieldCheck, UserCheck, UserX, Pencil, Camera } from "lucide-react";
 import { getAdmins, createAdmin, toggleAdminStatus, updateAdminRole, updateAdminProfile, uploadAdminPicture } from "../services/adminApi";
 import { getSession, patchSession } from "../services/api";
@@ -193,7 +194,7 @@ export default function ManageAdmins() {
         key={a.id}
         style={{
           ...card,
-          ...(self ? { outline: "2px solid var(--primary)", outlineOffset: -2, maxWidth: 560 } : {}),
+          ...(self ? { outline: "2px solid var(--primary)", outlineOffset: -2 } : {}),
         }}
       >
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -260,12 +261,13 @@ export default function ManageAdmins() {
           }}
         >
           {self ? (
-            <>
-              <p style={{ ...cardMeta, margin: 0, flex: 1 }}>
-                This is your account — role and status can only be changed by another SuperAdmin.
-              </p>
-              {iconButton("Edit profile", Pencil)(() => openEditModal(a))}
-            </>
+            <p style={{ ...cardMeta, margin: 0 }}>
+              This is your account — edit it in the{" "}
+              <Link to="/profile" style={{ color: "var(--primary)", fontWeight: 600 }}>
+                Profile tab
+              </Link>
+              . Role and status can only be changed by another SuperAdmin.
+            </p>
           ) : (
             <>
               <select
@@ -303,27 +305,13 @@ export default function ManageAdmins() {
 
       {loading ? (
         <GridSkeleton count={6} />
+      ) : admins.length === 0 ? (
+        <p style={{ ...cardMeta }}>No admins found.</p>
       ) : (
-        <>
-          {selfAdmin && (
-            <>
-              <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--muted)", margin: "16px 0 4px" }}>
-                Your profile
-              </h3>
-              {renderAdminCard(selfAdmin, true)}
-            </>
-          )}
-          <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--muted)", margin: "20px 0 4px" }}>
-            Other admins{otherAdmins.length > 0 ? ` (${otherAdmins.length})` : ""}
-          </h3>
-          {otherAdmins.length === 0 ? (
-            <p style={{ ...cardMeta }}>No other admins.</p>
-          ) : (
-            <div style={cardGrid}>
-              {otherAdmins.map((a) => renderAdminCard(a, false))}
-            </div>
-          )}
-        </>
+        <div style={cardGrid}>
+          {selfAdmin && renderAdminCard(selfAdmin, true)}
+          {otherAdmins.map((a) => renderAdminCard(a, false))}
+        </div>
       )}
 
       {showModal && (
