@@ -67,8 +67,8 @@ export default function App() {
           <Route path="/jobs/:id/applicants" element={<JobApplicants />} />
           <Route path="/events" element={<Events />} />
           <Route path="/manage-admins" element={<SuperAdminRoute><ManageAdmins /></SuperAdminRoute>} />
-          <Route path="/trash" element={<SuperAdminRoute><Trash /></SuperAdminRoute>} />
-          <Route path="/activity-log" element={<SuperAdminRoute><ActivityLog /></SuperAdminRoute>} />
+          <Route path="/trash" element={<Trash />} />
+          <Route path="/activity-log" element={<ActivityLog />} />
         </Route>
 
         <Route path="*" element={<NotFoundRedirect />} />
