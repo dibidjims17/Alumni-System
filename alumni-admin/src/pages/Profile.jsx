@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config";
 import Toast from "../components/Toast";
 import {
   ModalShell, Field, textInput,
-  card, cardMeta, actionsRow,
+  card, cardTitle, cardMeta, actionsRow,
   btn, btnPrimary,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
