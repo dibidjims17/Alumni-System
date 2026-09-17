@@ -133,66 +133,115 @@ export default function Profile() {
       ) : !profile ? (
         <p>Could not load your profile.</p>
       ) : (
-        <div style={{ ...card, maxWidth: 560 }}>
-          <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-            {profilePictureUrl(profile.profilePicturePath) ? (
-              <img
-                src={profilePictureUrl(profile.profilePicturePath)}
-                alt=""
-                style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-              />
-            ) : (
-              <div style={{
-                width: 56, height: 56, borderRadius: "50%", background: "#eceaf6",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 700, fontSize: 22, color: "#4a3b8f", flexShrink: 0,
-              }}>
-                {avatarInitial(profile)}
-              </div>
-            )}
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <h4 style={{ ...cardTitle, margin: 0, fontSize: 17 }}>{profile.fullName}</h4>
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  fontSize: 12, fontWeight: 600, padding: "3px 10px",
-                  borderRadius: 999, whiteSpace: "nowrap", ...rolePillStyle(profile.role),
+        <div style={{ ...card, maxWidth: 640, padding: 0, overflow: "hidden" }}>
+          <div style={{
+            position: "relative",
+            background: "linear-gradient(120deg, var(--primary-strong), var(--primary))",
+            padding: "20px 20px 0",
+            overflow: "hidden",
+          }}>
+            <div style={{
+              position: "absolute", right: -60, top: -60,
+              width: 200, height: 200, borderRadius: "50%",
+              background: "rgba(255,255,255,0.09)", pointerEvents: "none",
+            }} />
+            <div style={{
+              position: "absolute", right: 70, bottom: -90,
+              width: 170, height: 170, borderRadius: "50%",
+              background: "rgba(255,255,255,0.06)", pointerEvents: "none",
+            }} />
+            <div style={{ position: "relative", display: "flex", alignItems: "flex-end", gap: 14 }}>
+              {profilePictureUrl(profile.profilePicturePath) ? (
+                <img
+                  src={profilePictureUrl(profile.profilePicturePath)}
+                  alt=""
+                  style={{
+                    width: 88, height: 88, borderRadius: "50%", objectFit: "cover", flexShrink: 0,
+                    border: "3px solid rgba(255,255,255,0.85)", marginBottom: -28,
+                    background: "var(--surface)",
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: 88, height: 88, borderRadius: "50%", background: "var(--surface)",
+                  color: "var(--primary)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 800, fontSize: 34, flexShrink: 0,
+                  border: "3px solid rgba(255,255,255,0.85)", marginBottom: -28,
                 }}>
-                  <ShieldCheck size={13} />
-                  {profile.role}
-                </span>
+                  {avatarInitial(profile)}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <h4 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff" }}>{profile.fullName}</h4>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 12, fontWeight: 600, padding: "3px 10px",
+                    borderRadius: 999, whiteSpace: "nowrap",
+                    background: "rgba(255,255,255,0.16)", color: "#fff",
+                  }}>
+                    <ShieldCheck size={13} />
+                    {profile.role}
+                  </span>
+                </div>
+                <p style={{ margin: "2px 0 0", fontSize: 13, color: "rgba(255,255,255,0.8)" }}>@{profile.username}</p>
               </div>
-              <p style={{ ...cardMeta, margin: 0 }}>@{profile.username}</p>
-              <p style={{ ...cardMeta, margin: 0 }}>{profile.email}</p>
-              <p style={{ ...cardMeta, margin: 0 }}>
-                Last login: {profile.lastLoginAt ? new Date(profile.lastLoginAt).toLocaleString() : "Never"}
-              </p>
+              <span style={{
+                flexShrink: 0, marginBottom: 8,
+                fontSize: 12, fontWeight: 600, padding: "2px 10px",
+                borderRadius: 999, whiteSpace: "nowrap", ...statusPillStyle(profile.isActive),
+                background: profile.isActive ? "#e6f4ea" : "#fdecea",
+              }}>
+                {profile.isActive ? "Active" : "Inactive"}
+              </span>
             </div>
-            <span style={{
-              marginLeft: "auto", flexShrink: 0,
-              fontSize: 12, fontWeight: 600, padding: "2px 10px",
-              borderRadius: 999, whiteSpace: "nowrap", ...statusPillStyle(profile.isActive),
-            }}>
-              {profile.isActive ? "Active" : "Inactive"}
-            </span>
           </div>
 
-          <div
-            style={{
-              borderTop: "1px solid var(--border)",
-              paddingTop: 12,
-              marginTop: 12,
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "flex-end",
-            }}
-          >
-            <button type="button" onClick={openEditModal} style={btnPrimary}>
-              <Pencil size={15} />
-              Edit profile
-            </button>
+          <div style={{ padding: "40px 20px 16px" }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "12px 20px",
+            }}>
+              {[
+                ["Email", profile.email],
+                ["Username", `@${profile.username}`],
+                ["Role", profile.role],
+                ["Member since", profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "—"],
+                ["Last login", profile.lastLoginAt ? new Date(profile.lastLoginAt).toLocaleString() : "Never"],
+              ].map(([label, value]) => (
+                <div key={label} style={{ minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+                    letterSpacing: 0.6, color: "var(--muted)", marginBottom: 2,
+                  }}>
+                    {label}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, overflowWrap: "break-word" }}>
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                borderTop: "1px solid var(--border)",
+                paddingTop: 12,
+                marginTop: 16,
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button type="button" onClick={openEditModal} style={btnPrimary}>
+                <Pencil size={15} />
+                Edit profile
+              </button>
+            </div>
           </div>
         </div>
       )}
