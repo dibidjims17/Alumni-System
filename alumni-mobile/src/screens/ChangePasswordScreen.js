@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Text,
+  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -107,6 +108,17 @@ export default function ChangePasswordScreen({ navigation }) {
         loading={isSubmitting}
         style={{ marginTop: 8 }}
       />
+      {student?.mustChangePassword && (
+        <TouchableOpacity
+          onPress={logout}
+          disabled={isSubmitting}
+          style={styles.backLink}
+        >
+          <Text style={[styles.backLinkText, { color: c.textMuted }]}>
+            ← Back to login
+          </Text>
+        </TouchableOpacity>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -130,5 +142,14 @@ const styles = StyleSheet.create({
   },
   field: {
     marginBottom: 14,
+  },
+  backLink: {
+    marginTop: 16,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  backLinkText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
