@@ -96,20 +96,27 @@ export default function ResumeScreen() {
     }
   }
 
-  async function handlePickAndUpload() {
+  async function pickPdf() {
     const result = await DocumentPicker.getDocumentAsync({
       type: 'application/pdf',
       copyToCacheDirectory: true,
     });
 
-    if (result.canceled) return;
+    if (result.canceled) return null;
 
     const file = result.assets[0];
 
     if (file.size && file.size > MAX_SIZE_BYTES) {
       appAlert('File too large', 'Resume must be 5MB or smaller.');
-      return;
+      return null;
     }
+
+    return file;
+  }
+
+  async function handlePickAndUpload() {
+    const file = await pickPdf();
+    if (!file) return;
 
     setIsUploading(true);
     try {
@@ -118,6 +125,34 @@ export default function ResumeScreen() {
       appAlert('Uploaded', 'Your resume has been uploaded successfully.');
     } catch (err) {
       const message = err.response?.data?.message || 'Could not upload resume.';
+      appAlert('Error', message);
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function handleUploadAndFill() {
+    const file = await pickPdf();
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const res = await apiClient.uploadFile('/Resume/upload-fill', file.uri, file.name, 'application/pdf');
+      await fetchActiveResume();
+      const filled = res.data?.filled || {};
+      const parts = [];
+      if (filled.workAdded > 0) parts.push(`${filled.workAdded} work experience`);
+      if (filled.educationAdded > 0) parts.push(`${filled.educationAdded} education`);
+      if (filled.skillsAdded > 0) parts.push(`${filled.skillsAdded} skills`);
+      if (filled.phoneSet) parts.push('phone number');
+      appAlert(
+        'Profile updated',
+        parts.length > 0
+          ? `Resume saved. Filled from your PDF: ${parts.join(', ')}. Review everything in Profile.`
+          : 'Resume saved. Nothing new could be confidently read — your existing profile was left untouched.'
+      );
+    } catch (err) {
+      const message = err.response?.data?.message || 'Could not process resume.';
       appAlert('Error', message);
     } finally {
       setIsUploading(false);
@@ -179,6 +214,13 @@ export default function ResumeScreen() {
         title="Generate ATS CV from Profile"
         onPress={handleGenerate}
         loading={isGenerating}
+        style={{ marginTop: 8 }}
+      />
+
+      <PrimaryButton
+        title="Upload & Auto-fill Profile"
+        onPress={handleUploadAndFill}
+        loading={isUploading}
         style={{ marginTop: 8 }}
       />
 

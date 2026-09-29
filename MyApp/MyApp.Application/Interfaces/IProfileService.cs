@@ -1,3 +1,4 @@
+using MyApp.Application.Services;
 using MyApp.Shared.DTOs;
 
 namespace MyApp.Application.Interfaces
@@ -19,5 +20,6 @@ namespace MyApp.Application.Interfaces
         Task UpdateSkillsAsync(int studentId, List<string> skills, string ipAddress);
         Task<(bool Success, string Message, YearChangeRequestDto? Request)> CreateYearChangeRequestAsync(int studentId, CreateYearChangeRequest request, string ipAddress);
         Task<List<YearChangeRequestDto>> GetMyYearChangeRequestsAsync(int studentId);
+        Task<ResumeFillResultDto> FillFromResumeAsync(int studentId, ResumeParser.ParsedResume parsed, string ipAddress);
     }
 }

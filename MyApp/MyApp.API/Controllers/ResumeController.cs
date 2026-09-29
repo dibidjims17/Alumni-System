@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.Application.Interfaces;
+using MyApp.Application.Services;
 
 namespace MyApp.API.Controllers
 {
@@ -11,10 +12,12 @@ namespace MyApp.API.Controllers
     public class ResumeController : ControllerBase
     {
         private readonly IResumeService _resumeService;
+        private readonly IProfileService _profileService;
 
-        public ResumeController(IResumeService resumeService)
+        public ResumeController(IResumeService resumeService, IProfileService profileService)
         {
             _resumeService = resumeService;
+            _profileService = profileService;
         }
 
         private int GetStudentId()
@@ -95,6 +98,68 @@ namespace MyApp.API.Controllers
             var result = await _resumeService.UploadResumeAsync(GetStudentId(), safeOriginalName, filePath, ipAddress);
 
             return Ok(result);
+        }
+
+        // Upload + autofill: stores the PDF as the active resume, then
+        // extracts high-confidence fields (phone, dated work/education,
+        // dictionary skills) into the profile. Additive only — nothing
+        // already on the profile is modified.
+        [HttpPost("upload-fill")]
+        public async Task<IActionResult> UploadAndFill(IFormFile file)
+        {
+            if (!IsGraduate()) return Forbid();
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file provided." });
+
+            if (!file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = "Only PDF files are allowed." });
+
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "File size must not exceed 5MB." });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var pdfBytes = ms.ToArray();
+            if (pdfBytes.Length < 5
+                || pdfBytes[0] != '%' || pdfBytes[1] != 'P' || pdfBytes[2] != 'D'
+                || pdfBytes[3] != 'F' || pdfBytes[4] != '-')
+                return BadRequest(new { message = "The uploaded file is not a valid PDF." });
+
+            var safeOriginalName = SanitizeFileName(file.FileName, "resume.pdf");
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Resumes");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var storedFileName = $"{GetStudentId()}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}.pdf";
+            var filePath = Path.Combine(uploadsFolder, storedFileName);
+
+            await System.IO.File.WriteAllBytesAsync(filePath, pdfBytes);
+
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var resume = await _resumeService.UploadResumeAsync(GetStudentId(), safeOriginalName, filePath, ipAddress);
+
+            ResumeParser.ParsedResume parsed;
+            try
+            {
+                parsed = ResumeParser.Parse(pdfBytes);
+            }
+            catch
+            {
+                return Ok(new { resume, filled = new { workAdded = 0, educationAdded = 0, skillsAdded = 0, phoneSet = false }, warning = "Resume saved, but its text could not be read for autofill." });
+            }
+
+            var filled = await _profileService.FillFromResumeAsync(GetStudentId(), parsed, ipAddress);
+
+            return Ok(new
+            {
+                resume,
+                filled = new
+                {
+                    workAdded = filled.WorkAdded,
+                    educationAdded = filled.EducationAdded,
+                    skillsAdded = filled.SkillsAdded,
+                    phoneSet = filled.PhoneSet
+                }
+            });
         }
 
         private static string SanitizeFileName(string fileName, string fallback)

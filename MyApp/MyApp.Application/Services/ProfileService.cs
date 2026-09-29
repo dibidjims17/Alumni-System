@@ -77,6 +77,89 @@ namespace MyApp.Application.Services
             return (true, "Request submitted. An administrator will review it.", MapYearChange(entity, student.FullName, student.StudentNumber, null));
         }
 
+        // Autofill from a parsed resume. Additive only: existing entries are
+        // never modified, phone is set only when empty, skills are merged.
+        public async Task<ResumeFillResultDto> FillFromResumeAsync(
+            int studentId, ResumeParser.ParsedResume parsed, string ipAddress)
+        {
+            var result = new ResumeFillResultDto();
+
+            var profile = await _profileRepository.GetByStudentIdAsync(studentId);
+            if (profile == null)
+            {
+                profile = new AlumniProfile { StudentId = studentId };
+                await _profileRepository.CreateAsync(profile);
+            }
+
+            if (string.IsNullOrWhiteSpace(profile.Phone) && !string.IsNullOrWhiteSpace(parsed.Phone))
+            {
+                profile.Phone = parsed.Phone;
+                profile.UpdatedAt = DateTime.UtcNow;
+                await _profileRepository.UpdateAsync(profile);
+                result.PhoneSet = true;
+            }
+
+            var existingWork = await _workExperienceRepository.GetByStudentIdAsync(studentId);
+            foreach (var w in parsed.Work)
+            {
+                var duplicate = existingWork.Any(e =>
+                    e.JobTitle.Equals(w.JobTitle, StringComparison.OrdinalIgnoreCase) &&
+                    e.Company.Equals(w.Company, StringComparison.OrdinalIgnoreCase));
+                if (duplicate) continue;
+                await _workExperienceRepository.CreateAsync(new WorkExperience
+                {
+                    StudentId = studentId,
+                    JobTitle = w.JobTitle,
+                    Company = w.Company,
+                    Location = w.Location,
+                    StartDate = w.StartDate,
+                    EndDate = w.EndDate,
+                    Description = w.Description
+                });
+                result.WorkAdded++;
+            }
+
+            var existingEdu = await _educationRepository.GetByStudentIdAsync(studentId);
+            foreach (var e in parsed.Education)
+            {
+                var duplicate = existingEdu.Any(x =>
+                    x.Degree.Equals(e.Degree, StringComparison.OrdinalIgnoreCase) &&
+                    x.School.Equals(e.School, StringComparison.OrdinalIgnoreCase));
+                if (duplicate) continue;
+                await _educationRepository.CreateAsync(new Education
+                {
+                    StudentId = studentId,
+                    Degree = e.Degree,
+                    FieldOfStudy = e.FieldOfStudy,
+                    School = e.School,
+                    StartYear = e.StartYear,
+                    EndYear = e.EndYear
+                });
+                result.EducationAdded++;
+            }
+
+            var existingSkills = await _skillRepository.GetByStudentIdAsync(studentId);
+            var known = new HashSet<string>(existingSkills.Select(s => s.SkillName),
+                StringComparer.OrdinalIgnoreCase);
+            foreach (var skill in parsed.Skills)
+            {
+                if (!known.Add(skill)) continue;
+                await _skillRepository.CreateAsync(new Skill
+                {
+                    StudentId = studentId,
+                    SkillName = skill
+                });
+                result.SkillsAdded++;
+            }
+
+            await _activityLogRepository.LogStudentAsync(studentId, "RESUME_AUTOFILL",
+                $"Autofilled profile from resume: {result.WorkAdded} work, " +
+                $"{result.EducationAdded} education, {result.SkillsAdded} skills" +
+                (result.PhoneSet ? ", phone set" : ""), ipAddress);
+
+            return result;
+        }
+
         public async Task<List<YearChangeRequestDto>> GetMyYearChangeRequestsAsync(int studentId)
         {
             var student = await _studentRepository.GetByIdAsync(studentId);
