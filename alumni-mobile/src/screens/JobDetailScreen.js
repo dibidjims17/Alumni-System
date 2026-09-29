@@ -28,6 +28,7 @@ export default function JobDetailScreen({ route, navigation }) {
   const [attachResume, setAttachResume] = useState(true);
   const [myApplication, setMyApplication] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [hasResume, setHasResume] = useState(null);
 
   async function handleRefresh() {
     setIsRefreshing(true);
@@ -61,6 +62,10 @@ export default function JobDetailScreen({ route, navigation }) {
     useCallback(() => {
       setIsLoading(true);
       fetchJob().finally(() => setIsLoading(false));
+      apiClient
+        .get('/Resume/active')
+        .then(() => setHasResume(true))
+        .catch(() => setHasResume(false));
     }, [jobId])
   );
 
@@ -205,6 +210,20 @@ export default function JobDetailScreen({ route, navigation }) {
         </View>
       </View>
 
+      {hasResume === false && (
+        <TouchableOpacity
+          style={[styles.banner, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}
+          onPress={() => navigation.navigate('ProfileTab', { screen: 'Resume' })}
+        >
+          <Text style={[styles.bannerTitle, { color: c.text }]}>
+            No resume yet? Generate an ATS CV in one tap.
+          </Text>
+          <Text style={[styles.bannerSub, { color: c.primary }]}>
+            Go to Resume →
+          </Text>
+        </TouchableOpacity>
+      )}
+
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         <Text style={[styles.sectionTitle, { color: c.text }]}>Description</Text>
         <Text style={[styles.description, { color: c.text }]}>{job.description}</Text>
@@ -282,6 +301,14 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 11, fontWeight: '600' },
   meta: { fontSize: 12, marginBottom: 4 },
   sectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
+  banner: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  bannerTitle: { fontSize: 13, fontWeight: '600', marginBottom: 4 },
+  bannerSub: { fontSize: 13, fontWeight: '600' },
   description: { fontSize: 13, lineHeight: 20 },
   switchRow: {
     flexDirection: 'row',

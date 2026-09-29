@@ -11,19 +11,22 @@ namespace MyApp.Application.Services
         private readonly IStudentRepository _studentRepository;
         private readonly IPushTokenRepository _pushTokenRepository;
         private readonly IPushService _pushService;
+        private readonly IResumeRepository _resumeRepository;
 
         public NotificationService(
             INotificationRepository notificationRepository,
             IEmailService emailService,
             IStudentRepository studentRepository,
             IPushTokenRepository pushTokenRepository,
-            IPushService pushService)
+            IPushService pushService,
+            IResumeRepository resumeRepository)
         {
             _notificationRepository = notificationRepository;
             _emailService = emailService;
             _studentRepository = studentRepository;
             _pushTokenRepository = pushTokenRepository;
             _pushService = pushService;
+            _resumeRepository = resumeRepository;
         }
 
         public async Task<List<NotificationDto>> GetMyNotificationsAsync(int studentId)
@@ -59,6 +62,39 @@ namespace MyApp.Application.Services
         public async Task MarkAllAsReadAsync(int studentId)
         {
             await _notificationRepository.MarkAllAsReadAsync(studentId);
+        }
+
+        // One-shot encouragement: graduates with no active resume get a
+        // single unread nudge (in-app + push). Self-throttling — a live
+        // nudge suppresses repeats until read.
+        public async Task MaybeNudgeResumeAsync(int studentId)
+        {
+            try
+            {
+                var active = await _resumeRepository.GetActiveByStudentIdAsync(studentId);
+                if (active != null) return;
+
+                var existing = await _notificationRepository.GetByStudentIdAsync(studentId);
+                if (existing.Any(n => n.Type == "RESUME_NUDGE" && !n.IsRead)) return;
+
+                var notification = new Notification
+                {
+                    StudentId = studentId,
+                    Title = "Build your ATS CV in one tap",
+                    Message = "Complete your profile and generate an ATS-friendly CV — free, in seconds.",
+                    Type = "RESUME_NUDGE",
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _notificationRepository.CreateAsync(notification);
+
+                var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(studentId);
+                await _pushService.SendAsync(tokens, notification.Title, notification.Message,
+                    notification.Type, null);
+            }
+            catch
+            {
+                // Nudges must never break login.
+            }
         }
 
         public async Task RegisterPushTokenAsync(int studentId, string token, string platform)

@@ -31,6 +31,7 @@ export default function ResumeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isGraduate = student?.schoolYear === 'Graduate';
 
@@ -78,6 +79,22 @@ export default function ResumeScreen() {
       fetchActiveResume().finally(() => setIsLoading(false));
     }, [isGraduate])
   );
+
+  async function handleGenerate() {
+    setIsGenerating(true);
+    try {
+      await apiClient.post('/Resume/generate');
+      await fetchActiveResume();
+      appAlert('Generated', 'Your ATS-friendly CV is ready.');
+    } catch (err) {
+      const message =
+        err.response?.data?.message ||
+        'Could not generate CV. Complete your profile first.';
+      appAlert('Error', message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
 
   async function handlePickAndUpload() {
     const result = await DocumentPicker.getDocumentAsync({
@@ -136,7 +153,8 @@ export default function ResumeScreen() {
         <>
           <Text style={[styles.fieldValue, { color: c.text }]}>{activeResume.fileName}</Text>
           <Text style={[styles.fieldLabel, { color: c.textMuted }]}>
-            Uploaded {new Date(activeResume.uploadedAt).toLocaleDateString()}
+            {activeResume.source === 'Generated' ? 'Generated' : 'Uploaded'}{' '}
+            {new Date(activeResume.uploadedAt).toLocaleDateString()}
           </Text>
 
           <View style={[styles.pdfContainer, { backgroundColor: c.surface, borderColor: c.border }]}>
@@ -156,6 +174,13 @@ export default function ResumeScreen() {
       ) : (
         <Text style={[styles.fieldValue, { color: c.text }]}>No resume uploaded yet.</Text>
       )}
+
+      <PrimaryButton
+        title="Generate ATS CV from Profile"
+        onPress={handleGenerate}
+        loading={isGenerating}
+        style={{ marginTop: 8 }}
+      />
 
       <PrimaryButton
         title={activeResume ? 'Replace Resume' : 'Upload Resume'}

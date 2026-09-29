@@ -8,6 +8,7 @@ namespace MyApp.Domain.Entities
         public string FilePath { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true; // current resume
+        public string Source { get; set; } = "Uploaded"; // "Uploaded" or "Generated"
 
         public Student Student { get; set; } = null!;
     }

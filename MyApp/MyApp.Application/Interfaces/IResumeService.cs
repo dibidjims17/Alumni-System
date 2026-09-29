@@ -8,5 +8,6 @@ namespace MyApp.Application.Interfaces
         Task<ResumeDto?> GetResumeByIdAsync(int resumeId);
         Task<ResumeDto?> GetActiveResumeAsync(int studentId);
         Task<ResumeDto> UploadResumeAsync(int studentId, string fileName, string filePath, string ipAddress);
+        Task<(bool Success, string Message, ResumeDto? Resume)> GenerateResumeAsync(int studentId, string ipAddress);
     }
 }

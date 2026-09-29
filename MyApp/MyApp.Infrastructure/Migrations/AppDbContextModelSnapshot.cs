@@ -718,6 +718,10 @@ namespace MyApp.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
 

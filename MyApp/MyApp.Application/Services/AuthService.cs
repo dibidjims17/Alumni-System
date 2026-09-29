@@ -16,17 +16,20 @@ namespace MyApp.Application.Services
         private readonly IActivityLogRepository _activityLogRepository;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
+        private readonly INotificationService _notificationService;
 
         public AuthService(
             IStudentRepository studentRepository,
             IActivityLogRepository activityLogRepository,
             IConfiguration configuration,
-            IEmailService emailService)
+            IEmailService emailService,
+            INotificationService notificationService)
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
             _configuration = configuration;
             _emailService = emailService;
+            _notificationService = notificationService;
         }
 
         public async Task<LoginResponse?> LoginAsync(LoginRequest request, string ipAddress)
@@ -71,6 +74,14 @@ namespace MyApp.Application.Services
 
             // 3. Log the activity
             await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN", "Student logged in", ipAddress);
+
+            // Settled accounts only: temp-password holders go straight to
+            // the forced-change screen, where a nudge would be noise.
+            if (!student.MustChangePassword
+                && student.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase))
+            {
+                await _notificationService.MaybeNudgeResumeAsync(student.Id);
+            }
 
             // 4. Generate JWT token
             var token = GenerateToken(student);

@@ -39,6 +39,16 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("generate")]
+        public async Task<IActionResult> GenerateResume()
+        {
+            if (!IsGraduate()) return Forbid();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var (success, message, resume) = await _resumeService.GenerateResumeAsync(GetStudentId(), ipAddress);
+            if (!success) return BadRequest(new { message });
+            return Ok(resume);
+        }
+
         [HttpPost("upload")]
         public async Task<IActionResult> UploadResume(IFormFile file)
         {

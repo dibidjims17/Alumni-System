@@ -8,5 +8,6 @@ namespace MyApp.Shared.DTOs
         public string FilePath { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; }
         public bool IsActive { get; set; }
+        public string Source { get; set; } = "Uploaded";
     }
 }
