@@ -52,6 +52,8 @@ namespace MyApp.Application.Services
                     SchoolYear = s.SchoolYear,
                     IsActive = s.IsActive,
                     CreatedAt = s.CreatedAt,
+                    ActivatedAt = s.ActivatedAt,
+                    IsClaimed = s.ActivatedAt != null || !s.MustChangePassword,
                     ProfilePicturePath = profile?.ProfilePicturePath
                 };
             }).ToList();

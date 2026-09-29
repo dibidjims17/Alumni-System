@@ -16,5 +16,8 @@ namespace MyApp.Domain.Entities
         public string? PasswordResetCode { get; set; }
         public DateTime? PasswordResetCodeExpiry { get; set; }
         public DateTime? TemporaryPasswordExpiry { get; set; }
+        // First successful login by ANY method (password today, Google
+        // sign-in when it lands). Null = account never claimed.
+        public DateTime? ActivatedAt { get; set; }
     }
 }

@@ -60,6 +60,15 @@ namespace MyApp.Application.Services
                 return new LoginResponse { TemporaryPasswordExpired = true };
             }
 
+            // First login by any method claims the account. (When Google
+            // sign-in lands, its success path must stamp ActivatedAt too —
+            // Google email ownership is the claim proof on that path.)
+            if (student.ActivatedAt == null)
+            {
+                student.ActivatedAt = DateTime.UtcNow;
+                await _studentRepository.UpdateAsync(student);
+            }
+
             // 3. Log the activity
             await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN", "Student logged in", ipAddress);
 

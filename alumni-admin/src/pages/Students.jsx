@@ -29,6 +29,7 @@ export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [programFilter, setProgramFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(""); // "", "active", "inactive", "unclaimed"
 
   const [viewingProfile, setViewingProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -245,10 +246,15 @@ export default function Students() {
 
       const matchesYear = !yearFilter || s.schoolYear === yearFilter;
       const matchesProgram = !programFilter || s.program === programFilter;
+      const matchesStatus =
+        !statusFilter ||
+        (statusFilter === "active" && s.isActive) ||
+        (statusFilter === "inactive" && !s.isActive) ||
+        (statusFilter === "unclaimed" && !s.isClaimed);
 
-      return matchesSearch && matchesYear && matchesProgram;
+      return matchesSearch && matchesYear && matchesProgram && matchesStatus;
     });
-  }, [students, searchTerm, yearFilter, programFilter]);
+  }, [students, searchTerm, yearFilter, programFilter, statusFilter]);
 
   return (
     <div>
@@ -287,12 +293,20 @@ export default function Students() {
           ))}
         </select>
 
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="unclaimed">Unclaimed</option>
+        </select>
+
         <button
           style={btn}
           onClick={() => {
             setSearchTerm("");
             setYearFilter("");
             setProgramFilter("");
+            setStatusFilter("");
           }}
         >
           <RotateCcw size={14} />
@@ -382,16 +396,25 @@ export default function Students() {
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.email}</p>
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.program} • {s.schoolYear}</p>
                   </div>
-                  <span
-                    style={{
-                      ...pill,
-                      marginLeft: "auto",
-                      background: s.isActive ? "rgba(46,125,50,0.13)" : "rgba(194,57,43,0.10)",
-                      color: s.isActive ? "var(--success)" : "var(--danger)",
-                    }}
-                  >
-                    {s.isActive ? "Active" : "Inactive"}
-                  </span>
+                  <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
+                    <span
+                      style={{
+                        ...pill,
+                        background: s.isActive ? "rgba(46,125,50,0.13)" : "rgba(194,57,43,0.10)",
+                        color: s.isActive ? "var(--success)" : "var(--danger)",
+                      }}
+                    >
+                      {s.isActive ? "Active" : "Inactive"}
+                    </span>
+                    {!s.isClaimed && (
+                      <span
+                        title="Never logged in — invite not yet claimed"
+                        style={{ ...pill, background: "rgba(239,108,0,0.14)", color: "#B45309" }}
+                      >
+                        Unclaimed
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>

@@ -10,6 +10,10 @@ namespace MyApp.Shared.DTOs
         public string SchoolYear { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime? ActivatedAt { get; set; }
+        // Claimed = logged in at least once (or already past the
+        // temp-password gate). Rule lives here so every client agrees.
+        public bool IsClaimed { get; set; }
         public string? ProfilePicturePath { get; set; }
         // Populated only on creation responses so the admin can relay it.
         public string? TemporaryPassword { get; set; }
