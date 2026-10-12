@@ -92,6 +92,7 @@ export default function NewsDetailScreen({ route, navigation }) {
   const [notFound, setNotFound] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewerImage, setViewerImage] = useState(null);
+  const [imgRatio, setImgRatio] = useState(16 / 10);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const baseWindowHeight = useRef(Dimensions.get('window').height);
 
@@ -134,6 +135,17 @@ export default function NewsDetailScreen({ route, navigation }) {
       setNotFound(false);
       const res = await apiClient.get(`/News/${newsId}`);
       setNews(res.data);
+      // Size the hero image to its real aspect ratio so posters and
+      // text-heavy images display fully instead of being cropped.
+      const url = assetUrl(res.data?.imagePath);
+      if (url) {
+        setImgRatio(16 / 10);
+        Image.getSize(
+          url,
+          (w, h) => { if (w > 0 && h > 0) setImgRatio(w / h); },
+          () => {}
+        );
+      }
     } catch (err) {
       if (err.response?.status === 404) {
         setNotFound(true);
@@ -324,8 +336,8 @@ export default function NewsDetailScreen({ route, navigation }) {
             >
               <Image
                 source={{ uri: assetUrl(news.imagePath) }}
-                style={[styles.image, { backgroundColor: c.surfaceAlt }]}
-                resizeMode="cover"
+                style={[styles.image, { backgroundColor: c.surfaceAlt, aspectRatio: imgRatio }]}
+                resizeMode="contain"
               />
             </TouchableOpacity>
           )}
@@ -532,7 +544,6 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 200,
     marginBottom: 12,
     borderRadius: 8,
   },

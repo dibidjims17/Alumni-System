@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { Heart, MessageCircle } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -105,84 +106,78 @@ export default function NewsListScreen({ navigation }) {
 
   function renderItem({ item }) {
     const imageUrl = assetUrl(item.imagePath);
+    const authorUrl = assetUrl(item.postedByAdminPicture);
     return (
-      <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
-        {imageUrl && (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setViewerImage(imageUrl)}
-          >
-            <Image
-              source={{ uri: imageUrl }}
-              style={[styles.cardImage, { backgroundColor: c.surfaceAlt }]}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
-        >
-          <View style={styles.cardBody}>
-            <Text style={[styles.title, { color: c.text }]}>{item.title}</Text>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
+      >
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+          {imageUrl && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setViewerImage(imageUrl)}
+              accessibilityLabel="View image fullscreen"
+              style={styles.thumbPress}
+            >
+              <Image
+                source={{ uri: imageUrl }}
+                style={[styles.thumb, { backgroundColor: c.surfaceAlt }]}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          )}
+          <View style={styles.cardContent}>
+            <Text style={[styles.title, { color: c.text }]} numberOfLines={2}>
+              {item.title}
+            </Text>
             <Text style={[styles.preview, { color: c.textMuted }]} numberOfLines={2}>
               {item.content}
             </Text>
-          </View>
-        </TouchableOpacity>
-
-        <View style={[styles.actions, { borderColor: c.border }]}>
-          <View style={styles.actionMeta}>
-            {assetUrl(item.postedByAdminPicture) ? (
-              <Image
-                source={{ uri: assetUrl(item.postedByAdminPicture) }}
-                style={styles.authorAvatar}
-              />
-            ) : (
-              <View style={[styles.authorFallback, { backgroundColor: c.surfaceAlt }]}>
-                <Text style={[styles.authorFallbackText, { color: c.primary }]}>
-                  {(item.postedByAdminName || '?').charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            )}
-            <View style={styles.actionMetaText}>
-              <Text style={[styles.author, { color: c.text }]}>{item.postedByAdminName}</Text>
-              <Text style={[styles.date, { color: c.textMuted }]}>
-                {item.postedAt ? new Date(item.postedAt).toLocaleDateString() : ''}
+            <View style={styles.authorRow}>
+              {authorUrl ? (
+                <Image source={{ uri: authorUrl }} style={styles.authorAvatar} />
+              ) : (
+                <View style={[styles.authorFallback, { backgroundColor: c.surfaceAlt }]}>
+                  <Text style={[styles.authorFallbackText, { color: c.primary }]}>
+                    {(item.postedByAdminName || '?').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <Text style={[styles.author, { color: c.text }]} numberOfLines={1}>
+                {item.postedByAdminName}
               </Text>
             </View>
-          </View>
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: c.background }]}
-              onPress={() => toggleHeart(item)}
-              disabled={heartingId === item.id}
-              accessibilityLabel={item.isHearted ? 'Unlike' : 'Like'}
-            >
-              <Heart
-                size={18}
-                color={item.isHearted ? c.heart : c.textMuted}
-                fill={item.isHearted ? c.heart : 'none'}
-              />
-              <Text
-                style={[styles.actionText, { color: item.isHearted ? c.heart : c.textMuted }]}
-              >
-                {item.heartCount}
+            <View style={styles.metaRow}>
+              <Text style={[styles.date, { color: c.textMuted }]} numberOfLines={1}>
+                {item.postedAt ? new Date(item.postedAt).toLocaleDateString() : ''}
               </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: c.background }]}
-              onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
-              accessibilityLabel="Comments"
-            >
-              <MessageCircle size={18} color={c.textMuted} />
-              <Text style={[styles.actionText, { color: c.textMuted }]}>{item.commentCount}</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.metaAction}
+                onPress={() => toggleHeart(item)}
+                disabled={heartingId === item.id}
+                accessibilityLabel={item.isHearted ? 'Unlike' : 'Like'}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Heart
+                  size={15}
+                  color={item.isHearted ? c.heart : c.textMuted}
+                  fill={item.isHearted ? c.heart : 'none'}
+                />
+                <Text style={[styles.metaText, { color: item.isHearted ? c.heart : c.textMuted }]}>
+                  {item.heartCount}
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.metaAction}>
+                <MessageCircle size={15} color={c.textMuted} />
+                <Text style={[styles.metaText, { color: c.textMuted }]}>
+                  {item.commentCount}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }
 
@@ -210,11 +205,11 @@ export default function NewsListScreen({ navigation }) {
                 { backgroundColor: c.surface, borderColor: c.border },
               ]}
             >
-              <Skeleton height={150} borderRadius={0} />
+              <Skeleton width={Math.round(screenWidth * 0.4)} height={190} borderRadius={0} />
               <View style={styles.skeletonBody}>
-                <Skeleton width="70%" height={16} style={{ marginBottom: 8 }} />
+                <Skeleton width="80%" height={15} style={{ marginBottom: 8 }} />
                 <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
-                <Skeleton width="90%" height={13} />
+                <Skeleton width="60%" height={12} />
               </View>
             </View>
           ))}
@@ -241,6 +236,8 @@ export default function NewsListScreen({ navigation }) {
   );
 }
 
+const screenWidth = Dimensions.get('window').width;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -250,13 +247,15 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   skeletonCard: {
+    flexDirection: 'row',
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 14,
+    marginBottom: 12,
     overflow: 'hidden',
   },
   skeletonBody: {
-    padding: 14,
+    flex: 1,
+    padding: 12,
   },
   searchRow: {
     margin: 16,
@@ -270,87 +269,83 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   card: {
+    flexDirection: 'row',
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 14,
+    marginBottom: 12,
     overflow: 'hidden',
+    minHeight: 180,
   },
-  cardImage: {
+  thumbPress: {
+    width: Math.round(screenWidth * 0.4),
+    alignSelf: 'stretch',
+  },
+  thumb: {
+    flex: 1,
     width: '100%',
-    height: 170,
   },
-  cardBody: {
-    paddingHorizontal: 14,
-    paddingTop: 12,
+  cardContent: {
+    flex: 1,
+    padding: 12,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 6,
-    lineHeight: 21,
+    marginBottom: 4,
+    lineHeight: 20,
   },
   preview: {
     fontSize: 13,
-    lineHeight: 19,
+    lineHeight: 18,
   },
-  actions: {
+  authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  actionMeta: {
-    flex: 1,
-    marginRight: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  actionMetaText: {
-    flex: 1,
+    marginTop: 8,
   },
   authorAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 6,
   },
   authorFallback: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   authorFallbackText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   author: {
+    flex: 1,
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
   },
   date: {
     fontSize: 11,
-    marginTop: 1,
+    marginRight: 12,
+    flexShrink: 1,
   },
-  actionButtons: {
+  metaAction: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 12,
   },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginLeft: 8,
-  },
-  actionText: {
+  metaText: {
     fontSize: 12,
     marginLeft: 4,
+    fontWeight: '600',
   },
   errorText: {
     textAlign: 'center',
