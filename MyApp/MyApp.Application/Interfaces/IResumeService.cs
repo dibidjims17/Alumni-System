@@ -9,5 +9,6 @@ namespace MyApp.Application.Interfaces
         Task<ResumeDto?> GetActiveResumeAsync(int studentId);
         Task<ResumeDto> UploadResumeAsync(int studentId, string fileName, string filePath, string ipAddress);
         Task<(bool Success, string Message, ResumeDto? Resume)> GenerateResumeAsync(int studentId, string ipAddress);
+        Task<bool> DeleteResumeAsync(int studentId, int resumeId, string ipAddress);
     }
 }

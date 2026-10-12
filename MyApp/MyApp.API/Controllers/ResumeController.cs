@@ -193,5 +193,15 @@ namespace MyApp.API.Controllers
             var fileBytes = await System.IO.File.ReadAllBytesAsync(resume.FilePath);
             return File(fileBytes, "application/pdf", resume.FileName);
         }
+
+        [HttpDelete("{resumeId}")]
+        public async Task<IActionResult> DeleteResume(int resumeId)
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var studentId = GetStudentId();
+            var deleted = await _resumeService.DeleteResumeAsync(studentId, resumeId, ipAddress);
+            if (!deleted) return NotFound(new { message = "Resume not found." });
+            return Ok(new { message = "Resume deleted." });
+        }
     }
 }

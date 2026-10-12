@@ -45,6 +45,12 @@ namespace MyApp.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task DeleteAsync(Resume resume)
+        {
+            _context.Resumes.Remove(resume);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeactivateAllAsync(int studentId)
         {
             var resumes = await _context.Resumes

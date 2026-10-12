@@ -262,5 +262,27 @@ namespace MyApp.Application.Services
                 });
             }).GeneratePdf();
         }
+
+        public async Task<bool> DeleteResumeAsync(int studentId, int resumeId, string ipAddress)
+        {
+            var resume = await _resumeRepository.GetByIdAsync(resumeId);
+            if (resume == null || resume.StudentId != studentId)
+                return false;
+
+            await _resumeRepository.DeleteAsync(resume);
+
+            try
+            {
+                if (File.Exists(resume.FilePath))
+                    File.Delete(resume.FilePath);
+            }
+            catch
+            {
+                // Row is gone; a stranded file is harmless and cleaned on wipe.
+            }
+
+            await _activityLogRepository.LogStudentAsync(studentId, "DELETE_RESUME", $"Deleted resume: {resume.FileName}", ipAddress);
+            return true;
+        }
     }
 }

@@ -9,6 +9,7 @@ namespace MyApp.Application.Interfaces
         Task<Resume?> GetByIdAsync(int id);
         Task CreateAsync(Resume resume);
         Task UpdateAsync(Resume resume);
+        Task DeleteAsync(Resume resume);
         Task DeactivateAllAsync(int studentId);
     }
 }

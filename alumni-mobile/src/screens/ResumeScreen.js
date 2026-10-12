@@ -1,17 +1,20 @@
 // src/screens/ResumeScreen.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNBlobUtil from 'react-native-blob-util';
 import Pdf from 'react-native-pdf';
+import { Download, Trash2 } from 'lucide-react-native';
 import apiClient from '../api/client';
 import Skeleton from '../components/ui/Skeleton';
 import { useAuth } from '../context/AuthContext';
@@ -22,7 +25,7 @@ import { alert as appAlert } from '../components/AppAlert';
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB, matches backend rule
 
-export default function ResumeScreen() {
+export default function ResumeScreen({ navigation }) {
   const { student } = useAuth();
   const { theme } = useTheme();
   const c = theme.colors;
@@ -34,6 +37,32 @@ export default function ResumeScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const isGraduate = student?.schoolYear === 'Graduate';
+
+  // Header actions: download to device + remove, next to the title.
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () =>
+        activeResume ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity
+              onPress={handleDownloadToDevice}
+              disabled={isDownloading}
+              accessibilityLabel="Download resume to device"
+              style={{ padding: 8 }}
+            >
+              <Download size={20} color={c.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={confirmRemoveResume}
+              accessibilityLabel="Remove resume"
+              style={{ padding: 8 }}
+            >
+              <Trash2 size={20} color={c.danger} />
+            </TouchableOpacity>
+          </View>
+        ) : undefined,
+    });
+  });
 
   async function fetchActiveResume() {
     try {
@@ -80,8 +109,62 @@ export default function ResumeScreen() {
     }, [isGraduate])
   );
 
-  async function handleGenerate() {
-    setIsGenerating(true);
+  // Save the active resume onto the device (Downloads via the system
+  // Download Manager on Android; app documents on iOS).
+  async function handleDownloadToDevice() {
+    if (!activeResume || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const url = `${API_BASE_URL}/Resume/${activeResume.id}/download`;
+      const fileName = activeResume.fileName || 'resume.pdf';
+      if (Platform.OS === 'android') {
+        const { config, fs } = RNBlobUtil;
+        await config({
+          fileCache: false,
+          addAndroidDownloads: {
+            useDownloadManager: true,
+            notification: true,
+            mime: 'application/pdf',
+            title: fileName,
+            description: 'Reunio resume download',
+            path: `${fs.dirs.DownloadDir}/${fileName}`,
+          },
+        }).fetch('GET', url, { Authorization: `Bearer ${token}` });
+        appAlert('Downloaded', `${fileName} saved to Downloads.`);
+      } else {
+        const dest = `${RNBlobUtil.fs.dirs.DocumentDir}/${fileName}`;
+        const res = await RNBlobUtil.fetch('GET', url, { Authorization: `Bearer ${token}` });
+        await RNBlobUtil.fs.writeFile(dest, res.base64(), 'base64');
+        appAlert('Downloaded', `${fileName} saved to app documents.`);
+      }
+    } catch (err) {
+      appAlert('Error', 'Could not download resume. Check your connection and try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
+  function confirmRemoveResume() {
+    if (!activeResume) return;
+    appAlert('Remove resume', `Delete "${activeResume.fileName}"? This cannot be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: handleRemoveResume },
+    ]);
+  }
+
+  async function handleRemoveResume() {
+    try {
+      await apiClient.delete(`/Resume/${activeResume.id}`);
+      setActiveResume(null);
+      setLocalPdfPath(null);
+      appAlert('Removed', 'Your resume has been deleted.');
+    } catch (err) {
+      appAlert('Error', 'Could not delete resume. Please try again.');
+    }
+  }
+
+  async function handleGenerate() {    setIsGenerating(true);
     try {
       await apiClient.post('/Resume/generate');
       await fetchActiveResume();
