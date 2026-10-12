@@ -156,7 +156,7 @@ export default function NewsListScreen({ navigation }) {
             <Text style={[styles.title, { color: c.text }]} numberOfLines={2}>
               {item.title}
             </Text>
-            <Text style={[styles.preview, { color: c.textMuted }]} numberOfLines={2}>
+            <Text style={[styles.preview, { color: c.textMuted }]} numberOfLines={5}>
               {item.content}
             </Text>
             <View style={styles.metaRow}>
