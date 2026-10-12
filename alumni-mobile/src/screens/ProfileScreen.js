@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import ProfileCompleteness, { computeCompleteness } from '../components/ProfileCompleteness';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import { alert as appAlert } from '../components/AppAlert';
 
@@ -179,7 +180,8 @@ export default function ProfileScreen({ navigation }) {
 
   if (isLoading || !profile) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top']}>
+        <AppBackground />
         <AppHeader title="Profile" navigation={navigation} />
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Skeleton width={104} height={104} borderRadius={52} style={styles.skeletonAvatar} />
@@ -206,7 +208,8 @@ export default function ProfileScreen({ navigation }) {
   const { percent } = computeCompleteness(profile, jobPreferences, !!activeResume);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Profile" navigation={navigation} />
 
       <ScrollView

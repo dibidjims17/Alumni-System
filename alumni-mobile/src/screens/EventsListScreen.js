@@ -9,6 +9,7 @@ import { alert as appAlert } from '../components/AppAlert';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -137,7 +138,8 @@ export default function EventsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={tabs} active="EventsList" navigation={navigation} />
       <View style={styles.searchRow}>

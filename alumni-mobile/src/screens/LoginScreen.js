@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { alert as appAlert } from '../components/AppAlert';
 import { useTheme } from '../theme/ThemeContext';
 import PasswordField from '../components/ui/PasswordField';
+import AppBackground from '../components/AppBackground';
 import { signInWithGoogle, isGoogleCancelled, googleSetupMessage } from '../auth/google';
 
 export default function LoginScreen({ navigation }) {
@@ -66,9 +67,10 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <AppBackground />
       <Image
         source={require('../../assets/schoolLogo.png')}
         style={styles.logo}

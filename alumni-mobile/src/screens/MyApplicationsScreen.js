@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -107,9 +108,10 @@ export default function MyApplicationsScreen({ navigation }) {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       edges={['top', 'left', 'right']}
     >
+      <AppBackground />
       <AppHeader title="Career" navigation={navigation} />
       <SectionTabs items={CAREER_TABS} active="MyApplications" navigation={navigation} />
       {isLoading ? (

@@ -19,6 +19,7 @@ import { API_BASE_URL } from '../config';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -148,7 +149,8 @@ export default function DirectoryScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={COMMUNITY_TABS} active="Directory" navigation={navigation} />
       <View style={styles.content}>

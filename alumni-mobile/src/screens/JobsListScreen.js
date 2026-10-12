@@ -17,6 +17,7 @@ import { useTheme } from '../theme/ThemeContext';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 
 const CAREER_TABS = [
@@ -135,9 +136,10 @@ export default function JobsListScreen({ navigation }) {
   if (!isGraduate) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: c.background }]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         edges={['top', 'left', 'right']}
       >
+        <AppBackground />
         <AppHeader title="Career" navigation={navigation} />
         <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
         <View style={styles.centered}>
@@ -151,9 +153,10 @@ export default function JobsListScreen({ navigation }) {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       edges={['top', 'left', 'right']}
     >
+      <AppBackground />
       <AppHeader title="Career" navigation={navigation} />
       <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
       <View style={styles.searchRow}>

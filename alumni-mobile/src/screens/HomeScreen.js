@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
+import AppBackground from '../components/AppBackground';
 import { assetUrl } from '../utils/media';
 import { alert as appAlert } from '../components/AppAlert';
 
@@ -91,9 +92,10 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       edges={['top', 'left', 'right']}
     >
+      <AppBackground />
       <View style={styles.header}>
         {photoUrl ? (
           <Image source={{ uri: photoUrl }} style={styles.avatarPhoto} />

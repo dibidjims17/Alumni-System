@@ -19,6 +19,7 @@ import { assetUrl } from '../utils/media';
 import SearchBar from '../components/SearchBar';
 import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import ImageViewer from '../components/ImageViewer';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
@@ -190,7 +191,8 @@ export default function NewsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={tabs} active="NewsList" navigation={navigation} />
       {error && <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>}
