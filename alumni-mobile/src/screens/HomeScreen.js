@@ -60,10 +60,10 @@ export default function HomeScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const isGraduate = student?.schoolYear === 'Graduate';
   const tiles = isGraduate ? GRADUATE_TILES : UNDERGRAD_TILES;
-  // Column count follows the actual window width so phones, landscape
-  // tablets, and split-screen windows all get a fitting grid.
-  const numColumns = width >= 900 ? 3 : width >= 600 ? 2 : 2;
-  const tileBasis = numColumns === 3 ? '31%' : '48%';
+  // Column count follows the actual window width: portrait phones get a
+  // full-width stacked list, landscape/tablets get the grid back.
+  const numColumns = width >= 900 ? 3 : width >= 600 ? 2 : 1;
+  const tileBasis = numColumns === 3 ? '31%' : numColumns === 2 ? '48%' : '100%';
   const [unreadCount, setUnreadCount] = useState(0);
   const [photoUrl, setPhotoUrl] = useState(null);
 
