@@ -285,23 +285,23 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    padding: 12,
+    padding: 14,
     justifyContent: 'center',
   },
   title: {
     fontSize: 15,
     fontWeight: '700',
-    marginBottom: 4,
-    lineHeight: 20,
+    marginBottom: 6,
+    lineHeight: 21,
   },
   preview: {
     fontSize: 13,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 10,
   },
   authorAvatar: {
     width: 24,
@@ -329,17 +329,17 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 10,
   },
   date: {
     fontSize: 11,
-    marginRight: 12,
+    marginRight: 14,
     flexShrink: 1,
   },
   metaAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   metaText: {
     fontSize: 12,
