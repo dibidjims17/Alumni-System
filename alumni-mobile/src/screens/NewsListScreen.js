@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { Heart, MessageCircle } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -32,6 +32,8 @@ const COMMUNITY_TABS = [
 export default function NewsListScreen({ navigation }) {
   const { theme } = useTheme();
   const { student } = useAuth();
+  const { width: screenWidth } = useWindowDimensions();
+  const thumbWidth = Math.round(screenWidth * 0.4);
   const c = theme.colors;
   // The alumni directory is graduate-only; news and events stay open
   // as community teasers.
@@ -118,7 +120,7 @@ export default function NewsListScreen({ navigation }) {
               activeOpacity={0.8}
               onPress={() => setViewerImage(imageUrl)}
               accessibilityLabel="View image fullscreen"
-              style={styles.thumbPress}
+              style={[styles.thumbPress, { width: thumbWidth }]}
             >
               <Image
                 source={{ uri: imageUrl }}
@@ -205,7 +207,7 @@ export default function NewsListScreen({ navigation }) {
                 { backgroundColor: c.surface, borderColor: c.border },
               ]}
             >
-              <Skeleton width={Math.round(screenWidth * 0.4)} height={190} borderRadius={0} />
+              <Skeleton width={thumbWidth} height={190} borderRadius={0} />
               <View style={styles.skeletonBody}>
                 <Skeleton width="80%" height={15} style={{ marginBottom: 8 }} />
                 <Skeleton width="100%" height={13} style={{ marginBottom: 6 }} />
@@ -235,8 +237,6 @@ export default function NewsListScreen({ navigation }) {
     </SafeAreaView>
   );
 }
-
-const screenWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
   container: {
@@ -277,7 +277,6 @@ const styles = StyleSheet.create({
     minHeight: 180,
   },
   thumbPress: {
-    width: Math.round(screenWidth * 0.4),
     alignSelf: 'stretch',
   },
   thumb: {
