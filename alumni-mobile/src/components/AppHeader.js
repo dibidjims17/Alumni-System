@@ -6,14 +6,14 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { Moon, Sun, Bell } from 'lucide-react-native';
+import { Moon, Sun, Bell, ChevronLeft } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
 
-// Shared themed header bar: title left, dark-mode toggle + notifications
-// right. Used by every tab root so headers stay identical.
-export default function AppHeader({ title, navigation }) {
+// Shared themed header bar: optional back chevron, title, dark-mode toggle
+// + notifications. Used by tab roots (no back) and pushed detail screens.
+export default function AppHeader({ title, navigation, showBack }) {
   const { theme, isDark, toggleDarkMode } = useTheme();
   const c = theme.colors;
   const [unreadCount, setUnreadCount] = useState(0);
@@ -35,6 +35,15 @@ export default function AppHeader({ title, navigation }) {
   return (
     <>
       <View style={[styles.bar, { borderBottomColor: c.border, backgroundColor: c.surface }]}>
+        {showBack && navigation?.canGoBack?.() ? (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            accessibilityLabel="Go back"
+          >
+            <ChevronLeft size={24} color={c.text} />
+          </TouchableOpacity>
+        ) : null}
         <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
           {title}
         </Text>
@@ -77,6 +86,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   title: { flex: 1, fontSize: 19, fontWeight: '800', letterSpacing: 0.3 },
+  backButton: { padding: 4, marginLeft: -4, marginRight: 2 },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',

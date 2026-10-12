@@ -11,9 +11,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 import { assetUrl } from '../utils/media';
 import { alert as appAlert } from '../components/AppAlert';
+import AppHeader from '../components/AppHeader';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -79,6 +81,8 @@ export default function EventDetailScreen({ route, navigation }) {
 
   if (isLoading) {
     return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <AppHeader title="Event Details" navigation={navigation} showBack />
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={styles.content}
@@ -99,11 +103,14 @@ export default function EventDetailScreen({ route, navigation }) {
           <Skeleton width="100%" height={44} borderRadius={8} />
         </View>
       </ScrollView>
+      </SafeAreaView>
     );
   }
 
   if (!event) {
     return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <AppHeader title="Event Details" navigation={navigation} showBack />
       <View style={[styles.centered, { backgroundColor: c.background }]}>
         <Text style={[styles.notFoundTitle, { color: c.text }]}>No longer available</Text>
         <Text style={[styles.notFoundText, { color: c.textMuted }]}>
@@ -116,10 +123,13 @@ export default function EventDetailScreen({ route, navigation }) {
           <Text style={[styles.goBackText, { color: c.primary }]}>Go Back</Text>
         </TouchableOpacity>
       </View>
+      </SafeAreaView>
     );
   }
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+    <AppHeader title="Event Details" navigation={navigation} showBack />
     <ScrollView
       style={[styles.container, { backgroundColor: c.background }]}
       contentContainerStyle={styles.content}
@@ -184,6 +194,7 @@ export default function EventDetailScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 

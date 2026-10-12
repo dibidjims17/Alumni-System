@@ -16,12 +16,14 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Heart, Send, ChevronDown, ChevronUp } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
 import Skeleton from '../components/ui/Skeleton';
 import ImageViewer from '../components/ImageViewer';
+import AppHeader from '../components/AppHeader';
 import { useTheme } from '../theme/ThemeContext';
 import { alert as appAlert } from '../components/AppAlert';
 
@@ -252,6 +254,8 @@ export default function NewsDetailScreen({ route, navigation }) {
 
   if (isLoading) {
     return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <AppHeader title="Post" navigation={navigation} showBack />
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={styles.scrollContent}
@@ -283,11 +287,14 @@ export default function NewsDetailScreen({ route, navigation }) {
           </View>
         ))}
       </ScrollView>
+      </SafeAreaView>
     );
   }
 
   if (!news) {
     return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <AppHeader title="Post" navigation={navigation} showBack />
       <View style={[styles.centered, { backgroundColor: c.background }]}>
         <Text style={[styles.notFoundTitle, { color: c.text }]}>No longer available</Text>
         <Text style={[styles.notFoundText, { color: c.textMuted }]}>
@@ -300,12 +307,14 @@ export default function NewsDetailScreen({ route, navigation }) {
           <Text style={[styles.goBackText, { color: c.primary }]}>Go Back</Text>
         </TouchableOpacity>
       </View>
+      </SafeAreaView>
     );
   }
 
   function renderContent() {
     return (
-      <>
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <AppHeader title="Post" navigation={navigation} showBack />
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
         contentContainerStyle={styles.scrollContent}
@@ -475,7 +484,7 @@ export default function NewsDetailScreen({ route, navigation }) {
         </View>
       </View>
       <ImageViewer imageUrl={viewerImage} onClose={() => setViewerImage(null)} />
-      </>
+      </SafeAreaView>
     );
   }
 
