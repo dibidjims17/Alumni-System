@@ -258,7 +258,8 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   searchRow: {
-    margin: 16,
+    marginHorizontal: 16,
+    marginTop: 12,
     marginBottom: 8,
   },
   list: {
@@ -285,7 +286,8 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     justifyContent: 'center',
   },
   title: {
