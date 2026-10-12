@@ -145,6 +145,9 @@ export default function ResumeScreen() {
       if (filled.educationAdded > 0) parts.push(`${filled.educationAdded} education`);
       if (filled.skillsAdded > 0) parts.push(`${filled.skillsAdded} skills`);
       if (filled.phoneSet) parts.push('phone number');
+      if (filled.bioSet) parts.push('bio');
+      if (filled.headlineSet) parts.push('headline');
+      if (filled.contactSet) parts.push('contact info');
       appAlert(
         'Profile updated',
         parts.length > 0

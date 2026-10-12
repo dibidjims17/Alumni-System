@@ -20,6 +20,7 @@ import DirectoryScreen from '../screens/DirectoryScreen';
 
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import ProfileSetupWizardScreen from '../screens/ProfileSetupWizardScreen';
 import JobPreferencesScreen from '../screens/JobPreferencesScreen';
 import EditSkillsScreen from '../screens/EditSkillsScreen';
 import EditWorkExperienceScreen from '../screens/EditWorkExperienceScreen';
@@ -127,6 +128,7 @@ function ProfileStack() {
         options={{ headerShown: false }}
       />
       <ProfileStackNav.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
+      <ProfileStackNav.Screen name="ProfileWizard" component={ProfileSetupWizardScreen} options={{ title: 'Complete Profile' }} />
       <ProfileStackNav.Screen name="JobPreferences" component={JobPreferencesScreen} options={{ title: 'Job Preferences' }} />
       <ProfileStackNav.Screen name="EditSkills" component={EditSkillsScreen} options={{ title: 'Edit Skills' }} />
       <ProfileStackNav.Screen name="EditWorkExperience" component={EditWorkExperienceScreen} options={{ title: 'Work Experience' }} />
