@@ -99,6 +99,36 @@ namespace MyApp.Application.Services
                 result.PhoneSet = true;
             }
 
+            // Summary -> Bio, header line -> Headline, contact header ->
+            // Location/LinkedIn. All blank-only, like the rest of this method.
+            bool contactTouched = false;
+            if (string.IsNullOrWhiteSpace(profile.Headline) && !string.IsNullOrWhiteSpace(parsed.Headline))
+            {
+                profile.Headline = parsed.Headline;
+                result.HeadlineSet = true;
+            }
+            if (string.IsNullOrWhiteSpace(profile.Bio) && !string.IsNullOrWhiteSpace(parsed.Summary))
+            {
+                profile.Bio = parsed.Summary;
+                result.BioSet = true;
+            }
+            if (string.IsNullOrWhiteSpace(profile.Location) && !string.IsNullOrWhiteSpace(parsed.Location))
+            {
+                profile.Location = parsed.Location;
+                contactTouched = true;
+            }
+            if (string.IsNullOrWhiteSpace(profile.LinkedInUrl) && !string.IsNullOrWhiteSpace(parsed.LinkedInUrl))
+            {
+                profile.LinkedInUrl = parsed.LinkedInUrl;
+                contactTouched = true;
+            }
+            if (result.BioSet || result.HeadlineSet || contactTouched)
+            {
+                profile.UpdatedAt = DateTime.UtcNow;
+                await _profileRepository.UpdateAsync(profile);
+                result.ContactSet = contactTouched;
+            }
+
             var existingWork = await _workExperienceRepository.GetByStudentIdAsync(studentId);
             foreach (var w in parsed.Work)
             {
@@ -155,7 +185,10 @@ namespace MyApp.Application.Services
             await _activityLogRepository.LogStudentAsync(studentId, "RESUME_AUTOFILL",
                 $"Autofilled profile from resume: {result.WorkAdded} work, " +
                 $"{result.EducationAdded} education, {result.SkillsAdded} skills" +
-                (result.PhoneSet ? ", phone set" : ""), ipAddress);
+                (result.PhoneSet ? ", phone set" : "") +
+                (result.BioSet ? ", bio set" : "") +
+                (result.HeadlineSet ? ", headline set" : "") +
+                (result.ContactSet ? ", contact set" : ""), ipAddress);
 
             return result;
         }

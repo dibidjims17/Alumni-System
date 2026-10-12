@@ -13,7 +13,9 @@ namespace MyApp.Application.Services
         public sealed record ParsedEducation(string Degree, string FieldOfStudy, string School,
             int StartYear, int? EndYear);
         public sealed record ParsedResume(string? Phone, List<ParsedWork> Work,
-            List<ParsedEducation> Education, List<string> Skills);
+            List<ParsedEducation> Education, List<string> Skills,
+            string? Summary = null, string? Location = null, string? LinkedInUrl = null,
+            string? Headline = null);
 
         private static readonly string[] ExperienceHeadings =
             ["work experience", "experience", "employment", "employment history",
@@ -26,6 +28,10 @@ namespace MyApp.Application.Services
         private static readonly string[] SkillsHeadings =
             ["skills", "technical skills", "core skills", "key skills",
              "competencies", "technologies", "tech stack"];
+
+        private static readonly string[] SummaryHeadings =
+            ["professional summary", "summary", "objective", "profile",
+             "about me"];
 
         private static readonly string[] DegreeKeywords =
             ["bachelor", "master", "doctor", "phd", "associate", "diploma",
@@ -40,7 +46,7 @@ namespace MyApp.Application.Services
         [
             "C#", "Java", "Python", "JavaScript", "TypeScript", "PHP", "Kotlin",
             "Swift", "Dart", "Flutter", "React", "Angular", "Vue", "Node.js",
-            ".NET", "Laravel", "Django", "Spring Boot", "SQL", "MySQL",
+            ".NET", "ASP.NET Core", "ASP.NET", "Laravel", "Django", "Spring Boot", "SQL", "MySQL",
             "PostgreSQL", "MongoDB", "SQLite", "Firebase", "Git", "GitHub",
             "Docker", "AWS", "Azure", "Google Cloud", "HTML", "CSS", "Tailwind",
             "Bootstrap", "Figma", "Photoshop", "Illustrator", "AutoCAD",
@@ -72,16 +78,54 @@ namespace MyApp.Application.Services
 
         public static List<string> ExtractLines(byte[] pdfBytes)
         {
+            // page.Text collapses QuestPDF output into one blob (no line
+            // breaks), which starves the section splitter — so rebuild lines
+            // from word positions. Words join the current line when their
+            // vertical span overlaps it (hyphens sit higher than the
+            // baseline, so centroid bucketing would strand "-" on its own
+            // line and break date ranges like "Jul 2026 - Present").
             using var document = PdfDocument.Open(pdfBytes);
             var lines = new List<string>();
             foreach (var page in document.GetPages())
             {
-                foreach (var line in page.Text.Split('\n'))
+                var words = page.GetWords().ToList();
+                if (words.Count == 0)
                 {
-                    var trimmed = line.Trim();
-                    if (!string.IsNullOrWhiteSpace(trimmed))
-                        lines.Add(trimmed);
+                    foreach (var line in page.Text.Split('\n'))
+                    {
+                        var t = line.Trim();
+                        if (!string.IsNullOrWhiteSpace(t)) lines.Add(t);
+                    }
+                    continue;
                 }
+                var ordered = words.OrderByDescending(w => w.BoundingBox.Centroid.Y).ToList();
+                var current = new List<UglyToad.PdfPig.Content.Word>();
+                double top = double.NaN, bottom = double.NaN;
+                void Flush()
+                {
+                    if (current.Count == 0) return;
+                    var text = string.Join(" ",
+                        current.OrderBy(w => w.BoundingBox.Centroid.X)
+                               .Select(w => w.Text.Trim())
+                               .Where(t => t.Length > 0)).Trim();
+                    if (!string.IsNullOrWhiteSpace(text))
+                        lines.Add(text);
+                    current.Clear();
+                    top = bottom = double.NaN;
+                }
+                foreach (var w in ordered)
+                {
+                    var wt = w.BoundingBox.Top;
+                    var wb = w.BoundingBox.Bottom;
+                    if (current.Count > 0 && (wb > top + 1 || wt < bottom - 1))
+                    {
+                        Flush();
+                    }
+                    current.Add(w);
+                    top = double.IsNaN(top) ? wt : Math.Max(top, wt);
+                    bottom = double.IsNaN(bottom) ? wb : Math.Min(bottom, wb);
+                }
+                Flush();
             }
             return lines;
         }
@@ -101,6 +145,7 @@ namespace MyApp.Application.Services
                 ["experience"] = new(),
                 ["education"] = new(),
                 ["skills"] = new(),
+                ["summary"] = new(),
                 ["other"] = new(),
             };
             var current = "contact";
@@ -109,6 +154,7 @@ namespace MyApp.Application.Services
                 if (IsHeading(line, ExperienceHeadings)) { current = "experience"; continue; }
                 if (IsHeading(line, EducationHeadings)) { current = "education"; continue; }
                 if (IsHeading(line, SkillsHeadings)) { current = "skills"; continue; }
+                if (IsHeading(line, SummaryHeadings)) { current = "summary"; continue; }
                 sections[current].Add(line);
             }
             return sections;
@@ -197,19 +243,81 @@ namespace MyApp.Application.Services
             }
             FlushEdu();
 
+            // Summary section (our generator writes Bio/Headline here).
+            string? summary = null;
+            if (sections["summary"].Count > 0)
+            {
+                var text = string.Join(" ", sections["summary"]).Trim();
+                if (text.Length > 500) text = text[..500];
+                if (text.Length >= 10) summary = text;
+            }
+
+            // Headline: our generator prints it as the lone line between the
+            // name line and the pipe-joined contact line (which carries @).
+            // Strict 3-line gate so foreign CVs rarely qualify — and fill is
+            // blank-only with user review anyway.
+            string? headline = null;
+            var contact = sections["contact"];
+            if (contact.Count >= 3
+                && !contact[1].Contains('|') && !contact[1].Contains('@')
+                && contact[2].Contains('|') && contact[2].Contains('@')
+                && contact[1].Length is >= 3 and <= 100)
+            {
+                headline = contact[1].Trim();
+            }
+
+            // Contact header: our generator joins "email | phone | location |
+            // linkedin" on one pipe-separated line. Only trust that exact
+            // shape (must contain the email segment) — never guess from
+            // stray lines. Remaining segments: URL -> LinkedIn, first other
+            // non-empty segment -> location.
+            string? location = null;
+            string? linkedInUrl = null;
+            foreach (var line in sections["contact"])
+            {
+                if (!line.Contains('|') || !line.Contains('@')) continue;
+                var segs = line.Split('|').Select(s => s.Trim())
+                    .Where(s => s.Length > 0).ToList();
+                if (segs.Count < 2) continue;
+                foreach (var seg in segs)
+                {
+                    if (seg.Contains('@')) continue;
+                    if (PhMobileRegex.IsMatch(seg)) continue;
+                    if (seg.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                        || seg.Contains("linkedin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        linkedInUrl ??= seg;
+                    }
+                    else
+                    {
+                        location ??= seg;
+                    }
+                }
+                if (location != null || linkedInUrl != null) break;
+            }
+
             // Skills: dictionary match over the skills section (whole doc fallback).
+            // Longest-first with matched spans blanked out, so "ASP.NET" never
+            // double-fires inside "ASP.NET Core" and bare "C" never fires
+            // inside "C#".
             var skillSource = sections["skills"].Count > 0
                 ? string.Join("\n", sections["skills"])
                 : string.Join("\n", lines);
-            var skills = SkillDictionary
-                .Where(s => Regex.IsMatch(skillSource,
+            var buffer = skillSource;
+            var skills = new List<string>();
+            foreach (var s in SkillDictionary.OrderByDescending(s => s.Length))
+            {
+                var m = Regex.Match(buffer,
                     $@"(?<!\w){Regex.Escape(s)}(?!\w)",
-                    RegexOptions.IgnoreCase))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(12)
-                .ToList();
+                    RegexOptions.IgnoreCase);
+                if (!m.Success) continue;
+                skills.Add(s);
+                buffer = buffer.Remove(m.Index, m.Length)
+                    .Insert(m.Index, new string(' ', m.Length));
+                if (skills.Count >= 12) break;
+            }
 
-            return new ParsedResume(phone, work, education, skills);
+            return new ParsedResume(phone, work, education, skills, summary, location, linkedInUrl, headline);
         }
 
         private static ParsedWork? ParseWorkChunk(List<string> chunk)

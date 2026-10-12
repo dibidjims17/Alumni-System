@@ -185,6 +185,8 @@ namespace MyApp.Application.Services
 
                         // Contact header
                         col.Item().Text(profile.FullName).FontSize(17).Bold();
+                        if (!string.IsNullOrWhiteSpace(profile.Headline))
+                            col.Item().Text(profile.Headline).FontSize(11);
                         var contact = string.Join(" | ", new[]
                         {
                             email,
@@ -203,7 +205,12 @@ namespace MyApp.Application.Services
                             col.Item().Text(summary);
                         }
 
-                        // Experience, newest first
+                        // Experience, newest first.
+                        // Layout is parser-friendly on purpose: the date-range
+                        // line comes FIRST, then title, then company — this
+                        // matches ResumeParser's chunking (it splits entries
+                        // on date lines and reads title/company after them),
+                        // so Generate -> Upload & Auto-fill round-trips.
                         if (profile.WorkExperiences.Count > 0)
                         {
                             col.Item().PaddingTop(6).Text("WORK EXPERIENCE").FontSize(11).Bold();
@@ -211,17 +218,22 @@ namespace MyApp.Application.Services
                             {
                                 col.Item().Column(item =>
                                 {
-                                    item.Item().Text($"{w.JobTitle} — {w.Company}").Bold();
-                                    var meta = w.Location;
                                     var dates = DateRange(w.StartDate, w.EndDate, "Present");
-                                    item.Item().Text(string.IsNullOrWhiteSpace(meta) ? dates : $"{meta} | {dates}").FontSize(9);
+                                    item.Item().Text(dates).FontSize(9);
+                                    item.Item().Text(w.JobTitle).Bold();
+                                    var companyLine = string.IsNullOrWhiteSpace(w.Location)
+                                        ? w.Company
+                                        : $"{w.Company} | {w.Location}";
+                                    item.Item().Text(companyLine);
                                     if (!string.IsNullOrWhiteSpace(w.Description))
                                         item.Item().Text(w.Description);
                                 });
                             }
                         }
 
-                        // Education, newest first
+                        // Education, newest first. Same rule: the years line
+                        // first, then degree, then school — one chunk per
+                        // entry for the parser.
                         if (profile.Educations.Count > 0)
                         {
                             col.Item().PaddingTop(6).Text("EDUCATION").FontSize(11).Bold();
@@ -229,12 +241,13 @@ namespace MyApp.Application.Services
                             {
                                 col.Item().Column(item =>
                                 {
+                                    var years = e.EndYear.HasValue ? $"{e.StartYear} - {e.EndYear}" : $"{e.StartYear} - Present";
+                                    item.Item().Text(years).FontSize(9);
                                     var degree = string.IsNullOrWhiteSpace(e.FieldOfStudy)
                                         ? e.Degree
                                         : $"{e.Degree}, {e.FieldOfStudy}";
-                                    item.Item().Text($"{degree} — {e.School}").Bold();
-                                    var years = e.EndYear.HasValue ? $"{e.StartYear} - {e.EndYear}" : $"{e.StartYear} - Present";
-                                    item.Item().Text(years).FontSize(9);
+                                    item.Item().Text(degree).Bold();
+                                    item.Item().Text(e.School);
                                 });
                             }
                         }
