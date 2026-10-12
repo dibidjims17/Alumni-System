@@ -14,6 +14,7 @@ import PrimaryButton from '../components/ui/PrimaryButton';
 import PasswordField from '../components/ui/PasswordField';
 import PasswordChecklist, { passwordMeetsAll } from '../components/ui/PasswordChecklist';
 import { alert as appAlert } from '../components/AppAlert';
+import AppBackground from '../components/AppBackground';
 
 export default function ResetPasswordScreen({ route, navigation }) {
   const { identifier } = route.params;
@@ -92,9 +93,10 @@ export default function ResetPasswordScreen({ route, navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <AppBackground />
       <Text style={[styles.title, { color: c.text }]}>Reset Password</Text>
       <Text style={[styles.subtitle, { color: c.textMuted }]}>
         Enter the 6-digit code sent to your email, along with your new

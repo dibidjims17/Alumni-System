@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
+import AppBackground from '../components/AppBackground';
 import { useTheme } from '../theme/ThemeContext';
 import Skeleton from '../components/ui/Skeleton';
 import { alert as appAlert } from '../components/AppAlert';
@@ -122,7 +123,8 @@ export default function NotificationsScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: c.background, padding: 16 }]}>
+      <View style={[styles.container, { backgroundColor: 'transparent', padding: 16 }]}>
+        <AppBackground />
         {[0, 1, 2, 3].map((i) => (
           <View
             key={i}
@@ -138,7 +140,8 @@ export default function NotificationsScreen({ navigation }) {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: c.background }]}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <AppBackground />
       <TouchableOpacity
         style={[styles.markAllButton, { backgroundColor: c.primaryTint, borderColor: c.primary }]}
         onPress={handleMarkAllRead}

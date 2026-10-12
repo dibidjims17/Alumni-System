@@ -15,6 +15,7 @@ import { alert as appAlert } from '../components/AppAlert';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
+import AppBackground from '../components/AppBackground';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 
@@ -98,9 +99,10 @@ export default function EditEducationScreen({ route, navigation }) {
     >
       <DiscardDialog {...discardDialog} />
       <ScrollView
-        style={[styles.container, { backgroundColor: c.background }]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{ padding: 16 }}
       >
+        <AppBackground />
         <Text style={[styles.label, { color: c.textMuted }]}>Degree *</Text>
         <TextInput
           style={[

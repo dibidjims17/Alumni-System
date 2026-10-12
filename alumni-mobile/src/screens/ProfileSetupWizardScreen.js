@@ -19,6 +19,7 @@ import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import { alert as appAlert } from '../components/AppAlert';
+import AppBackground from '../components/AppBackground';
 
 const STEPS = ['About', 'Contact', 'Education', 'Work', 'Skills', 'Finish'];
 
@@ -210,7 +211,8 @@ export default function ProfileSetupWizardScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
+      <View style={[styles.centered, { backgroundColor: 'transparent' }]}>
+        <AppBackground />
         <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
@@ -218,9 +220,10 @@ export default function ProfileSetupWizardScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: c.background }}
+      style={{ flex: 1, backgroundColor: 'transparent' }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <AppBackground />
       {/* Progress header */}
       <View style={styles.progressWrap}>
         <Text style={[styles.stepCount, { color: c.textMuted }]}>

@@ -12,6 +12,7 @@ import apiClient from '../api/client';
 import { alert as appAlert } from '../components/AppAlert';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import AppBackground from '../components/AppBackground';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const { theme } = useTheme();
@@ -46,7 +47,8 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   if (submitted) {
     return (
-      <View style={[styles.container, { backgroundColor: c.background }]}>
+      <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+        <AppBackground />
         <Text style={[styles.title, { color: c.text }]}>Check Your Email</Text>
         <Text style={[styles.subtitle, { color: c.textMuted }]}>
           If an account exists for "{identifier.trim()}", a 6-digit reset
@@ -73,9 +75,10 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <AppBackground />
       <Text style={[styles.title, { color: c.text }]}>Forgot Password</Text>
       <Text style={[styles.subtitle, { color: c.textMuted }]}>
         Enter your student number or email and we'll send you a reset code.

@@ -15,6 +15,7 @@ import { alert as appAlert } from '../components/AppAlert';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
+import AppBackground from '../components/AppBackground';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -71,9 +72,10 @@ export default function EditProfileScreen({ route, navigation }) {
     >
       <DiscardDialog {...discardDialog} />
       <ScrollView
-        style={[styles.container, { backgroundColor: c.background }]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={styles.content}
       >
+        <AppBackground />
         <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
           <Text style={[styles.cardTitle, { color: c.text }]}>Basic info</Text>
 

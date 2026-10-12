@@ -16,6 +16,7 @@ import apiClient from '../api/client';
 import { assetUrl } from '../utils/media';
 import { alert as appAlert } from '../components/AppAlert';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -81,10 +82,11 @@ export default function EventDetailScreen({ route, navigation }) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Event Details" navigation={navigation} showBack />
       <ScrollView
-        style={[styles.container, { backgroundColor: c.background }]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={styles.content}
       >
         <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
@@ -109,9 +111,10 @@ export default function EventDetailScreen({ route, navigation }) {
 
   if (!event) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Event Details" navigation={navigation} showBack />
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
+      <View style={[styles.centered, { backgroundColor: 'transparent' }]}>
         <Text style={[styles.notFoundTitle, { color: c.text }]}>No longer available</Text>
         <Text style={[styles.notFoundText, { color: c.textMuted }]}>
           This event may have been removed by an admin.
@@ -128,10 +131,11 @@ export default function EventDetailScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} edges={['top', 'left', 'right']}>
+    <AppBackground />
     <AppHeader title="Event Details" navigation={navigation} showBack />
     <ScrollView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl

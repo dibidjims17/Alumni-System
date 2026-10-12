@@ -16,6 +16,7 @@ import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import Skeleton from '../components/ui/Skeleton';
 import { alert as appAlert } from '../components/AppAlert';
@@ -93,7 +94,8 @@ export default function YearCorrectionScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: c.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Year Correction" navigation={navigation} />
       <ScrollView
         contentContainerStyle={styles.content}

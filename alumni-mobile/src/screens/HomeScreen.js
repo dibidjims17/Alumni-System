@@ -58,14 +58,13 @@ export default function HomeScreen({ navigation }) {
       { text: 'Sign Out', style: 'destructive', onPress: logout },
     ]);
   }
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isGraduate = student?.schoolYear === 'Graduate';
   const tiles = isGraduate ? GRADUATE_TILES : UNDERGRAD_TILES;
-  // Column count follows the actual window width: portrait phones get a
-  // full-width stacked list, landscape/tablets get the grid back.
-  // NOTE: single column uses width:100% (not flexBasis %) — percentage
-  // basis + flexGrow refuses to wrap on some Yoga versions.
-  const numColumns = width >= 900 ? 3 : width >= 600 ? 2 : 1;
+  // Portrait stacks full-width, landscape gets the grid back —
+  // orientation-based so wide portrait tablets stack too.
+  const isPortrait = height >= width;
+  const numColumns = isPortrait ? 1 : width >= 900 ? 3 : 2;
   const tileLayout =
     numColumns === 1
       ? { width: '100%', flexGrow: 0, flexBasis: 'auto' }
@@ -174,7 +173,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE · w={Math.round(width)} cols={numColumns}</Text>
+        <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE</Text>
 
         <View style={styles.grid}>
           {tiles.map(({ key, label, sub, Icon, target }) => (

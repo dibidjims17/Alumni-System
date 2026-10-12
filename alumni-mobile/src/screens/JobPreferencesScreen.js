@@ -17,6 +17,7 @@ import DiscardDialog from '../components/DiscardDialog';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import AutocompleteInput from '../components/AutocompleteInput';
+import AppBackground from '../components/AppBackground';
 import { JOB_TITLE_SUGGESTIONS, INDUSTRY_SUGGESTIONS } from '../data/suggestionLists';
 
 export default function JobPreferencesScreen({ navigation }) {
@@ -87,9 +88,10 @@ export default function JobPreferencesScreen({ navigation }) {
   if (isLoading) {
     return (
       <ScrollView
-        style={[styles.container, { backgroundColor: c.background }]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{ padding: 16 }}
       >
+        <AppBackground />
         <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
           {[0, 1, 2].map((i) => (
             <View key={i} style={{ marginBottom: 16 }}>
@@ -107,10 +109,11 @@ export default function JobPreferencesScreen({ navigation }) {
     <>
       <DiscardDialog {...discardDialog} />
       <ScrollView
-        style={[styles.container, { backgroundColor: c.background }]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{ padding: 16 }}
         keyboardShouldPersistTaps="handled"
       >
+      <AppBackground />
       {!hasSetPreferencesBefore && (
         <Text style={[styles.noticeText, { color: c.textMuted }]}>
           You haven't set job preferences yet.

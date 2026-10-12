@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import PasswordField from '../components/ui/PasswordField';
 import PasswordChecklist, { passwordMeetsAll } from '../components/ui/PasswordChecklist';
@@ -139,10 +140,11 @@ export default function ChangePasswordScreen({ navigation, route }) {
 
   if (inScreenBack) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} edges={['top', 'left', 'right']}>
+        <AppBackground />
         <AppHeader title="Change Password" navigation={navigation} />
         <KeyboardAvoidingView
-          style={[styles.container, { backgroundColor: c.background }]}
+          style={[styles.container, { backgroundColor: 'transparent' }]}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           {form}
@@ -153,9 +155,10 @@ export default function ChangePasswordScreen({ navigation, route }) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: c.background }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <AppBackground />
       {form}
     </KeyboardAvoidingView>
   );

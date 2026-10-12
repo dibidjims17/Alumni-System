@@ -19,6 +19,7 @@ import { Download, Trash2 } from 'lucide-react-native';
 import apiClient from '../api/client';
 import Skeleton from '../components/ui/Skeleton';
 import AppHeader from '../components/AppHeader';
+import AppBackground from '../components/AppBackground';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
@@ -223,7 +224,8 @@ export default function ResumeScreen({ navigation }) {
 
   if (!isGraduate) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} edges={['top', 'left', 'right']}>
+        <AppBackground />
         <AppHeader title="Résumé" navigation={navigation} showBack />
         <View style={[styles.centered, { backgroundColor: c.background }]}>
           <Text style={[styles.infoText, { color: c.textMuted }]}>
@@ -236,9 +238,10 @@ export default function ResumeScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} edges={['top', 'left', 'right']}>
+        <AppBackground />
         <AppHeader title="Résumé" navigation={navigation} showBack />
-        <View style={[styles.container, { backgroundColor: c.background, padding: 16 }]}>
+        <View style={[styles.container, { backgroundColor: 'transparent', padding: 16 }]}>
           <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
             <Skeleton width="70%" height={15} style={{ marginBottom: 8 }} />
             <Skeleton width="45%" height={12} style={{ marginBottom: 12 }} />
@@ -251,10 +254,11 @@ export default function ResumeScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} edges={['top', 'left', 'right']}>
+      <AppBackground />
       <AppHeader title="Résumé" navigation={navigation} showBack />
       <ScrollView
-        style={[styles.container, { backgroundColor: c.background }]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={styles.scrollContent}
       >
       {activeResume ? (
