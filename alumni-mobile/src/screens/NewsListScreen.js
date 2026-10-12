@@ -130,12 +130,6 @@ export default function NewsListScreen({ navigation }) {
             </TouchableOpacity>
           )}
           <View style={styles.cardContent}>
-            <Text style={[styles.title, { color: c.text }]} numberOfLines={2}>
-              {item.title}
-            </Text>
-            <Text style={[styles.preview, { color: c.textMuted }]} numberOfLines={2}>
-              {item.content}
-            </Text>
             <View style={styles.authorRow}>
               {authorUrl ? (
                 <Image source={{ uri: authorUrl }} style={styles.authorAvatar} />
@@ -150,6 +144,12 @@ export default function NewsListScreen({ navigation }) {
                 {item.postedByAdminName}
               </Text>
             </View>
+            <Text style={[styles.title, { color: c.text }]} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text style={[styles.preview, { color: c.textMuted }]} numberOfLines={2}>
+              {item.content}
+            </Text>
             <View style={styles.metaRow}>
               <Text style={[styles.date, { color: c.textMuted }]} numberOfLines={1}>
                 {item.postedAt ? new Date(item.postedAt).toLocaleDateString() : ''}
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 8,
   },
   authorAvatar: {
     width: 24,
