@@ -90,12 +90,12 @@ function CommunityStack() {
       <CommunityStackNav.Screen
         name="EventDetail"
         component={EventDetailScreen}
-        options={{ headerShown: true, title: 'Event Details' }}
+        options={{ headerShown: false }}
       />
       <CommunityStackNav.Screen
         name="NewsDetail"
         component={NewsDetailScreen}
-        options={{ headerShown: true, title: 'Post' }}
+        options={{ headerShown: false }}
       />
     </CommunityStackNav.Navigator>
   );
@@ -112,7 +112,7 @@ function CareerStack() {
       <CareerStackNav.Screen
         name="JobDetail"
         component={JobDetailScreen}
-        options={{ headerShown: true, title: 'Job Details' }}
+        options={{ headerShown: false }}
       />
     </CareerStackNav.Navigator>
   );
