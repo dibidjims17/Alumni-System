@@ -13,6 +13,21 @@
   --placeholder: #9AA79E;
   --danger: #C0392B;
   --success: #2E7D32;
+  --warning: #B45309;
+  --warning-tint: rgba(239,108,0,0.14);
+  --info: #1565C0;
+  --info-tint: rgba(21,101,192,0.12);
+  --success-tint: rgba(46,125,50,0.13);
+  --danger-tint: rgba(194,57,43,0.10);
+  --violet: #6A1B9A;
+  --violet-tint: rgba(106,27,154,0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(16,24,20,0.06), 0 4px 14px rgba(16,24,20,0.06);
+  --shadow-md: 0 1px 2px rgba(27,94,32,0.08), 0 10px 26px rgba(27,94,32,0.10);
+  --font: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   --sidebar: #0C2013;
   --sidebar-item: #14301C;
   --sidebar-border: #1E4327;
@@ -27,7 +42,7 @@
   --tile-bg: #E7F0E4;
 
   font-size: 15px;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font);
   color-scheme: light;
 }
 

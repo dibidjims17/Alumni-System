@@ -349,9 +349,54 @@ export const pill = {
   fontWeight: 650,
   lineHeight: 1,
   padding: "6px 11px",
-  borderRadius: 999,
+  borderRadius: "var(--radius-pill)",
   whiteSpace: "nowrap",
 };
+
+// Status pill presets — the single source of truth for every status color
+// in the app. Tones resolve through theme vars, so dark mode just works.
+// Usage: <span style={{ ...pill, ...statusTone("warning") }}>Pending</span>
+export const statusTones = {
+  success: { background: "var(--success-tint)", color: "var(--success)" },
+  warning: { background: "var(--warning-tint)", color: "var(--warning)" },
+  danger: { background: "var(--danger-tint)", color: "var(--danger)" },
+  info: { background: "var(--info-tint)", color: "var(--info)" },
+  violet: { background: "var(--violet-tint)", color: "var(--violet)" },
+  muted: { background: "var(--surface-alt)", color: "var(--muted)" },
+};
+
+export function statusTone(tone) {
+  return statusTones[tone] || statusTones.muted;
+}
+
+// Friendly empty state for lists, table bodies, and search no-hits.
+// Usage: {items.length === 0 && <EmptyState icon={Users} title="No students" hint="Try a different search." />}
+export function EmptyState({ icon: Icon, title, hint, action }) {
+  return (
+    <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--muted)" }}>
+      {Icon && (
+        <div style={{ ...iconTile, width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px" }}>
+          <Icon size={22} color="var(--muted)" />
+        </div>
+      )}
+      <div style={{ fontSize: 15, fontWeight: 650, color: "var(--text)", marginBottom: 4 }}>{title}</div>
+      {hint && <div style={{ fontSize: 13 }}>{hint}</div>}
+      {action && <div style={{ marginTop: 14 }}>{action}</div>}
+    </div>
+  );
+}
+
+// Section heading inside cards and page bodies — one rhythm everywhere.
+export function SectionTitle({ children, action }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--text)" }}>
+        {children}
+      </h3>
+      {action}
+    </div>
+  );
+}
 
 export const iconTile = {
   width: 36,
