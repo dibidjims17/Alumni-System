@@ -88,6 +88,10 @@ export default function HomeScreen({ navigation }) {
 
   const firstName = (student?.fullName || 'Alumni').split(' ')[0];
   const initial = (student?.fullName || 'A').charAt(0).toUpperCase();
+  // Dark-mode hero is a mid green — white text washes out, so ink goes dark.
+  const heroInk = isDark ? '#0B130D' : '#FFFFFF';
+  const heroSubInk = isDark ? 'rgba(11,19,13,0.78)' : 'rgba(255,255,255,0.78)';
+  const heroKickerInk = isDark ? 'rgba(11,19,13,0.72)' : 'rgba(255,255,255,0.70)';
 
   return (
     <SafeAreaView
@@ -146,13 +150,13 @@ export default function HomeScreen({ navigation }) {
         <View style={[styles.hero, { backgroundColor: c.primaryStrong }]}>
           <View style={styles.heroGlow} />
           <View style={styles.heroGlowSmall} />
-          <Text style={styles.heroKicker}>REUNIO · ALUMNI CONNECT</Text>
-          <Text style={styles.heroTitle}>
+          <Text style={[styles.heroKicker, { color: heroKickerInk }]}>REUNIO · ALUMNI CONNECT</Text>
+          <Text style={[styles.heroTitle, { color: heroInk }]}>
             {unreadCount > 0
               ? `${unreadCount} new notification${unreadCount === 1 ? '' : 's'}`
               : "You're all caught up"}
           </Text>
-          <Text style={styles.heroSub}>
+          <Text style={[styles.heroSub, { color: heroSubInk }]}>
             {unreadCount > 0
               ? 'Application updates, jobs, and news waiting for you.'
               : 'No new alerts. Explore jobs, news, and events below.'}
