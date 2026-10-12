@@ -36,6 +36,8 @@ builder.Services.AddScoped<IPushTokenRepository, PushTokenRepository>();
 builder.Services.AddScoped<IYearLevelChangeRepository, YearLevelChangeRepository>();
 
 // Services
+builder.Services.AddHttpClient<MyApp.Application.Services.GoogleTokenValidator>();
+builder.Services.AddScoped<MyApp.Application.Services.GoogleTokenValidator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IResumeService, ResumeService>();

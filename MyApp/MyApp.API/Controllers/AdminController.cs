@@ -32,6 +32,18 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("google")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> LoginWithGoogle([FromBody] GoogleLoginRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.IdToken))
+                return BadRequest(new { message = "Google ID token is required." });
+            var (success, message, response) = await _adminAuthService.LoginWithGoogleAsync(request.IdToken);
+            if (!success || response == null)
+                return Unauthorized(new { message });
+            return Ok(response);
+        }
+
         [HttpPost("forgot-password")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)

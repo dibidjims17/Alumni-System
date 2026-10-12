@@ -15,12 +15,14 @@ import { useAuth } from '../context/AuthContext';
 import { alert as appAlert } from '../components/AppAlert';
 import { useTheme } from '../theme/ThemeContext';
 import PasswordField from '../components/ui/PasswordField';
+import { signInWithGoogle, isGoogleCancelled, googleSetupMessage } from '../auth/google';
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const { login, loginWithGoogle } = useAuth();
   const { theme } = useTheme();
   const c = theme.colors;
 
@@ -43,6 +45,24 @@ export default function LoginScreen({ navigation }) {
       setIsSubmitting(false);
     }
   }
+
+  async function handleGoogleLogin() {
+    setIsGoogleSubmitting(true);
+    try {
+      const idToken = await signInWithGoogle();
+      await loginWithGoogle(idToken);
+    } catch (err) {
+      if (isGoogleCancelled(err)) return; // user dismissed the picker
+      const message =
+        err.response?.data?.message ||
+        (typeof err.message === 'string' ? err.message : 'Google sign-in failed.');
+      appAlert('Google sign-in failed', message);
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  }
+
+  const setupHint = googleSetupMessage();
 
   return (
     <KeyboardAvoidingView
@@ -89,6 +109,28 @@ export default function LoginScreen({ navigation }) {
           <Text style={[styles.buttonText, { color: c.onPrimary }]}>Log In</Text>
         )}
       </TouchableOpacity>
+
+      <View style={styles.dividerRow}>
+        <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
+        <Text style={[styles.dividerText, { color: c.textMuted }]}>or</Text>
+        <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
+      </View>
+
+      <TouchableOpacity
+        style={[styles.button, styles.googleButton, { borderColor: c.border, backgroundColor: c.surface }]}
+        onPress={handleGoogleLogin}
+        disabled={isGoogleSubmitting}
+        activeOpacity={0.85}
+      >
+        {isGoogleSubmitting ? (
+          <ActivityIndicator color={c.primary} />
+        ) : (
+          <Text style={[styles.buttonText, { color: c.text }]}>Ⓖ  Continue with Google</Text>
+        )}
+      </TouchableOpacity>
+      {setupHint ? (
+        <Text style={[styles.setupHint, { color: c.textMuted }]}>{setupHint}</Text>
+      ) : null}
 
       <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
         <Text style={[styles.forgotPassword, { color: c.primary }]}>
@@ -140,6 +182,29 @@ const styles = StyleSheet.create({
   buttonText: {
     fontWeight: '600',
     fontSize: 16,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+    gap: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  googleButton: {
+    borderWidth: 1,
+    marginTop: 0,
+  },
+  setupHint: {
+    textAlign: 'center',
+    marginTop: 8,
+    fontSize: 11,
   },
   forgotPassword: {
     textAlign: 'center',

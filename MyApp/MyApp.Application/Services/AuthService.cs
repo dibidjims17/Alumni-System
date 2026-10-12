@@ -17,19 +17,22 @@ namespace MyApp.Application.Services
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly INotificationService _notificationService;
+        private readonly GoogleTokenValidator _googleValidator;
 
         public AuthService(
             IStudentRepository studentRepository,
             IActivityLogRepository activityLogRepository,
             IConfiguration configuration,
             IEmailService emailService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            GoogleTokenValidator googleValidator)
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
             _configuration = configuration;
             _emailService = emailService;
             _notificationService = notificationService;
+            _googleValidator = googleValidator;
         }
 
         public async Task<LoginResponse?> LoginAsync(LoginRequest request, string ipAddress)
@@ -96,6 +99,57 @@ namespace MyApp.Application.Services
                 SchoolYear = student.SchoolYear,
                 MustChangePassword = student.MustChangePassword
             };
+        }
+
+        public async Task<(bool Success, string Message, LoginResponse? Response)> LoginWithGoogleAsync(string idToken, string ipAddress)
+        {
+            var validated = await _googleValidator.ValidateAsync(idToken);
+            if (validated == null)
+                return (false, "Google sign-in failed. Please try again.", null);
+
+            // Never auto-create: the Google email must match an existing record.
+            var student = await _studentRepository.GetByEmailAsync(validated.Email);
+            if (student == null)
+                return (false, "No account found for this Google email. Contact the admin to correct your email.", null);
+            if (!student.IsActive)
+                return (false, "Account is deactivated. Contact the admin.", null);
+
+            // Google email ownership (verified by Google) claims the account:
+            // first Google login stamps ActivatedAt and clears temp-password
+            // state so the user is not stuck behind password gates.
+            bool changed = false;
+            if (student.ActivatedAt == null)
+            {
+                student.ActivatedAt = DateTime.UtcNow;
+                changed = true;
+            }
+            if (student.MustChangePassword)
+            {
+                student.MustChangePassword = false;
+                student.TemporaryPasswordExpiry = null;
+                changed = true;
+            }
+            if (changed)
+                await _studentRepository.UpdateAsync(student);
+
+            await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN_GOOGLE", "Student logged in with Google", ipAddress);
+
+            if (student.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase))
+            {
+                await _notificationService.MaybeNudgeResumeAsync(student.Id);
+            }
+
+            var token = GenerateToken(student);
+            return (true, "OK", new LoginResponse
+            {
+                Id = student.Id,
+                Token = token,
+                FullName = student.FullName,
+                StudentNumber = student.StudentNumber,
+                Program = student.Program,
+                SchoolYear = student.SchoolYear,
+                MustChangePassword = false
+            });
         }
 
         private string GenerateToken(MyApp.Domain.Entities.Student student)

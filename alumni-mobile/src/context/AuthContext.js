@@ -50,6 +50,21 @@ export function AuthProvider({ children }) {
     return studentData;
   }
 
+  async function loginWithGoogle(idToken) {
+    const response = await apiClient.post('/Auth/google', {
+      idToken,
+    });
+
+    const { token, ...studentData } = response.data;
+
+    await AsyncStorage.setItem('authToken', token);
+    await AsyncStorage.setItem('studentData', JSON.stringify(studentData));
+
+    setStudent(studentData);
+    registerDevicePushToken();
+    return studentData;
+  }
+
   async function logout() {
     await unregisterDevicePushToken();
     await AsyncStorage.removeItem('authToken');
@@ -82,7 +97,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ student, isLoading, login, logout, changePassword, clearMustChangePassword }}
+      value={{ student, isLoading, login, loginWithGoogle, logout, changePassword, clearMustChangePassword }}
     >
       {children}
     </AuthContext.Provider>

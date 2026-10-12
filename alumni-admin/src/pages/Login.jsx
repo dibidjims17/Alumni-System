@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { School, LogIn, Sun, Moon } from "lucide-react";
-import { loginAdmin, saveSession, adminForgotPassword, adminResetPassword } from "../services/api";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { loginAdmin, loginAdminWithGoogle, saveSession, adminForgotPassword, adminResetPassword } from "../services/api";
 import { PasswordInput, CodeInput, PasswordChecklist, passwordMeetsAll } from "../components/kit";
+import { GOOGLE_CLIENT_ID, isGoogleConfigured } from "../config";
 import { useAdminTheme } from "../theme";
 
 export default function Login() {
@@ -39,6 +41,25 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Invalid username or password");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSuccess(credentialResponse) {
+    const idToken = credentialResponse?.credential;
+    if (!idToken) {
+      setError("Google did not return a credential. Please try again.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      const data = await loginAdminWithGoogle(idToken);
+      saveSession(data);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message || "Google sign-in failed");
     } finally {
       setLoading(false);
     }
@@ -177,6 +198,30 @@ export default function Login() {
               <LogIn size={16} />
               {loading ? "Logging in..." : "Login"}
             </button>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0 10px" }}>
+              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>or</span>
+              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+            </div>
+
+            {isGoogleConfigured() ? (
+              <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError("Google sign-in failed. Please try again.")}
+                    text="continue_with"
+                    shape="rectangular"
+                    width="320"
+                  />
+                </div>
+              </GoogleOAuthProvider>
+            ) : (
+              <p style={{ fontSize: 11, color: "var(--muted)", textAlign: "center", margin: "0 0 4px" }}>
+                Add VITE_GOOGLE_CLIENT_ID in a .env file to enable Continue with Google.
+              </p>
+            )}
 
             <button
               type="button"

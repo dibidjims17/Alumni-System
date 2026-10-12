@@ -4,6 +4,7 @@
     "slug": "alumni-mobile",
     "version": "1.0.0",
     "orientation": "default",
+    "scheme": "reunio",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
@@ -25,10 +26,12 @@
     "extra": {
       "eas": {
         "projectId": "aaa4fc61-62da-4f7e-b73d-e4d9e480d434"
-      }
+      },
+      "googleWebClientId": "107288328013-dpl55ntjp3almhl1rb65nflg59mtjfac.apps.googleusercontent.com"
     },
     "plugins": [
       "@react-native-community/datetimepicker",
+      "@react-native-google-signin/google-signin",
       [
         "expo-notifications",
         {

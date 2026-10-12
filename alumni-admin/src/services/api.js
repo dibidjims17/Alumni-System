@@ -15,6 +15,28 @@ export async function loginAdmin(username, password) {
   return response.json();
 }
 
+export async function loginAdminWithGoogle(idToken) {
+  const response = await fetch(`${API_BASE_URL}/admin/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+
+  if (!response.ok) {
+    let message = "Google sign-in failed";
+    try {
+      const data = await response.json();
+      message = data.message || message;
+    } catch {
+      const text = await response.text().catch(() => "");
+      if (text) message = text;
+    }
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export async function adminForgotPassword(email) {
   const response = await fetch(`${API_BASE_URL}/admin/forgot-password`, {
     method: "POST",

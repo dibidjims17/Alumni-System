@@ -33,6 +33,19 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("google")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> LoginWithGoogle([FromBody] GoogleLoginRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.IdToken))
+                return BadRequest(new { message = "Google ID token is required." });
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var (success, message, response) = await _authService.LoginWithGoogleAsync(request.IdToken, ipAddress);
+            if (!success || response == null)
+                return Unauthorized(new { message });
+            return Ok(response);
+        }
+
         [HttpPost("change-password")]
         [Authorize] // student must be logged in
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)

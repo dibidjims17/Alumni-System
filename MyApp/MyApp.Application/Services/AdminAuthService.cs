@@ -15,17 +15,20 @@ namespace MyApp.Application.Services
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly IActivityLogRepository _activityLogRepository;
+        private readonly GoogleTokenValidator _googleValidator;
 
         public AdminAuthService(
             IAdminRepository adminRepository,
             IConfiguration configuration,
             IEmailService emailService,
-            IActivityLogRepository activityLogRepository)
+            IActivityLogRepository activityLogRepository,
+            GoogleTokenValidator googleValidator)
         {
             _adminRepository = adminRepository;
             _configuration = configuration;
             _emailService = emailService;
             _activityLogRepository = activityLogRepository;
+            _googleValidator = googleValidator;
         }
 
         public async Task<AdminLoginResponse?> LoginAsync(AdminLoginRequest request)
@@ -69,6 +72,32 @@ namespace MyApp.Application.Services
                 Role = admin.Role,
                 ProfilePicturePath = admin.ProfilePicturePath
             };
+        }
+
+        public async Task<(bool Success, string Message, AdminLoginResponse? Response)> LoginWithGoogleAsync(string idToken)
+        {
+            var validated = await _googleValidator.ValidateAsync(idToken);
+            if (validated == null)
+                return (false, "Google sign-in failed. Please try again.", null);
+
+            var admin = await _adminRepository.GetByEmailAsync(validated.Email);
+            if (admin == null || !admin.IsActive)
+                return (false, "No admin account found for this Google email.", null);
+
+            admin.LastLoginAt = DateTime.UtcNow;
+            await _adminRepository.UpdateAsync(admin);
+
+            await _activityLogRepository.LogAdminAsync(admin.Id, "ADMIN_LOGIN_GOOGLE", $"Admin logged in with Google: {admin.Username}", "system");
+
+            var token = GenerateToken(admin);
+            return (true, "OK", new AdminLoginResponse
+            {
+                Token = token,
+                FullName = admin.FullName,
+                Username = admin.Username,
+                Role = admin.Role,
+                ProfilePicturePath = admin.ProfilePicturePath
+            });
         }
 
         public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
