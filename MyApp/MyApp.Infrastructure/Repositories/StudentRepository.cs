@@ -67,8 +67,12 @@ namespace MyApp.Infrastructure.Repositories
 
         private IQueryable<Student> DirectoryBaseQuery()
         {
+            // User-facing directory: claimed accounts only. Unclaimed
+            // (never logged in: ActivatedAt null AND still holding the temp
+            // password) stays visible to admins but hidden from users.
             return _context.Students
-                .Where(s => s.IsActive && s.SchoolYear == "Graduate" && s.ShowInDirectory);
+                .Where(s => s.IsActive && s.SchoolYear == "Graduate" && s.ShowInDirectory
+                    && (s.ActivatedAt != null || !s.MustChangePassword));
         }
 
         public async Task<(List<Student> Items, int Total)> SearchDirectoryAsync(
