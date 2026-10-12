@@ -114,7 +114,13 @@ export default function NewsListScreen({ navigation }) {
         activeOpacity={0.7}
         onPress={() => navigation.navigate('NewsDetail', { newsId: item.id })}
       >
-        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: c.surface, borderColor: c.border },
+            imageUrl && styles.cardWithImage,
+          ]}
+        >
           {imageUrl && (
             <TouchableOpacity
               activeOpacity={0.8}
@@ -275,7 +281,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 12,
     overflow: 'hidden',
-    minHeight: 210,
+  },
+  cardWithImage: {
+    minHeight: 240,
   },
   thumbPress: {
     alignSelf: 'stretch',
