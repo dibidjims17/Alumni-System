@@ -17,6 +17,11 @@ const light = {
     placeholder: '#93A198',
     danger: '#B3261E',
     success: '#257A2B',
+    // Semantic text colors — screens must use these instead of hardcoded
+    // hex (e.g. '#B45309'), which breaks dark mode.
+    warning: '#B45309',
+    info: '#1565C0',
+    violet: '#6A1B9A',
     heart: '#E0245E',
     badge: '#C0392B',
     overlay: 'rgba(0,0,0,0.5)',
@@ -41,6 +46,17 @@ const light = {
     lg: 16,
     xl: 24,
   },
+  // Type scale — screens should pick from here instead of scattering
+  // fontSize literals (currently 10–24 across 20 screens).
+  type: {
+    xs: 11,
+    sm: 12,
+    md: 13,
+    lg: 14,
+    xl: 15,
+    title: 17,
+    hero: 21,
+  },
 };
 
 const dark = {
@@ -59,6 +75,9 @@ const dark = {
     placeholder: '#5E6E63',
     danger: '#E57373',
     success: '#66BB6A',
+    warning: '#F0A04B',
+    info: '#7FB3EC',
+    violet: '#CE93D8',
     heart: '#F26B93',
     badge: '#E57373',
     overlay: 'rgba(0,0,0,0.65)',
@@ -82,6 +101,16 @@ const dark = {
     md: 12,
     lg: 16,
     xl: 24,
+  },
+  // Type scale — same values in both modes.
+  type: {
+    xs: 11,
+    sm: 12,
+    md: 13,
+    lg: 14,
+    xl: 15,
+    title: 17,
+    hero: 21,
   },
 };
 
