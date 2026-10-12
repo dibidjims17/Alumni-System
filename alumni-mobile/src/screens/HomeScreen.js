@@ -62,8 +62,13 @@ export default function HomeScreen({ navigation }) {
   const tiles = isGraduate ? GRADUATE_TILES : UNDERGRAD_TILES;
   // Column count follows the actual window width: portrait phones get a
   // full-width stacked list, landscape/tablets get the grid back.
+  // NOTE: single column uses width:100% (not flexBasis %) — percentage
+  // basis + flexGrow refuses to wrap on some Yoga versions.
   const numColumns = width >= 900 ? 3 : width >= 600 ? 2 : 1;
-  const tileBasis = numColumns === 3 ? '31%' : numColumns === 2 ? '48%' : '100%';
+  const tileLayout =
+    numColumns === 1
+      ? { width: '100%', flexGrow: 0, flexBasis: 'auto' }
+      : { flexBasis: numColumns === 3 ? '31%' : '48%', flexGrow: 1 };
   const [unreadCount, setUnreadCount] = useState(0);
   const [photoUrl, setPhotoUrl] = useState(null);
 
@@ -175,7 +180,8 @@ export default function HomeScreen({ navigation }) {
               key={key}
               style={[
                 styles.tile,
-                { backgroundColor: c.surface, borderColor: c.border, flexBasis: tileBasis },
+                { backgroundColor: c.surface, borderColor: c.border },
+                tileLayout,
               ]}
               activeOpacity={0.85}
               onPress={() => navigation.navigate(target[0], { screen: target[1] })}
