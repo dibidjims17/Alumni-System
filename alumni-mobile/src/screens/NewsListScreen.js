@@ -149,6 +149,9 @@ export default function NewsListScreen({ navigation }) {
               <Text style={[styles.author, { color: c.text }]} numberOfLines={1}>
                 {item.postedByAdminName}
               </Text>
+              <Text style={[styles.authorDate, { color: c.textMuted }]} numberOfLines={1}>
+                {item.postedAt ? ` · ${new Date(item.postedAt).toLocaleDateString()}` : ''}
+              </Text>
             </View>
             <Text style={[styles.title, { color: c.text }]} numberOfLines={2}>
               {item.title}
@@ -157,9 +160,6 @@ export default function NewsListScreen({ navigation }) {
               {item.content}
             </Text>
             <View style={styles.metaRow}>
-              <Text style={[styles.date, { color: c.textMuted }]} numberOfLines={1}>
-                {item.postedAt ? new Date(item.postedAt).toLocaleDateString() : ''}
-              </Text>
               <TouchableOpacity
                 style={styles.metaAction}
                 onPress={() => toggleHeart(item)}
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     justifyContent: 'center',
   },
@@ -332,19 +332,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   author: {
-    flex: 1,
     fontSize: 12,
     fontWeight: '600',
+    flexShrink: 1,
+  },
+  authorDate: {
+    fontSize: 11,
+    flexShrink: 0,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
-  },
-  date: {
-    fontSize: 11,
-    marginRight: 14,
-    flexShrink: 1,
   },
   metaAction: {
     flexDirection: 'row',
