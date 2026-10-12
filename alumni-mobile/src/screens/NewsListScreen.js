@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 12,
     overflow: 'hidden',
-    minHeight: 180,
+    minHeight: 210,
   },
   thumbPress: {
     alignSelf: 'stretch',
