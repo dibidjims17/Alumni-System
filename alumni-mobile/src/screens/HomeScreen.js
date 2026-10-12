@@ -172,7 +172,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE</Text>
+        <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE · w={Math.round(width)} cols={numColumns}</Text>
 
         <View style={styles.grid}>
           {tiles.map(({ key, label, sub, Icon, target }) => (
