@@ -12,7 +12,7 @@ export default function AppBackground({ opacity, darkOpacity }) {
   const { theme } = useTheme();
   const resolved =
     opacity ??
-    (theme.mode === 'dark' ? (darkOpacity ?? 0.22) : 0.1);
+    (theme.mode === 'dark' ? (darkOpacity ?? 0.5) : 0.1);
   return (
     <ImageBackground
       source={require('../../assets/background.png')}
