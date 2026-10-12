@@ -133,7 +133,7 @@ function ProfileStack() {
       <ProfileStackNav.Screen name="EditSkills" component={EditSkillsScreen} options={{ title: 'Edit Skills' }} />
       <ProfileStackNav.Screen name="EditWorkExperience" component={EditWorkExperienceScreen} options={{ title: 'Work Experience' }} />
       <ProfileStackNav.Screen name="EditEducation" component={EditEducationScreen} options={{ title: 'Education' }} />
-      <ProfileStackNav.Screen name="Resume" component={ResumeScreen} options={{ title: 'Resume' }} />
+      <ProfileStackNav.Screen name="Resume" component={ResumeScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen name="YearCorrection" component={YearCorrectionScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen
         name="ChangePassword"

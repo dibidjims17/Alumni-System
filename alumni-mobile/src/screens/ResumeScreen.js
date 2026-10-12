@@ -1,14 +1,15 @@
 // src/screens/ResumeScreen.js
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
   TouchableOpacity,
   Platform,
+  ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,6 +18,7 @@ import Pdf from 'react-native-pdf';
 import { Download, Trash2 } from 'lucide-react-native';
 import apiClient from '../api/client';
 import Skeleton from '../components/ui/Skeleton';
+import AppHeader from '../components/AppHeader';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
@@ -37,32 +39,6 @@ export default function ResumeScreen({ navigation }) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const isGraduate = student?.schoolYear === 'Graduate';
-
-  // Header actions: download to device + remove, next to the title.
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () =>
-        activeResume ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity
-              onPress={handleDownloadToDevice}
-              disabled={isDownloading}
-              accessibilityLabel="Download resume to device"
-              style={{ padding: 8 }}
-            >
-              <Download size={20} color={c.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={confirmRemoveResume}
-              accessibilityLabel="Remove resume"
-              style={{ padding: 8 }}
-            >
-              <Trash2 size={20} color={c.danger} />
-            </TouchableOpacity>
-          </View>
-        ) : undefined,
-    });
-  });
 
   async function fetchActiveResume() {
     try {
@@ -247,29 +223,40 @@ export default function ResumeScreen({ navigation }) {
 
   if (!isGraduate) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <Text style={[styles.infoText, { color: c.textMuted }]}>
-          Resume upload is available for Graduate students only.
-        </Text>
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+        <AppHeader title="Résumé" navigation={navigation} showBack />
+        <View style={[styles.centered, { backgroundColor: c.background }]}>
+          <Text style={[styles.infoText, { color: c.textMuted }]}>
+            Resume upload is available for Graduate students only.
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: c.background, padding: 16 }]}>
-        <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
-          <Skeleton width="70%" height={15} style={{ marginBottom: 8 }} />
-          <Skeleton width="45%" height={12} style={{ marginBottom: 12 }} />
-          <Skeleton width="100%" height={220} borderRadius={8} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+        <AppHeader title="Résumé" navigation={navigation} showBack />
+        <View style={[styles.container, { backgroundColor: c.background, padding: 16 }]}>
+          <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+            <Skeleton width="70%" height={15} style={{ marginBottom: 8 }} />
+            <Skeleton width="45%" height={12} style={{ marginBottom: 12 }} />
+            <Skeleton width="100%" height={220} borderRadius={8} />
+          </View>
+          <Skeleton width="100%" height={48} borderRadius={10} />
         </View>
-        <Skeleton width="100%" height={48} borderRadius={10} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.background }} edges={['top', 'left', 'right']}>
+      <AppHeader title="Résumé" navigation={navigation} showBack />
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={styles.scrollContent}
+      >
       {activeResume ? (
         <>
           <Text style={[styles.fieldValue, { color: c.text }]}>{activeResume.fileName}</Text>
@@ -290,6 +277,34 @@ export default function ResumeScreen({ navigation }) {
             ) : (
               <Text style={[styles.infoText, { color: c.textMuted }]}>Could not load PDF preview.</Text>
             )}
+          </View>
+
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.downloadButton, { backgroundColor: c.primary }]}
+              onPress={handleDownloadToDevice}
+              disabled={isDownloading}
+              activeOpacity={0.85}
+            >
+              {isDownloading ? (
+                <ActivityIndicator color={c.onPrimary} />
+              ) : (
+                <>
+                  <Download size={17} color={c.onPrimary} />
+                  <Text style={[styles.actionButtonText, { color: c.onPrimary }]}>
+                    Download to Device
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.removeButton, { borderColor: c.danger }]}
+              onPress={confirmRemoveResume}
+              activeOpacity={0.85}
+            >
+              <Trash2 size={17} color={c.danger} />
+              <Text style={[styles.actionButtonText, { color: c.danger }]}>Remove</Text>
+            </TouchableOpacity>
           </View>
         </>
       ) : (
@@ -318,14 +333,14 @@ export default function ResumeScreen({ navigation }) {
       />
 
       <Text style={[styles.hintText, { color: c.textMuted }]}>PDF only, max 5MB.</Text>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const screenHeight = Dimensions.get('window').height;
-
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 24 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
   skeletonCard: {
     borderRadius: 12,
@@ -336,11 +351,33 @@ const styles = StyleSheet.create({
   fieldValue: { fontSize: 13 },
   fieldLabel: { fontSize: 11, marginTop: 4, marginBottom: 12 },
   pdfContainer: {
-    height: screenHeight * 0.5,
+    height: 420,
     borderWidth: 1,
-    marginBottom: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
   pdf: { flex: 1 },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 4,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 13,
+  },
+  downloadButton: {},
+  removeButton: {
+    borderWidth: 1.5,
+    backgroundColor: 'transparent',
+  },
+  actionButtonText: { fontSize: 14, fontWeight: '700' },
   hintText: { fontSize: 11, marginTop: 8, textAlign: 'center' },
   infoText: { fontSize: 13, textAlign: 'center' },
 });
