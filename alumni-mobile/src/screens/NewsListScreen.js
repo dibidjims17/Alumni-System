@@ -33,7 +33,7 @@ export default function NewsListScreen({ navigation }) {
   const { theme } = useTheme();
   const { student } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
-  const thumbWidth = Math.round(screenWidth * 0.4);
+  const thumbWidth = Math.round(screenWidth * 0.5);
   const c = theme.colors;
   // The alumni directory is graduate-only; news and events stay open
   // as community teasers.
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 8,
     justifyContent: 'center',
   },
   title: {
