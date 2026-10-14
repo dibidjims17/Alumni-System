@@ -71,7 +71,7 @@
           <mxGeometry x="77.45" y="503.41" width="212.98" height="116.17" as="geometry" />
         </mxCell>
         <mxCell id="8" value="Show error message" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;fontSize=11.5" vertex="1" parent="1">
-          <mxGeometry x="416.28" y="532.46" width="222.66" height="58.09" as="geometry" />
+          <mxGeometry x="300" y="915" width="222.66" height="58.09" as="geometry" />
         </mxCell>
         <mxCell id="9" value="Record ADMIN_LOGIN" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;html=1;fontSize=11.5" vertex="1" parent="1">
           <mxGeometry x="77.45" y="648.63" width="212.98" height="58.09" as="geometry" />
