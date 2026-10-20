@@ -1,4 +1,4 @@
-const LOCAL_IP = '10.118.133.128'
+const LOCAL_IP = '192.168.254.128'
 const PORT = '5207';
 
 export const API_BASE_URL = `http://${LOCAL_IP}:${PORT}/api`;

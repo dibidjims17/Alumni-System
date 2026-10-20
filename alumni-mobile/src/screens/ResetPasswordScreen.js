@@ -82,9 +82,14 @@ export default function ResetPasswordScreen({ route, navigation }) {
         { text: 'OK', onPress: () => navigation.navigate('Login') },
       ]);
     } catch (err) {
-      const message =
-        err.response?.data?.message ||
-        'Invalid or expired code. Please try again.';
+      let message = '';
+      if (!err.response) {
+        message = 'Unable to reach the server. Make sure the backend is running and your device is on the same Wi-Fi as the PC.';
+      } else {
+        message =
+          err.response?.data?.message ||
+          'Invalid or expired code. Please try again.';
+      }
       appAlert('Error', message);
     } finally {
       setIsSubmitting(false);

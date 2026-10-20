@@ -62,9 +62,14 @@ export default function ChangePasswordScreen({ navigation, route }) {
         ]);
       }
     } catch (err) {
-      const message =
-        err.response?.data?.message ||
-        'Could not change password. Please check your current password and try again.';
+      let message = '';
+      if (!err.response) {
+        message = 'Unable to reach the server. Make sure the backend is running and your device is on the same Wi-Fi as the PC.';
+      } else {
+        message =
+          err.response?.data?.message ||
+          'Could not change password. Please try again.';
+      }
       appAlert('Error', message);
     } finally {
       setIsSubmitting(false);
