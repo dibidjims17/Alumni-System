@@ -53,11 +53,13 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> GetStats()
         {
             var (totalStudents, activeStudents, graduateStudents) = await _studentService.GetStatsAsync();
+            var unclaimed = await _studentService.GetUnclaimedCountAsync();
             return Ok(new
             {
                 totalStudents,
                 activeStudents,
-                graduateStudents
+                graduateStudents,
+                unclaimed
             });
         }
 

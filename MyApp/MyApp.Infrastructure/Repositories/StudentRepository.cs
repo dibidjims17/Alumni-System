@@ -137,5 +137,11 @@ namespace MyApp.Infrastructure.Repositories
                 .Take(10)
                 .ToListAsync();
         }
+
+        public async Task<int> GetUnclaimedCountAsync()
+        {
+            return await _context.Students
+                .CountAsync(s => s.ActivatedAt == null && s.MustChangePassword);
+        }
     }
 }

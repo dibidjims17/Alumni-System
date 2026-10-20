@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   FileText,
   RefreshCw,
+  Clock,
 } from "lucide-react";
 import { getStudentStats } from "../services/studentsApi";
 import { getNews } from "../services/newsApi";
@@ -22,7 +23,7 @@ import { Skeleton } from "../components/Skeleton";
 // overflowing. Small screens stack and fall back to normal page scroll.
 const statGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+  gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
   gap: 16,
   width: "100%",
 };
@@ -165,12 +166,15 @@ export default function Dashboard() {
     const total = stats?.totalStudents ?? 0;
     const grads = stats?.graduateStudents ?? 0;
     const active = stats?.activeStudents ?? 0;
+    const unclaimed = stats?.unclaimed ?? 0;
     return {
       total,
       grads,
       active,
+      unclaimed,
       gradPct: total ? Math.round((grads / total) * 100) : 0,
       activePct: total ? Math.round((active / total) * 100) : 0,
+      unclaimedPct: total ? Math.round((unclaimed / total) * 100) : 0,
     };
   }, [stats]);
 
@@ -296,6 +300,7 @@ export default function Dashboard() {
         <StatCard label="Active" value={derived.active} sub={`${derived.activePct}% active`} Icon={UserCheck} accent="#1565C0" tint="rgba(21,101,192,0.12)" loading={loading} />
         <StatCard label="News" value={newsCount ?? 0} sub="Announcements" Icon={Newspaper} accent="#6A1B9A" tint="rgba(106,27,154,0.12)" loading={loading} />
         <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="#EF6C00" tint="rgba(239,108,0,0.13)" loading={loading} />
+        <StatCard label="Unclaimed" value={derived.unclaimed} sub={`${derived.unclaimedPct}% never logged in`} Icon={Clock} accent="#B00020" tint="rgba(176,0,32,0.12)" loading={loading} />
       </div>
 
       <div className="dash-bottom-grid" style={bottomGrid}>
@@ -334,6 +339,15 @@ export default function Dashboard() {
                 )}
               </div>
               <Bar pct={derived.activePct} color="#1565C0" />
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+                <span style={{ fontWeight: 650 }}>Unclaimed</span>
+                {loading ? <Skeleton width={90} height={12} /> : (
+                  <span style={{ color: "var(--muted)" }}>{`${derived.unclaimed} (${derived.unclaimedPct}%)`}</span>
+                )}
+              </div>
+              <Bar pct={derived.unclaimedPct} color="#B00020" />
             </div>
           </div>
         </div>
