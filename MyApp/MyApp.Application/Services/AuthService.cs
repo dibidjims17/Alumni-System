@@ -115,20 +115,27 @@ namespace MyApp.Application.Services
                 return (false, "Account is deactivated. Contact the admin.", null);
 
             // Google email ownership (verified by Google) claims the account:
-            // first Google login stamps ActivatedAt and clears temp-password
-            // state so the user is not stuck behind password gates.
+            // first Google login stamps ActivatedAt. Do NOT auto-clear
+            // MustChangePassword for new accounts — let the forced password
+            // change flow handle it so the user sets a real password without
+            // needing a current password they never set. Only clear temp state
+            // for accounts that were already claimed.
+            bool wasAlreadyActivated = student.ActivatedAt != null;
             bool changed = false;
+
             if (student.ActivatedAt == null)
             {
                 student.ActivatedAt = DateTime.UtcNow;
                 changed = true;
             }
-            if (student.MustChangePassword)
+
+            if (wasAlreadyActivated && student.MustChangePassword)
             {
                 student.MustChangePassword = false;
                 student.TemporaryPasswordExpiry = null;
                 changed = true;
             }
+
             if (changed)
                 await _studentRepository.UpdateAsync(student);
 
@@ -148,7 +155,7 @@ namespace MyApp.Application.Services
                 StudentNumber = student.StudentNumber,
                 Program = student.Program,
                 SchoolYear = student.SchoolYear,
-                MustChangePassword = false
+                MustChangePassword = student.MustChangePassword
             });
         }
 
