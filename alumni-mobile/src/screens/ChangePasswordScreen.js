@@ -66,9 +66,9 @@ export default function ChangePasswordScreen({ navigation, route }) {
       if (!err.response) {
         message = 'Unable to reach the server. Make sure the backend is running and your device is on the same Wi-Fi as the PC.';
       } else {
-        message =
-          err.response?.data?.message ||
-          'Could not change password. Please try again.';
+        const body = err.response.data || {};
+        const status = err.response.status || 'unknown';
+        message = body.message || body.title || JSON.stringify(body) || `Server error (${status}). Please try again.`;
       }
       appAlert('Error', message);
     } finally {

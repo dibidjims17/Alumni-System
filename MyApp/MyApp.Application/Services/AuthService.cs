@@ -186,49 +186,56 @@ namespace MyApp.Application.Services
 
         public async Task<(bool Success, string Message)> ChangePasswordAsync(int studentId, ChangePasswordRequest request, string ipAddress)
         {
-            // 1. Find student
-            var student = await _studentRepository.GetByIdAsync(studentId);
-            if (student == null || !student.IsActive)
-                return (false, "Account not found.");
-
-            // 2. Verify current password — skipped in forced-change mode
-            // (the user just proved identity with the temporary password
-            // at login, seconds ago).
-            bool forcedMode = student.MustChangePassword;
-            if (!forcedMode)
+            try
             {
-                if (string.IsNullOrWhiteSpace(request.CurrentPassword))
-                    return (false, "Current password is incorrect.");
-                bool currentOk;
-                try
+                // 1. Find student
+                var student = await _studentRepository.GetByIdAsync(studentId);
+                if (student == null || !student.IsActive)
+                    return (false, "Account not found.");
+
+                // 2. Verify current password — skipped in forced-change mode
+                // (the user just proved identity with the temporary password
+                // at login, seconds ago).
+                bool forcedMode = student.MustChangePassword;
+                if (!forcedMode)
                 {
-                    currentOk = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, student.PasswordHash);
+                    if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+                        return (false, "Current password is incorrect.");
+                    bool currentOk;
+                    try
+                    {
+                        currentOk = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, student.PasswordHash);
+                    }
+                    catch
+                    {
+                        return (false, "Current password is incorrect.");
+                    }
+                    if (!currentOk)
+                        return (false, "Current password is incorrect.");
                 }
-                catch
-                {
-                    return (false, "Current password is incorrect.");
-                }
-                if (!currentOk)
-                    return (false, "Current password is incorrect.");
+
+                // 3. Validate the replacement (mirrors the client checklist rules)
+                var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(
+                    request.NewPassword, forcedMode ? null : request.CurrentPassword);
+                if (!ruleOk)
+                    return (false, ruleMessage);
+
+                // 4. Hash and set new password
+                student.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+                student.MustChangePassword = false;
+                student.TemporaryPasswordExpiry = null;
+
+                await _studentRepository.UpdateAsync(student);
+
+                // 5. Log the activity
+                await _activityLogRepository.LogStudentAsync(studentId, "CHANGE_PASSWORD", "Student changed password", ipAddress);
+
+                return (true, "Password changed successfully.");
             }
-
-            // 3. Validate the replacement (mirrors the client checklist rules)
-            var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(
-                request.NewPassword, forcedMode ? null : request.CurrentPassword);
-            if (!ruleOk)
-                return (false, ruleMessage);
-
-            // 4. Hash and set new password
-            student.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            student.MustChangePassword = false;
-            student.TemporaryPasswordExpiry = null;
-
-            await _studentRepository.UpdateAsync(student);
-
-            // 5. Log the activity
-            await _activityLogRepository.LogStudentAsync(studentId, "CHANGE_PASSWORD", "Student changed password", ipAddress);
-
-            return (true, "Password changed successfully.");
+            catch (Exception ex)
+            {
+                return (false, $"Server error: {ex.Message}");
+            }
         }
 
         public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
