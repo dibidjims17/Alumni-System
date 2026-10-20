@@ -12,6 +12,8 @@ ADMIN
   "password": "Admin@1234"
 }
 
+https://expo.dev/artifacts/eas/HRqRoRJWJhPaM1MTsH16xUqYdX9XhJRNj7pPyr8GMR4.apk
+
 Build
 
 dotnet build
@@ -29,6 +31,7 @@ npm run electron:dev
 D:
 cd D:\CAPSTONE_SYSTEM\alumni-mobile
 cls
+npx expo start --dev-client --lan --clear
 npx expo start --lan --clear
 
 cd D:\CAPSTONE_SYSTEM\alumni-website

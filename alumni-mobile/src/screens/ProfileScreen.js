@@ -443,6 +443,12 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.accountRow}
+            onPress={() => navigation.navigate('Documents')}
+          >
+            <Text style={[styles.accountRowText, { color: c.text }]}>My Documents</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.accountRow}
             onPress={() => navigation.navigate('ChangePassword')}
           >
             <Text style={[styles.accountRowText, { color: c.text }]}>Change Password</Text>

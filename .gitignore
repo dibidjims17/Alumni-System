@@ -23,3 +23,7 @@ opencode.json
 
 MyApp/MyApp.API/appsettings.json
 MyApp/MyApp.API/Uploads/
+
+# Supporting materials (not part of the running system)
+Flowchart/
+docs/

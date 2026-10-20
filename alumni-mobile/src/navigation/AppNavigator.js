@@ -26,6 +26,7 @@ import EditSkillsScreen from '../screens/EditSkillsScreen';
 import EditWorkExperienceScreen from '../screens/EditWorkExperienceScreen';
 import EditEducationScreen from '../screens/EditEducationScreen';
 import ResumeScreen from '../screens/ResumeScreen';
+import DocumentsScreen from '../screens/DocumentsScreen';
 
 import JobsListScreen from '../screens/JobsListScreen';
 import JobDetailScreen from '../screens/JobDetailScreen';
@@ -134,6 +135,7 @@ function ProfileStack() {
       <ProfileStackNav.Screen name="EditWorkExperience" component={EditWorkExperienceScreen} options={{ title: 'Work Experience' }} />
       <ProfileStackNav.Screen name="EditEducation" component={EditEducationScreen} options={{ title: 'Education' }} />
       <ProfileStackNav.Screen name="Resume" component={ResumeScreen} options={{ headerShown: false }} />
+      <ProfileStackNav.Screen name="Documents" component={DocumentsScreen} options={{ title: 'My Documents' }} />
       <ProfileStackNav.Screen name="YearCorrection" component={YearCorrectionScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen
         name="ChangePassword"
