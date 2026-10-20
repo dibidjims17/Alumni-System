@@ -166,7 +166,7 @@ export default function Dashboard() {
     const total = stats?.totalStudents ?? 0;
     const grads = stats?.graduateStudents ?? 0;
     const active = stats?.activeStudents ?? 0;
-    const unclaimed = stats?.unclaimed ?? 0;
+    const claimed = stats?.claimed ?? 0;
     return {
       total,
       grads,
