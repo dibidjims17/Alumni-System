@@ -8,5 +8,6 @@ namespace MyApp.Application.Interfaces
         Task<Dictionary<int, AlumniProfile>> GetByStudentIdsAsync(IEnumerable<int> studentIds);
         Task CreateAsync(AlumniProfile profile);
         Task UpdateAsync(AlumniProfile profile);
+        Task<List<string>> GetLocationSuggestionsAsync(string term);
     }
 }

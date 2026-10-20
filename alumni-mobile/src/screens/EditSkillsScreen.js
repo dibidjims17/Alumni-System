@@ -17,6 +17,7 @@ import DiscardDialog from '../components/DiscardDialog';
 import AppBackground from '../components/AppBackground';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import AutocompleteInput from '../components/AutocompleteInput';
 
 export default function EditSkillsScreen({ route, navigation }) {
   const { skills: initialSkills } = route.params;
@@ -57,6 +58,13 @@ export default function EditSkillsScreen({ route, navigation }) {
     }
   }
 
+  async function fetchSkillSuggestions(term, type) {
+    const res = await apiClient.get('/Suggestions', {
+      params: { term, type },
+    });
+    return res.data || [];
+  }
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -70,17 +78,12 @@ export default function EditSkillsScreen({ route, navigation }) {
         <AppBackground />
         <Text style={[styles.label, { color: c.textMuted }]}>Add a skill</Text>
         <View style={styles.addRow}>
-          <TextInput
-            style={[
-              styles.addInput,
-              { backgroundColor: c.surface, borderColor: c.border, color: c.text },
-            ]}
+          <AutocompleteInput
             value={newSkill}
             onChangeText={setNewSkill}
+            onSearch={fetchSkillSuggestions}
+            apiType="skill"
             placeholder="e.g. React Native"
-            placeholderTextColor={c.placeholder}
-            onSubmitEditing={handleAddSkill}
-            returnKeyType="done"
           />
           <TouchableOpacity
             style={[styles.addButton, { borderColor: c.primary }]}

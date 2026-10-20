@@ -41,5 +41,16 @@ namespace MyApp.Infrastructure.Repositories
             _context.Skills.RemoveRange(skills);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<string>> GetSkillSuggestionsAsync(string term)
+        {
+            return await _context.Skills
+                .Where(s => !string.IsNullOrWhiteSpace(s.SkillName) && s.SkillName.Contains(term))
+                .Select(s => s.SkillName)
+                .Distinct()
+                .OrderBy(s => s)
+                .Take(10)
+                .ToListAsync();
+        }
     }
 }

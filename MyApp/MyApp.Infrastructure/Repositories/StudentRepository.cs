@@ -126,5 +126,16 @@ namespace MyApp.Infrastructure.Repositories
 
             return (programs, schoolYears);
         }
+
+        public async Task<List<string>> GetProgramSuggestionsAsync(string term)
+        {
+            return await _context.Students
+                .Where(s => !string.IsNullOrWhiteSpace(s.Program) && s.Program.Contains(term))
+                .Select(s => s.Program)
+                .Distinct()
+                .OrderBy(s => s)
+                .Take(10)
+                .ToListAsync();
+        }
     }
 }

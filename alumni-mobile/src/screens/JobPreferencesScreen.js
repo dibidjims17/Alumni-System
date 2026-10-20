@@ -18,7 +18,6 @@ import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import AutocompleteInput from '../components/AutocompleteInput';
 import AppBackground from '../components/AppBackground';
-import { JOB_TITLE_SUGGESTIONS, INDUSTRY_SUGGESTIONS } from '../data/suggestionLists';
 
 export default function JobPreferencesScreen({ navigation }) {
   const { theme } = useTheme();
@@ -57,6 +56,13 @@ export default function JobPreferencesScreen({ navigation }) {
         appAlert('Error', 'Could not load job preferences.');
       }
     }
+  }
+
+  async function fetchSuggestions(term, type) {
+    const res = await apiClient.get('/Suggestions', {
+      params: { term, type },
+    });
+    return res.data || [];
   }
 
   useFocusEffect(
@@ -124,24 +130,27 @@ export default function JobPreferencesScreen({ navigation }) {
       <AutocompleteInput
         value={preferredJobTitle}
         onChangeText={setPreferredJobTitle}
-        suggestions={JOB_TITLE_SUGGESTIONS}
+        onSearch={fetchSuggestions}
+        apiType="jobtitle"
+        placeholder="e.g. Web Developer"
       />
 
       <Text style={[styles.label, { color: c.textMuted }]}>Preferred Industry</Text>
       <AutocompleteInput
         value={preferredIndustry}
         onChangeText={setPreferredIndustry}
-        suggestions={INDUSTRY_SUGGESTIONS}
+        onSearch={fetchSuggestions}
+        apiType="industry"
+        placeholder="e.g. Information Technology"
       />
 
       <Text style={[styles.label, { color: c.textMuted }]}>Preferred Location</Text>
-      <TextInput
-        style={[
-          styles.input,
-          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
-        ]}
+      <AutocompleteInput
         value={preferredLocation}
         onChangeText={setPreferredLocation}
+        onSearch={fetchSuggestions}
+        apiType="location"
+        placeholder="e.g. Manila"
       />
 
       <View style={styles.switchRow}>

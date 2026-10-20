@@ -31,5 +31,27 @@ namespace MyApp.Infrastructure.Repositories
             _context.JobPreferences.Update(preference);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<string>> GetJobTitleSuggestionsAsync(string term)
+        {
+            return await _context.JobPreferences
+                .Where(j => !string.IsNullOrWhiteSpace(j.PreferredJobTitle) && j.PreferredJobTitle.Contains(term))
+                .Select(j => j.PreferredJobTitle)
+                .Distinct()
+                .OrderBy(j => j)
+                .Take(10)
+                .ToListAsync();
+        }
+
+        public async Task<List<string>> GetIndustrySuggestionsAsync(string term)
+        {
+            return await _context.JobPreferences
+                .Where(j => !string.IsNullOrWhiteSpace(j.PreferredIndustry) && j.PreferredIndustry.Contains(term))
+                .Select(j => j.PreferredIndustry)
+                .Distinct()
+                .OrderBy(j => j)
+                .Take(10)
+                .ToListAsync();
+        }
     }
 }

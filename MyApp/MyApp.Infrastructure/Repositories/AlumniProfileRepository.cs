@@ -41,5 +41,16 @@ namespace MyApp.Infrastructure.Repositories
             _context.AlumniProfiles.Update(profile);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<string>> GetLocationSuggestionsAsync(string term)
+        {
+            return await _context.AlumniProfiles
+                .Where(p => !string.IsNullOrWhiteSpace(p.Location) && p.Location.Contains(term))
+                .Select(p => p.Location)
+                .Distinct()
+                .OrderBy(p => p)
+                .Take(10)
+                .ToListAsync();
+        }
     }
 }

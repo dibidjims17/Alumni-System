@@ -7,5 +7,7 @@ namespace MyApp.Application.Interfaces
         Task<JobPreference?> GetByStudentIdAsync(int studentId);
         Task CreateAsync(JobPreference preference);
         Task UpdateAsync(JobPreference preference);
+        Task<List<string>> GetJobTitleSuggestionsAsync(string term);
+        Task<List<string>> GetIndustrySuggestionsAsync(string term);
     }
 }

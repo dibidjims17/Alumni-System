@@ -8,5 +8,6 @@ namespace MyApp.Application.Interfaces
         Task CreateAsync(Skill skill);
         Task DeleteAsync(Skill skill);
         Task DeleteAllByStudentIdAsync(int studentId);
+        Task<List<string>> GetSkillSuggestionsAsync(string term);
     }
 }
