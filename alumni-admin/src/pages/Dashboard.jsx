@@ -9,7 +9,7 @@ import {
   ArrowUpRight,
   FileText,
   RefreshCw,
-  Clock,
+  Check,
 } from "lucide-react";
 import { getStudentStats } from "../services/studentsApi";
 import { getNews } from "../services/newsApi";
@@ -171,10 +171,10 @@ export default function Dashboard() {
       total,
       grads,
       active,
-      unclaimed,
+      claimed,
       gradPct: total ? Math.round((grads / total) * 100) : 0,
       activePct: total ? Math.round((active / total) * 100) : 0,
-      unclaimedPct: total ? Math.round((unclaimed / total) * 100) : 0,
+      claimedPct: total ? Math.round((claimed / total) * 100) : 0,
     };
   }, [stats]);
 
@@ -300,7 +300,7 @@ export default function Dashboard() {
         <StatCard label="Active" value={derived.active} sub={`${derived.activePct}% active`} Icon={UserCheck} accent="#1565C0" tint="rgba(21,101,192,0.12)" loading={loading} />
         <StatCard label="News" value={newsCount ?? 0} sub="Announcements" Icon={Newspaper} accent="#6A1B9A" tint="rgba(106,27,154,0.12)" loading={loading} />
         <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="#EF6C00" tint="rgba(239,108,0,0.13)" loading={loading} />
-        <StatCard label="Unclaimed" value={derived.unclaimed} sub={`${derived.unclaimedPct}% never logged in`} Icon={Clock} accent="#B00020" tint="rgba(176,0,32,0.12)" loading={loading} />
+        <StatCard label="Claimed" value={derived.claimed} sub={`${derived.claimedPct}% logged in`} Icon={Check} accent="#2E7D32" tint="rgba(46,125,50,0.12)" loading={loading} />
       </div>
 
       <div className="dash-bottom-grid" style={bottomGrid}>
@@ -342,12 +342,12 @@ export default function Dashboard() {
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
-                <span style={{ fontWeight: 650 }}>Unclaimed</span>
+                <span style={{ fontWeight: 650 }}>Claimed</span>
                 {loading ? <Skeleton width={90} height={12} /> : (
-                  <span style={{ color: "var(--muted)" }}>{`${derived.unclaimed} (${derived.unclaimedPct}%)`}</span>
+                  <span style={{ color: "var(--muted)" }}>{`${derived.claimed} (${derived.claimedPct}%)`}</span>
                 )}
               </div>
-              <Bar pct={derived.unclaimedPct} color="#B00020" />
+              <Bar pct={derived.claimedPct} color="#2E7D32" />
             </div>
           </div>
         </div>

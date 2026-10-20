@@ -138,10 +138,10 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetUnclaimedCountAsync()
+        public async Task<int> GetClaimedCountAsync()
         {
             return await _context.Students
-                .CountAsync(s => s.ActivatedAt == null && s.MustChangePassword);
+                .CountAsync(s => s.ActivatedAt != null || !s.MustChangePassword);
         }
     }
 }

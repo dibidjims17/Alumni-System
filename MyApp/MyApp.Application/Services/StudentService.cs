@@ -67,9 +67,9 @@ namespace MyApp.Application.Services
             return (total, active, graduate);
         }
 
-        public async Task<int> GetUnclaimedCountAsync()
+        public async Task<int> GetClaimedCountAsync()
         {
-            return await _studentRepository.GetUnclaimedCountAsync();
+            return await _studentRepository.GetClaimedCountAsync();
         }
 
         public async Task<ImportResultDto> ImportStudentsAsync(List<ImportStudentDto> students, int adminId)

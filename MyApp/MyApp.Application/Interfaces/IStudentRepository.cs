@@ -16,6 +16,6 @@ namespace MyApp.Application.Interfaces
         Task<(List<Student> Items, int Total)> SearchDirectoryAsync(string? search, string? program, string? schoolYear, int page, int pageSize);
         Task<(List<string> Programs, List<string> SchoolYears)> GetDirectoryFilterValuesAsync();
         Task<List<string>> GetProgramSuggestionsAsync(string term);
-        Task<int> GetUnclaimedCountAsync();
+        Task<int> GetClaimedCountAsync();
     }
 }
