@@ -31,6 +31,7 @@ namespace MyApp.Infrastructure.Data
         public DbSet<JobApplicationHistory> JobApplicationHistory { get; set; }
         public DbSet<PushToken> PushTokens { get; set; }
         public DbSet<YearLevelChangeRequest> YearLevelChangeRequests { get; set; }
+        public DbSet<CareerRecord> CareerRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

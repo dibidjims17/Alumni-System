@@ -12,25 +12,36 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import apiClient from '../api/client';
 import AppBackground from '../components/AppBackground';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import Skeleton from '../components/ui/Skeleton';
+import PrimaryButton from '../components/ui/PrimaryButton';
 import { alert as appAlert } from '../components/AppAlert';
 
 export default function NotificationsScreen({ navigation }) {
   const { theme } = useTheme();
+  const { student } = useAuth();
   const c = theme.colors;
+  const isGraduate = student?.schoolYear === 'Graduate';
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
 
   async function fetchNotifications() {
     try {
       const res = await apiClient.get('/Notification');
       setItems(res.data || []);
+      setLoadError(false);
     } catch (err) {
-      // silent
+      setLoadError(true);
     }
+  }
+
+  function retryLoad() {
+    setIsLoading(true);
+    fetchNotifications().finally(() => setIsLoading(false));
   }
 
   useFocusEffect(
@@ -70,13 +81,23 @@ export default function NotificationsScreen({ navigation }) {
 
     switch (item.type) {
       case 'APPLICATION_STATUS':
-        navigation.navigate('CareerTab', { screen: 'MyApplications' });
+        // CareerTab is graduate-only — undergrads get a silent fallback
+        // instead of a navigate() no-op into a tab that doesn't exist.
+        if (isGraduate) {
+          navigation.navigate('CareerTab', { screen: 'MyApplications' });
+        } else {
+          navigation.navigate('HomeTab');
+        }
         break;
       case 'JOB':
-        navigation.navigate('CareerTab', {
-          screen: 'JobDetail',
-          params: { jobId: item.relatedId },
-        });
+        if (isGraduate) {
+          navigation.navigate('CareerTab', {
+            screen: 'JobDetail',
+            params: { jobId: item.relatedId },
+          });
+        } else {
+          navigation.navigate('HomeTab');
+        }
         break;
       case 'EVENT':
         navigation.navigate('CommunityTab', {
@@ -160,10 +181,24 @@ export default function NotificationsScreen({ navigation }) {
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[c.primary]}
+            tintColor={c.primary}
+          />
         }
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: c.text }]}>No notifications yet.</Text>
+          loadError ? (
+            <View style={styles.emptyBlock}>
+              <Text style={[styles.emptyText, { color: c.text }]}>
+                Couldn't load notifications. Check your connection and try again.
+              </Text>
+              <PrimaryButton title="Retry" onPress={retryLoad} style={styles.retryButton} />
+            </View>
+          ) : (
+            <Text style={[styles.emptyText, { color: c.text }]}>No notifications yet.</Text>
+          )
         }
       />
     </View>
@@ -187,6 +222,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   listContent: { padding: 16 },
+  emptyBlock: { alignItems: 'center' },
+  retryButton: { marginTop: 14 },
   card: {
     padding: 12,
     marginBottom: 12,

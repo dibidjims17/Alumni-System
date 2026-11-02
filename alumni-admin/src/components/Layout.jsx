@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, Newspaper, Briefcase, CalendarDays,
-  UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu, User,
+  UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu, User, BadgeCheck,
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
 import { API_BASE_URL } from "../config";
@@ -23,6 +23,7 @@ import { askConfirm } from "./confirmBus";
 const SEGMENT_TITLES = {
   dashboard: "Dashboard",
   students: "Students",
+  careers: "Careers",
   documents: "Documents",
   news: "News",
   jobs: "Jobs",
@@ -49,6 +50,7 @@ const GROUPS = [
     label: "Directory",
     items: [
       { path: "/students", label: "Students", Icon: Users },
+      { path: "/careers", label: "Careers", Icon: BadgeCheck },
       { path: "/documents", label: "Documents", Icon: FileText },
     ],
   },
@@ -129,6 +131,16 @@ export default function Layout() {
     setNavOpen(false);
   }, [location.pathname]);
 
+  // Escape dismisses the open drawer, same as tapping the backdrop.
+  useEffect(() => {
+    if (!navOpen) return;
+    function onKeyDown(e) {
+      if (e.key === "Escape") setNavOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [navOpen]);
+
   const navItemStyle = (isActive) => ({
     display: "flex",
     alignItems: "center",
@@ -153,7 +165,7 @@ export default function Layout() {
           onClick={() => setNavOpen(false)}
           style={{
             position: "fixed", inset: 0, zIndex: 30,
-            background: "rgba(0,0,0,0.45)",
+            background: "var(--overlay)",
           }}
         />
       )}
@@ -171,7 +183,7 @@ export default function Layout() {
           zIndex: compact ? 40 : "auto",
           transform: compact && !navOpen ? "translateX(-105%)" : "none",
           transition: "transform 200ms ease",
-          boxShadow: compact && navOpen ? "8px 0 32px rgba(0,0,0,0.35)" : "none",
+          boxShadow: compact && navOpen ? "var(--shadow-md)" : "none",
         }}
       >
         <div style={{ padding: "20px 18px 8px", display: "flex", alignItems: "center", gap: 10 }}>
@@ -243,6 +255,7 @@ export default function Layout() {
                 onClick={() => setNavOpen((v) => !v)}
                 title="Open navigation"
                 aria-label="Open navigation"
+                aria-expanded={navOpen}
                 style={{
                   width: 36, height: 36, borderRadius: 8, cursor: "pointer", flexShrink: 0,
                   border: "1px solid var(--border)", background: "var(--surface-alt)",
@@ -295,6 +308,7 @@ export default function Layout() {
             <button
               onClick={toggle}
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               style={{
                 width: 36, height: 36, borderRadius: 8, cursor: "pointer",
                 border: "1px solid var(--border)", background: "var(--surface-alt)",

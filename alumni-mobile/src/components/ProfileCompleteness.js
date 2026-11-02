@@ -7,7 +7,7 @@ function isFilled(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-export function computeCompleteness(profile, jobPreferences, hasResume) {
+export function computeCompleteness(profile, jobPreferences, hasResume, hasCareerProof) {
   const items = [
     {
       key: 'headline',
@@ -77,16 +77,28 @@ export function computeCompleteness(profile, jobPreferences, hasResume) {
           !!jobPreferences.isOpenToWork),
       target: { screen: 'JobPreferences', params: {} },
     },
+    {
+      key: 'career',
+      label: 'Get your career verified',
+      weight: 10,
+      done: !!hasCareerProof,
+      target: { screen: 'CareerProof', params: {} },
+    },
   ];
 
-  const percent = items.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0);
+  // Divide by the summed weight so adding a checklist item can never push
+  // the total past 100%.
+  const total = items.reduce((sum, item) => sum + item.weight, 0);
+  const percent = Math.round(
+    (items.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0) / total) * 100
+  );
   return { percent, items, missing: items.filter((item) => !item.done) };
 }
 
-export default function ProfileCompleteness({ profile, jobPreferences, hasResume, navigation }) {
+export default function ProfileCompleteness({ profile, jobPreferences, hasResume, hasCareerProof, navigation }) {
   const { theme } = useTheme();
   const c = theme.colors;
-  const { percent, missing } = computeCompleteness(profile, jobPreferences, hasResume);
+  const { percent, missing } = computeCompleteness(profile, jobPreferences, hasResume, hasCareerProof);
 
   if (percent === 100) {
     return (

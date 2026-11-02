@@ -24,6 +24,7 @@ import ProfileCompleteness, { computeCompleteness } from '../components/ProfileC
 import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
+import PrimaryButton from '../components/ui/PrimaryButton';
 import { alert as appAlert } from '../components/AppAlert';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
@@ -50,16 +51,20 @@ export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(null);
   const [jobPreferences, setJobPreferences] = useState(null);
   const [activeResume, setActiveResume] = useState(null);
+  const [careerRecord, setCareerRecord] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   async function fetchProfile() {
     try {
       const res = await apiClient.get('/Profile');
       setProfile(res.data);
+      setLoadError(false);
     } catch (err) {
-      appAlert('Error', 'Could not load profile.');
+      // Surfaced as an error state with a Retry button instead of a popup.
+      setLoadError(true);
     }
   }
 
@@ -85,18 +90,40 @@ export default function ProfileScreen({ navigation }) {
     }
   }
 
+  async function fetchCareerRecord() {
+    try {
+      const res = await apiClient.get('/Career/my-record');
+      setCareerRecord(res.data || null);
+    } catch (err) {
+      // Optional — never block profile loading
+      setCareerRecord(null);
+    }
+  }
+
+  function loadAll() {
+    setIsLoading(true);
+    return Promise.all([
+      fetchProfile(),
+      fetchJobPreferences(),
+      fetchResumeStatus(),
+      fetchCareerRecord(),
+    ]).finally(() => setIsLoading(false));
+  }
+
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
-      Promise.all([fetchProfile(), fetchJobPreferences(), fetchResumeStatus()]).finally(() =>
-        setIsLoading(false)
-      );
+      loadAll();
     }, [])
   );
 
   async function handleRefresh() {
     setIsRefreshing(true);
-    await Promise.all([fetchProfile(), fetchJobPreferences(), fetchResumeStatus()]);
+    await Promise.all([
+      fetchProfile(),
+      fetchJobPreferences(),
+      fetchResumeStatus(),
+      fetchCareerRecord(),
+    ]);
     setIsRefreshing(false);
   }
 
@@ -178,6 +205,21 @@ export default function ProfileScreen({ navigation }) {
     }
   }
 
+  if (loadError && !isLoading && !profile) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top']}>
+        <AppBackground />
+        <AppHeader title="Profile" navigation={navigation} />
+        <View style={styles.errorBlock}>
+          <Text style={[styles.errorText, { color: c.textMuted }]}>
+            Couldn't load your profile. Check your connection and try again.
+          </Text>
+          <PrimaryButton title="Retry" onPress={loadAll} style={styles.retryButton} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (isLoading || !profile) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top']}>
@@ -205,7 +247,12 @@ export default function ProfileScreen({ navigation }) {
   const workList = profile.workExperiences || [];
   const eduList = profile.educations || [];
   const skillList = profile.skills || [];
-  const { percent } = computeCompleteness(profile, jobPreferences, !!activeResume);
+  const { percent } = computeCompleteness(
+    profile,
+    jobPreferences,
+    !!activeResume,
+    careerRecord?.status === 'Approved'
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
@@ -216,7 +263,12 @@ export default function ProfileScreen({ navigation }) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[c.primary]}
+            tintColor={c.primary}
+          />
         }
       >
         {/* ── Identity header ─────────────────────────────── */}
@@ -257,6 +309,7 @@ export default function ProfileScreen({ navigation }) {
             profile={profile}
             jobPreferences={jobPreferences}
             hasResume={!!activeResume}
+            hasCareerProof={careerRecord?.status === 'Approved'}
             navigation={navigation}
           />
           {percent < 100 ? (
@@ -449,6 +502,12 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.accountRow}
+            onPress={() => navigation.navigate('CareerProof')}
+          >
+            <Text style={[styles.accountRowText, { color: c.text }]}>Career &amp; Employment</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.accountRow}
             onPress={() => navigation.navigate('ChangePassword')}
           >
             <Text style={[styles.accountRowText, { color: c.text }]}>Change Password</Text>
@@ -488,6 +547,15 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   content: { padding: 16, paddingBottom: 40 },
+  errorBlock: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    gap: 14,
+  },
+  errorText: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  retryButton: { alignSelf: 'stretch' },
   card: {
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,

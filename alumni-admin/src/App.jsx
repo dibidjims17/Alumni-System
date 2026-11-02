@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
+import Careers from "./pages/Careers";
 import StudentDocuments from "./pages/StudentDocuments";
 import Documents from "./pages/Documents";
 import News from "./pages/News";
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/students" element={<Students />} />
+          <Route path="/careers" element={<Careers />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/documents/:id" element={<StudentDocuments />} />
           <Route path="/news" element={<News />} />
