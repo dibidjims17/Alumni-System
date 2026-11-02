@@ -11,9 +11,9 @@ import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
-const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "1" };
+const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "Graduate" };
 
-const YEAR_OPTIONS = ["1", "2", "3", "4", "Graduate"];
+const YEAR_OPTIONS = ["Graduate", "4"];
 
 export default function Students() {
   const [students, setStudents] = useState([]);
@@ -116,6 +116,7 @@ export default function Students() {
 
   useEffect(() => {
     loadStudents();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadYearRequests();
   }, []);
 
@@ -670,7 +671,7 @@ export default function Students() {
               />
             </Field>
 
-            <Field label="School Year">
+            <Field label="Year Level">
               <select
                 value={editForm.schoolYear}
                 onChange={(e) => setEditForm({ ...editForm, schoolYear: e.target.value })}
