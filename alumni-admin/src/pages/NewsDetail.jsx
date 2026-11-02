@@ -1,25 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Newspaper } from "lucide-react";
 import { getNewsDetail, deleteCommentAsAdmin, newsImageUrl } from "../services/newsApi";
 import CommentRow from "../components/CommentRow";
-import { card, cardTitle, cardMeta } from "../components/kit";
+import { card, cardTitle, cardMeta, EmptyState, pageWrap } from "../components/kit";
 import { DetailSkeleton } from "../components/Skeleton";
+import { notifyError } from "../components/toastBus";
 
 export default function NewsDetail() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   async function loadPost() {
     setLoading(true);
-    setError("");
     try {
       const detail = await getNewsDetail(id);
       setPost(detail);
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -35,20 +34,23 @@ export default function NewsDetail() {
       await deleteCommentAsAdmin(commentId);
       await loadPost();
     } catch (err) {
-      setError(err.message);
+      notifyError(err.message);
     }
   }
 
   return (
-    <div>
+    <div style={pageWrap}>
       <Link to="/news">← Back to News</Link>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
 
       {loading ? (
         <DetailSkeleton />
       ) : !post ? (
-        <p>Post not found.</p>
+        <EmptyState
+          icon={Newspaper}
+          title="Post not found"
+          hint="It may have been deleted, or the link is out of date."
+          action={<Link to="/news">Back to News</Link>}
+        />
       ) : (
         <>
           <div style={{ ...card, marginTop: 16 }}>
@@ -80,11 +82,11 @@ export default function NewsDetail() {
 
             <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16, margin: 0 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <Heart size={14} color="#d64550" />
+                <Heart size={14} color="var(--danger)" />
                 {post.heartCount ?? 0}
               </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <MessageCircle size={14} color="#4574b8" />
+                <MessageCircle size={14} color="var(--info)" />
                 {(post.comments || []).length}
               </span>
             </p>
@@ -104,7 +106,7 @@ export default function NewsDetail() {
                         style={{
                           marginLeft: 20,
                           paddingLeft: 14,
-                          borderLeft: "2px solid #eee",
+                          borderLeft: "2px solid var(--border)",
                           marginTop: 10,
                           display: "flex",
                           flexDirection: "column",

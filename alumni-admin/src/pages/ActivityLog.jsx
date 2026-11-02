@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Activity, User } from "lucide-react";
 import { getAllActivityLogs } from "../services/activityLogApi";
 import { API_BASE_URL } from "../config";
-import { SearchBox, card, cardTitle, cardMeta, pill, selectStyle, btn } from "../components/kit";
+import { SearchBox, card, cardTitle, cardMeta, pill, statusTone, selectStyle, btn, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { RotateCcw } from "lucide-react";
 import { notifyError } from "../components/toastBus";
@@ -19,7 +19,6 @@ function actorPhotoUrl(path) {
 export default function ActivityLog() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [actorTypeFilter, setActorTypeFilter] = useState("");
@@ -29,7 +28,6 @@ export default function ActivityLog() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      setError("");
       try {
         const data = await getAllActivityLogs();
         setLogs(data);
@@ -73,9 +71,7 @@ export default function ActivityLog() {
   );
 
   return (
-    <div>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
+    <div style={pageWrap}>
       <div style={{ margin: "16px 0 0", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <SearchBox
           placeholder="Search by name or details"
@@ -114,14 +110,17 @@ export default function ActivityLog() {
 
       {loading ? (
         <GridSkeleton count={6} />
+      ) : filteredLogs.length === 0 ? (
+        <EmptyState
+          icon={Activity}
+          title="No entries found"
+          hint="Try a different search or clear the filters."
+        />
       ) : (
         <>
           <p>{filteredLogs.length} entries found</p>
 
-          {pagedLogs.length === 0 ? (
-            <p>No entries found.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
               {pagedLogs.map((log) => (
                 <div key={log.id} style={card}>
                   <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -133,7 +132,7 @@ export default function ActivityLog() {
                       />
                     ) : (
                       <div style={{
-                        width: 36, height: 36, borderRadius: "50%", background: "#eef3ec",
+                        width: 36, height: 36, borderRadius: "50%", background: "var(--surface-alt)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         fontWeight: 700, color: "var(--primary)", flexShrink: 0, fontSize: 15,
                       }}>
@@ -145,15 +144,14 @@ export default function ActivityLog() {
                         <strong style={{ ...cardTitle, fontSize: 14 }}>{log.actorName || "—"}</strong>
                         <span style={{
                           ...pill,
-                          background: log.actorType === "Admin" ? "#e3f2fd" : "rgba(46,125,50,0.13)",
-                          color: log.actorType === "Admin" ? "#1565c0" : "#257A2B",
+                          ...(log.actorType === "Admin" ? statusTone("info") : statusTone("success")),
                         }}>
                           {log.actorType || "—"}
                         </span>
                         <span style={{
                           ...pill,
                           display: "inline-flex", alignItems: "center", gap: 5,
-                          background: "#f3f4f6", color: "#374151",
+                          ...statusTone("muted"),
                         }}>
                           <Activity size={13} />
                           {log.action}
@@ -161,18 +159,17 @@ export default function ActivityLog() {
                       </div>
                       <p style={{ ...cardMeta, margin: 0, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{log.details || "—"}</p>
                       <p style={{ ...cardMeta, margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
-                        <User size={13} color="#888" />
+                        <User size={13} color="var(--muted)" />
                         IP: {log.ipAddress || "—"}
                       </p>
                     </div>
-                    <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 12, color: "#666" }}>
+                    <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 12, color: "var(--muted)" }}>
                       {new Date(log.createdAt).toLocaleString()}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
-          )}
 
           <div style={{ marginTop: 16 }}>
             <button disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)} style={btn}>

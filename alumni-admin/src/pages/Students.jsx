@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
-import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send } from "lucide-react";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite, getYearChangeRequests, reviewYearChangeRequest } from "../services/studentsApi";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, btnDanger, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, btnDanger, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -18,7 +17,6 @@ const YEAR_OPTIONS = ["Graduate", "4"];
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -38,7 +36,6 @@ export default function Students() {
   const [editForm, setEditForm] = useState({ fullName: "", email: "", program: "", schoolYear: "" });
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const [confirmResetId, setConfirmResetId] = useState(null);
   const [resetResult, setResetResult] = useState(null);
 
   const [yearRequests, setYearRequests] = useState([]);
@@ -84,7 +81,6 @@ export default function Students() {
   async function handleAddSave(e) {
     e.preventDefault();
     setSavingAdd(true);
-    setError("");
     try {
       const created = await createStudent(addForm);
       closeAddModal();
@@ -103,7 +99,6 @@ export default function Students() {
 
   async function loadStudents() {
     setLoading(true);
-    setError("");
     try {
       const data = await getStudents();
       setStudents(data);
@@ -207,7 +202,6 @@ export default function Students() {
   async function handleEditSave(e) {
     e.preventDefault();
     setSavingEdit(true);
-    setError("");
     try {
       await updateStudent(editingStudent.id, editForm);
       closeEditModal();
@@ -219,15 +213,17 @@ export default function Students() {
     }
   }
 
-  async function confirmResetPassword() {
+  async function confirmResetPassword(student) {
+    const ok = await askConfirm(
+      `Issue a new temporary password for ${student.fullName} (${student.studentNumber})? Their current password will stop working.`,
+      { confirmLabel: "Reset password", danger: true }
+    );
+    if (!ok) return;
     try {
-      const result = await resetStudentPassword(confirmResetId);
-      const student = students.find((s) => s.id === confirmResetId);
+      const result = await resetStudentPassword(student.id);
       setResetResult({ student, temporaryPassword: result.temporaryPassword });
     } catch (err) {
       notifyError(err.message);
-    } finally {
-      setConfirmResetId(null);
     }
   }
 
@@ -258,7 +254,7 @@ export default function Students() {
   }, [students, searchTerm, yearFilter, programFilter, statusFilter]);
 
   return (
-    <div>
+    <div style={pageWrap}>
       <div style={{ ...toolbar, justifyContent: "flex-end" }}>
         <button onClick={openAddModal} style={btnPrimary}>
           <UserPlus size={15} />
@@ -277,9 +273,6 @@ export default function Students() {
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}
         />
-      </div>
-
-      <div style={{ ...filterRow, marginTop: -4 }}>
         <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Years</option>
           {YEAR_OPTIONS.map((y) => (
@@ -316,12 +309,12 @@ export default function Students() {
       </div>
 
       {yearRequests.length > 0 && (
-        <div style={{ ...card, borderLeft: "4px solid #B45309", marginBottom: 4 }}>
+        <div style={{ ...card, borderLeft: "4px solid var(--warning)", marginBottom: 4 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <h4 style={{ ...cardTitle, margin: 0 }}>
               Year correction requests ({yearRequests.length})
             </h4>
-            <span style={{ ...pill, background: "rgba(239,108,0,0.14)", color: "#B45309" }}>
+            <span style={{ ...pill, ...statusTone("warning") }}>
               Needs review
             </span>
           </div>
@@ -367,9 +360,37 @@ export default function Students() {
       )}
 
       {loading && <GridSkeleton count={8} />}
-      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {!loading && !error && (
+      {!loading && filteredStudents.length === 0 && (
+        <EmptyState
+          icon={students.length === 0 ? Users : Search}
+          title={students.length === 0 ? "No students yet" : "No students found"}
+          hint={
+            students.length === 0
+              ? "Add a student or import a CSV to populate the directory."
+              : "Try a different search or clear your filters."
+          }
+          action={
+            students.length > 0 ? (
+              <button
+                type="button"
+                style={btn}
+                onClick={() => {
+                  setSearchTerm("");
+                  setYearFilter("");
+                  setProgramFilter("");
+                  setStatusFilter("");
+                }}
+              >
+                <RotateCcw size={14} />
+                Reset filters
+              </button>
+            ) : null
+          }
+        />
+      )}
+
+      {!loading && filteredStudents.length > 0 && (
         <>
           <p>{filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} found</p>
           <div style={cardGrid}>
@@ -401,8 +422,7 @@ export default function Students() {
                     <span
                       style={{
                         ...pill,
-                        background: s.isActive ? "rgba(46,125,50,0.13)" : "rgba(194,57,43,0.10)",
-                        color: s.isActive ? "var(--success)" : "var(--danger)",
+                        ...(s.isActive ? statusTone("success") : statusTone("danger")),
                       }}
                     >
                       {s.isActive ? "Active" : "Inactive"}
@@ -410,7 +430,7 @@ export default function Students() {
                     {!s.isClaimed && (
                       <span
                         title="Never logged in — invite not yet claimed"
-                        style={{ ...pill, background: "rgba(239,108,0,0.14)", color: "#B45309" }}
+                        style={{ ...pill, ...statusTone("warning") }}
                       >
                         Unclaimed
                       </span>
@@ -462,7 +482,7 @@ export default function Students() {
                     <Link to={`/documents/${s.id}`} style={{ ...btn, padding: "6px 12px", textDecoration: "none" }}>
                       <FileText size={15} /> Documents
                     </Link>
-                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => setConfirmResetId(s.id)}>
+                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => confirmResetPassword(s)}>
                       <KeyRound size={15} /> Reset PW
                     </button>
                     <button
@@ -752,7 +772,7 @@ export default function Students() {
               </select>
             </Field>
 
-            <p style={{ fontSize: 13, color: "#555", marginTop: 8 }}>
+            <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}>
               Default password is the student number; they must change it on first login.
             </p>
 
@@ -769,22 +789,8 @@ export default function Students() {
       )}
 
       {resetResult && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.5)", display: "flex",
-            alignItems: "center", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={() => setResetResult(null)}
-        >
-          <div
-            style={{
-              background: "var(--surface)", padding: 24, borderRadius: 10,
-              maxWidth: 480, width: "90%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ marginTop: 0 }}>Temporary Password Issued</h3>
+        <ModalShell title="Temporary Password Issued" onClose={() => setResetResult(null)} width={480}>
+          <div>
             <p>
               For <strong>{resetResult.student?.fullName}</strong> ({resetResult.student?.studentNumber}):
             </p>
@@ -797,7 +803,7 @@ export default function Students() {
             }}>
               {resetResult.temporaryPassword}
             </p>
-            <p style={{ fontSize: 13, color: "#555" }}>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>
               Relay this to the student. It is shown only once, expires in
               7 days, and must be changed on next login — afterwards they
               can use Forgot Password.
@@ -810,16 +816,12 @@ export default function Students() {
                 </>
               )}
             </p>
-            <button onClick={() => setResetResult(null)} style={btnPrimary}>Done</button>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setResetResult(null)} style={btnPrimary}>Done</button>
+            </div>
           </div>
-        </div>
+        </ModalShell>
       )}
-
-      <ConfirmDialog
-        message={confirmResetId ? "Issue a new temporary password for this student? Their current password will stop working." : null}
-        onConfirm={confirmResetPassword}
-        onCancel={() => setConfirmResetId(null)}
-      />
     </div>
   );
 }

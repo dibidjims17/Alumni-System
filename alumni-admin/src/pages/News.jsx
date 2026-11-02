@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare, Newspaper } from "lucide-react";
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, pill, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
+import { askConfirm } from "../components/confirmBus";
 
 const EditButton = iconButton("Edit", Pencil);
 const DeleteButton = iconButton("Delete", Trash2);
@@ -16,14 +16,11 @@ export default function News() {
   const navigate = useNavigate();
   const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
-
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -32,7 +29,6 @@ export default function News() {
 
   async function loadNews(activeSearch = "") {
     setLoading(true);
-    setError("");
     try {
       const data = await getNews(activeSearch);
       setNewsList(data);
@@ -96,7 +92,6 @@ export default function News() {
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
-    setError("");
     try {
       if (editingId) {
         await updateNews(editingId, form);
@@ -113,19 +108,22 @@ export default function News() {
     }
   }
 
-  async function confirmDelete() {
+  async function handleDelete(item) {
+    const ok = await askConfirm(`Move "${item.title}" to trash?`, {
+      confirmLabel: "Move to trash",
+      danger: true,
+    });
+    if (!ok) return;
     try {
-      await deleteNews(confirmDeleteId);
+      await deleteNews(item.id);
       loadNews(searchTerm);
     } catch (err) {
       notifyError(err.message);
-    } finally {
-      setConfirmDeleteId(null);
     }
   }
 
   return (
-    <div>
+    <div style={pageWrap}>
       <div style={{ ...toolbar, justifyContent: "flex-end" }}>
         <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={15} />
@@ -143,12 +141,14 @@ export default function News() {
         />
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
       {loading ? (
         <GridSkeleton count={6} />
       ) : newsList.length === 0 ? (
-        <p>No news yet.</p>
+        <EmptyState
+          icon={Newspaper}
+          title="No news yet"
+          hint={searchTerm ? "Try a different search." : "Publish the first announcement to see it here."}
+        />
       ) : (
         <div style={cardGrid}>
           {newsList.map((item) => {
@@ -166,16 +166,16 @@ export default function News() {
                     </p>
                     <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 16 }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                        <Heart size={14} color="#d64550" />
+                        <Heart size={14} color="var(--danger)" />
                         {item.heartCount}
                       </span>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                        <MessageCircle size={14} color="#4574b8" />
+                        <MessageCircle size={14} color="var(--info)" />
                         {item.commentCount}
                       </span>
                     </p>
                   </div>
-                  <span style={{ ...pill, marginLeft: "auto", background: item.isPublished ? "rgba(46,125,50,0.13)" : "rgba(239,108,0,0.14)", color: item.isPublished ? "var(--success)" : "#B45309" }}>
+                  <span style={{ ...pill, marginLeft: "auto", ...(item.isPublished ? statusTone("success") : statusTone("warning")) }}>
                     {item.isPublished ? "Published" : "Draft"}
                   </span>
                 </div>
@@ -199,24 +199,27 @@ export default function News() {
                   <DeleteButton
                     onClick={(e) => {
                       e.stopPropagation();
-                      setConfirmDeleteId(item.id);
+                      handleDelete(item);
                     }}
                     style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
                   />
-                  <span
+                  <Link
+                    to={`/news/${item.id}`}
+                    onClick={(e) => e.stopPropagation()}
                     style={{
                       marginLeft: "auto",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      color: "#4574b8",
+                      color: "var(--info)",
                       fontSize: 12,
                       fontWeight: 500,
+                      textDecoration: "none",
                     }}
                   >
                     <MessageSquare size={13} />
                     {`View post${item.commentCount ? ` (${item.commentCount} comments)` : ""}`}
-                  </span>
+                  </Link>
                 </div>
               </div>
             );
@@ -248,7 +251,7 @@ export default function News() {
             </Field>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#333", cursor: "pointer" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--text)", cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   checked={form.isPublished}
@@ -266,23 +269,17 @@ export default function News() {
               />
             </Field>
 
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="submit" disabled={saving} style={btnPrimary}>
-                {saving ? "Saving..." : editingId ? "Update Post" : "Create Post"}
-              </button>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button type="button" onClick={closeModalGuarded} style={btn}>
                 Cancel
+              </button>
+              <button type="submit" disabled={saving} style={btnPrimary}>
+                {saving ? "Saving..." : editingId ? "Update Post" : "Create Post"}
               </button>
             </div>
           </form>
         </ModalShell>
       )}
-
-      <ConfirmDialog
-        message={confirmDeleteId ? "Move this news post to trash?" : null}
-        onConfirm={confirmDelete}
-        onCancel={() => setConfirmDeleteId(null)}
-      />
     </div>
   );
 }

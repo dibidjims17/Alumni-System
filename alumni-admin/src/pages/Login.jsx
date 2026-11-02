@@ -129,6 +129,7 @@ export default function Login() {
       <button
         onClick={toggle}
         title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
         style={{
           position: "fixed", top: 18, right: 18,
           width: 38, height: 38, borderRadius: 10, cursor: "pointer",
@@ -207,13 +208,15 @@ export default function Login() {
 
             {isGoogleConfigured() ? (
               <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-                <div style={{ display: "flex", justifyContent: "center" }}>
+                {/* The card's content box is 308px (360 − 2×26px padding);
+                    cap the wrapper and the button so it can never overflow. */}
+                <div style={{ display: "flex", justifyContent: "center", maxWidth: 308, width: "100%", margin: "0 auto" }}>
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => setError("Google sign-in failed. Please try again.")}
                     text="continue_with"
                     shape="rectangular"
-                    width="320"
+                    width="308"
                   />
                 </div>
               </GoogleOAuthProvider>

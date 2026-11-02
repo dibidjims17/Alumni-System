@@ -26,7 +26,7 @@ const YEAR_OPTIONS = ['1', '2', '3', '4', 'Graduate'];
 function statusStyle(status, c) {
   if (status === 'Approved') return { backgroundColor: c.tintSuccess, color: c.success };
   if (status === 'Declined') return { backgroundColor: c.tintDanger, color: c.danger };
-  return { backgroundColor: c.tintWarning, color: '#B45309' };
+  return { backgroundColor: c.tintWarning, color: c.warning };
 }
 
 export default function YearCorrectionScreen({ navigation }) {
@@ -96,7 +96,7 @@ export default function YearCorrectionScreen({ navigation }) {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
       <AppBackground />
-      <AppHeader title="Year Correction" navigation={navigation} />
+      <AppHeader title="Year Correction" navigation={navigation} showBack />
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[c.primary]} tintColor={c.primary} />}

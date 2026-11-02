@@ -7,6 +7,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
@@ -102,6 +103,12 @@ export default function ResetPasswordScreen({ route, navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <AppBackground />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       <Text style={[styles.title, { color: c.text }]}>Reset Password</Text>
       <Text style={[styles.subtitle, { color: c.textMuted }]}>
         Enter the 6-digit code sent to your email, along with your new
@@ -170,6 +177,7 @@ export default function ResetPasswordScreen({ route, navigation }) {
       >
         <Text style={[styles.linkText, { color: c.primary }]}>Back to Login</Text>
       </TouchableOpacity>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -179,6 +187,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,

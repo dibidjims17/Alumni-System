@@ -93,33 +93,35 @@ export default function JobPreferencesScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <ScrollView
-        style={[styles.container, { backgroundColor: 'transparent' }]}
-        contentContainerStyle={{ padding: 16 }}
-      >
+      <View style={{ flex: 1, backgroundColor: 'transparent' }}>
         <AppBackground />
-        <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
-          {[0, 1, 2].map((i) => (
-            <View key={i} style={{ marginBottom: 16 }}>
-              <Skeleton width="35%" height={12} style={{ marginBottom: 8 }} />
-              <Skeleton width="100%" height={44} borderRadius={8} />
-            </View>
-          ))}
-          <Skeleton width="100%" height={48} borderRadius={10} />
-        </View>
-      </ScrollView>
+        <ScrollView
+          style={[styles.container, { backgroundColor: 'transparent' }]}
+          contentContainerStyle={{ padding: 16 }}
+        >
+          <View style={[styles.skeletonCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={{ marginBottom: 16 }}>
+                <Skeleton width="35%" height={12} style={{ marginBottom: 8 }} />
+                <Skeleton width="100%" height={44} borderRadius={8} />
+              </View>
+            ))}
+            <Skeleton width="100%" height={48} borderRadius={10} />
+          </View>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
     <>
       <DiscardDialog {...discardDialog} />
+      <AppBackground />
       <ScrollView
         style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{ padding: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-      <AppBackground />
       {!hasSetPreferencesBefore && (
         <Text style={[styles.noticeText, { color: c.textMuted }]}>
           You haven't set job preferences yet.

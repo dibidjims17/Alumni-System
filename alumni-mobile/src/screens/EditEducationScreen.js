@@ -98,11 +98,11 @@ export default function EditEducationScreen({ route, navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <DiscardDialog {...discardDialog} />
+      <AppBackground />
       <ScrollView
         style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{ padding: 16 }}
       >
-        <AppBackground />
         <Text style={[styles.label, { color: c.textMuted }]}>Degree *</Text>
         <TextInput
           style={[
@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     padding: 10,
+    fontSize: 14,
   },
   switchRow: {
     flexDirection: 'row',

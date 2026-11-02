@@ -1,26 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FileText, History, Download } from "lucide-react";
+import { FileText, History, Download, Users } from "lucide-react";
 import { getJobApplicants, updateApplicationStatus, downloadResume, getJobById, exportApplicants, getApplicationHistory } from "../services/jobsApi";
-import { cardGrid, card, cardTitle, cardMeta, pill, ModalShell, btn, btnPrimary, textInput, selectStyle } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, btn, btnPrimary, textInput, selectStyle, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
-const STATUS_STYLES = {
-  Pending: { background: "rgba(239,108,0,0.14)", color: "#B45309" },
-  Reviewed: { background: "rgba(69,116,184,0.13)", color: "#1a4fd8" },
-  Shortlisted: { background: "rgba(46,125,50,0.13)", color: "var(--success)" },
-  Rejected: { background: "rgba(194,57,43,0.10)", color: "var(--danger)" },
+const STATUS_TONES = {
+  Pending: "warning",
+  Reviewed: "info",
+  Shortlisted: "success",
+  Rejected: "danger",
 };
 
 export default function JobApplicants() {
   const { id } = useParams();
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [savingId, setSavingId] = useState(null);
   const [job, setJob] = useState(null);
   const [exportStatuses, setExportStatuses] = useState([]);
@@ -31,7 +30,6 @@ export default function JobApplicants() {
 
   async function loadApplicants() {
     setLoading(true);
-    setError("");
     try {
       const data = await getJobApplicants(id);
       setApplicants(data);
@@ -101,7 +99,6 @@ export default function JobApplicants() {
 
   async function handleExport() {
     setExporting(true);
-    setError("");
     try {
       await exportApplicants(id, exportStatuses);
     } catch (err) {
@@ -126,13 +123,11 @@ export default function JobApplicants() {
   }
 
   return (
-    <div>
+    <div style={pageWrap}>
       <Link to="/jobs">← Back to Jobs</Link>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
       {job && (
-        <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+        <div style={{ border: "1px solid var(--border)", borderRadius: 8, padding: 16, marginBottom: 20 }}>
           <h3 style={{ marginTop: 0 }}>{job.jobTitle} — {job.company}</h3>
           <p>
             <strong>Location:</strong> {job.location || "—"} |{" "}
@@ -150,9 +145,9 @@ export default function JobApplicants() {
         </div>
       )}
 
-      <div style={{ marginBottom: 20, padding: 12, border: "1px solid #ccc", borderRadius: 8 }}>
+      <div style={{ marginBottom: 20, padding: 12, border: "1px solid var(--border)", borderRadius: 8 }}>
         <p style={{ marginTop: 0 }}><strong>Export Applicants</strong></p>
-        <p style={{ fontSize: 13, color: "#555" }}>
+        <p style={{ fontSize: 13, color: "var(--muted)" }}>
           Select which statuses to include (leave all unchecked to export everyone):
         </p>
         {STATUS_OPTIONS.map((status) => (
@@ -176,16 +171,20 @@ export default function JobApplicants() {
       {loading ? (
         <GridSkeleton count={6} />
       ) : applicants.length === 0 ? (
-        <p>No applicants yet.</p>
+        <EmptyState
+          icon={Users}
+          title="No applicants yet"
+          hint="Applications from the mobile app will show up here."
+        />
       ) : (
         <div style={cardGrid}>
           {applicants.map((a) => {
-            const statusStyle = STATUS_STYLES[a.status] || STATUS_STYLES.Pending;
+            const tone = STATUS_TONES[a.status] || "warning";
             return (
               <div key={a.applicationId} style={card}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <div style={{
-                    width: 44, height: 44, borderRadius: "50%", background: "#eef3ec",
+                    width: 44, height: 44, borderRadius: "50%", background: "var(--surface-alt)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontWeight: 700, color: "var(--primary)", flexShrink: 0,
                   }}>
@@ -202,7 +201,7 @@ export default function JobApplicants() {
                   <span style={{
                     ...pill,
                     marginLeft: "auto",
-                    background: statusStyle.background, color: statusStyle.color,
+                    ...statusTone(tone),
                   }}>
                     {a.status}
                   </span>
@@ -211,7 +210,7 @@ export default function JobApplicants() {
                 <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <div>
-                      <label style={{ fontSize: 12, color: "#555" }}>Status</label><br />
+                      <label style={{ fontSize: 12, color: "var(--muted)" }}>Status</label><br />
                       <select
                         value={a.status}
                         onChange={(e) => handleStatusChange(a.applicationId, e.target.value, a.adminNotes, a.fullName, a.status)}
@@ -224,7 +223,7 @@ export default function JobApplicants() {
                       </select>
                     </div>
                     <div style={{ flex: 1, minWidth: 160 }}>
-                      <label style={{ fontSize: 12, color: "#555" }}>Admin Notes</label><br />
+                      <label style={{ fontSize: 12, color: "var(--muted)" }}>Admin Notes</label><br />
                       <input
                         type="text"
                         defaultValue={a.adminNotes || ""}
@@ -267,16 +266,16 @@ export default function JobApplicants() {
               {history.map((h) => (
                 <div
                   key={h.id}
-                  style={{ border: "1px solid #eee", borderRadius: 8, padding: "10px 12px" }}
+                  style={{ border: "1px solid var(--border)", borderRadius: 8, padding: "10px 12px" }}
                 >
-                  <p style={{ margin: 0, fontSize: 12, color: "#888" }}>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
                     {new Date(h.createdAt).toLocaleString()} • {h.updatedByAdminName || "System"}
                   </p>
                   <p style={{ margin: "4px 0 0", fontSize: 14 }}>
                     <strong>{h.fromStatus} → {h.toStatus}</strong>
                   </p>
                   {h.adminNotes && (
-                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "#555" }}>{h.adminNotes}</p>
+                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--muted)" }}>{h.adminNotes}</p>
                   )}
                 </div>
               ))}

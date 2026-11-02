@@ -1,15 +1,35 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, Pencil, Trash2, Users, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Download, CalendarDays } from "lucide-react";
 import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
 import { getSession } from "../services/api";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { cardGrid, card, cardTitle, cardMeta, pill, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
+import { askConfirm } from "../components/confirmBus";
 
 const EditButton = iconButton("Edit", Pencil);
 const DeleteButton = iconButton("Delete", Trash2);
 const AttendeesButton = iconButton("Attendees", Users);
+
+// Themed attendees-table cells (the old raw border=1 table rendered
+// unstyled — invisible borders — once dark mode landed).
+const attendeeTh = {
+  background: "var(--surface-alt)",
+  color: "var(--text)",
+  textAlign: "left",
+  fontWeight: 650,
+  fontSize: 12,
+  textTransform: "uppercase",
+  letterSpacing: 0.4,
+  padding: "8px 10px",
+  borderBottom: "1px solid var(--border)",
+};
+
+const attendeeTd = {
+  padding: "8px 10px",
+  borderBottom: "1px solid var(--border)",
+  color: "var(--text)",
+};
 
 const emptyForm = {
   title: "",
@@ -21,14 +41,11 @@ const emptyForm = {
 export default function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
-
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -43,7 +60,6 @@ export default function Events() {
 
   async function loadEvents(activeSearch = "") {
     setLoading(true);
-    setError("");
     try {
       const data = await getAllEvents(activeSearch);
       setEvents(data);
@@ -125,7 +141,6 @@ export default function Events() {
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
-    setError("");
     try {
       const payload = {
         title: form.title,
@@ -149,14 +164,17 @@ export default function Events() {
     }
   }
 
-  async function confirmDelete() {
+  async function handleDelete(event) {
+    const ok = await askConfirm(`Move "${event.title}" to trash? You can restore it later.`, {
+      confirmLabel: "Move to trash",
+      danger: true,
+    });
+    if (!ok) return;
     try {
-      await deleteEvent(confirmDeleteId);
+      await deleteEvent(event.id);
       loadEvents(searchTerm);
     } catch (err) {
       notifyError(err.message);
-    } finally {
-      setConfirmDeleteId(null);
     }
   }
 
@@ -204,7 +222,7 @@ export default function Events() {
   }
 
   return (
-    <div>
+    <div style={pageWrap}>
       <div style={{ ...toolbar, justifyContent: "flex-end" }}>
         <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={15} />
@@ -222,12 +240,14 @@ export default function Events() {
         />
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
       {loading ? (
         <GridSkeleton count={6} />
       ) : events.length === 0 ? (
-        <p>No events yet.</p>
+        <EmptyState
+          icon={CalendarDays}
+          title="No events yet"
+          hint={searchTerm ? "Try a different search." : "Add the first event to see it here."}
+        />
       ) : (
         <div style={cardGrid}>
           {events.map((event) => {
@@ -238,7 +258,7 @@ export default function Events() {
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <h3 style={cardTitle}>{event.title}</h3>
-                    <span style={{ ...pill, background: isPast ? "rgba(194,57,43,0.10)" : "rgba(46,125,50,0.13)", color: isPast ? "var(--danger)" : "#257A2B" }}>
+                    <span style={{ ...pill, ...(isPast ? statusTone("danger") : statusTone("success")) }}>
                       {isPast ? "Past" : "Upcoming"}
                     </span>
                   </div>
@@ -263,7 +283,7 @@ export default function Events() {
               >
                 <EditButton onClick={() => openEditModal(event)} />
                 <AttendeesButton onClick={() => openAttendees(event)} />
-                {isSuperAdmin && <DeleteButton onClick={() => setConfirmDeleteId(event.id)} style={{ color: "var(--danger)", borderColor: "var(--danger)" }} />}
+                {isSuperAdmin && <DeleteButton onClick={() => handleDelete(event)} style={{ color: "var(--danger)", borderColor: "var(--danger)" }} />}
               </div>
             </div>
             );
@@ -314,12 +334,12 @@ export default function Events() {
               />
             </Field>
 
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="submit" disabled={saving} style={btnPrimary}>
-                {saving ? "Saving..." : editingId ? "Update Event" : "Add Event"}
-              </button>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button type="button" onClick={closeModalGuarded} style={btn}>
                 Cancel
+              </button>
+              <button type="submit" disabled={saving} style={btnPrimary}>
+                {saving ? "Saving..." : editingId ? "Update Event" : "Add Event"}
               </button>
             </div>
           </form>
@@ -342,24 +362,33 @@ export default function Events() {
                 </button>
               </div>
               <div style={{ overflowX: "auto", margin: "0 -4px", padding: "0 4px" }}>
-              <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%", minWidth: 560 }}>
+              <table
+                style={{
+                  borderCollapse: "collapse",
+                  width: "100%",
+                  minWidth: 560,
+                  border: "1px solid var(--border)",
+                  fontSize: 13,
+                  color: "var(--text)",
+                }}
+              >
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Student #</th>
-                    <th>Program</th>
-                    <th>Year</th>
-                    <th>RSVP Date</th>
+                    <th scope="col" style={attendeeTh}>Name</th>
+                    <th scope="col" style={attendeeTh}>Student #</th>
+                    <th scope="col" style={attendeeTh}>Program</th>
+                    <th scope="col" style={attendeeTh}>Year</th>
+                    <th scope="col" style={attendeeTh}>RSVP Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {attendees.map((a) => (
                     <tr key={a.id}>
-                      <td>{a.fullName}</td>
-                      <td>{a.studentNumber}</td>
-                      <td>{a.program}</td>
-                      <td>{a.schoolYear}</td>
-                      <td>{a.rsvpedAt ? new Date(a.rsvpedAt).toLocaleString() : "—"}</td>
+                      <td style={attendeeTd}>{a.fullName}</td>
+                      <td style={attendeeTd}>{a.studentNumber}</td>
+                      <td style={attendeeTd}>{a.program}</td>
+                      <td style={attendeeTd}>{a.schoolYear}</td>
+                      <td style={attendeeTd}>{a.rsvpedAt ? new Date(a.rsvpedAt).toLocaleString() : "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -369,12 +398,6 @@ export default function Events() {
           )}
         </ModalShell>
       )}
-
-      <ConfirmDialog
-        message={confirmDeleteId ? "Move this event to trash? You can restore it later." : null}
-        onConfirm={confirmDelete}
-        onCancel={() => setConfirmDeleteId(null)}
-      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import apiClient from '../api/client';
 import { alert as appAlert } from '../components/AppAlert';
@@ -79,6 +80,12 @@ export default function ForgotPasswordScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <AppBackground />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       <Text style={[styles.title, { color: c.text }]}>Forgot Password</Text>
       <Text style={[styles.subtitle, { color: c.textMuted }]}>
         Enter your student number or email and we'll send you a reset code.
@@ -110,6 +117,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       >
         <Text style={[styles.linkText, { color: c.primary }]}>Back to Login</Text>
       </TouchableOpacity>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -119,6 +127,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,

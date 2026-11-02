@@ -183,7 +183,7 @@ export default function EventDetailScreen({ route, navigation }) {
           style={[
             styles.rsvpButton,
             { borderColor: c.border },
-            event.isRsvped && { backgroundColor: c.border },
+            event.isRsvped && { backgroundColor: c.tintSuccess, borderColor: c.success },
           ]}
           onPress={toggleRsvp}
           disabled={isToggling}
@@ -191,7 +191,7 @@ export default function EventDetailScreen({ route, navigation }) {
           {isToggling ? (
             <ActivityIndicator size="small" color={c.primary} />
           ) : (
-            <Text style={[styles.rsvpText, { color: c.text }]}>
+            <Text style={[styles.rsvpText, { color: event.isRsvped ? c.success : c.text }]}>
               {event.isRsvped ? 'Cancel RSVP' : "I'm Going"}
             </Text>
           )}

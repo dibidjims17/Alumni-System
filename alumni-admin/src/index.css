@@ -2,17 +2,17 @@
    These defaults prevent a flash before the provider applies the saved mode. */
 :root {
   --primary: #1B5E20;
-  --primary-strong: #14471A;
+  --primary-strong: #123F16;
   --on-primary: #FFFFFF;
-  --bg: #F2F5F0;
+  --bg: #E8EEE7;
   --surface: #FFFFFF;
-  --surface-alt: #E9EFE6;
-  --border: #D5DED1;
-  --text: #1B231D;
-  --muted: #5C6B60;
-  --placeholder: #9AA79E;
-  --danger: #C0392B;
-  --success: #2E7D32;
+  --surface-alt: #E4ECE1;
+  --border: #C9D6C4;
+  --text: #17211A;
+  --muted: #57685B;
+  --placeholder: #93A198;
+  --danger: #B3261E;
+  --success: #257A2B;
   --warning: #B45309;
   --warning-tint: rgba(239,108,0,0.14);
   --info: #1565C0;
@@ -40,6 +40,11 @@
   --hero-muted: rgba(255,255,255,0.76);
   --stat-shadow: 0 1px 2px rgba(27,94,32,0.08), 0 10px 26px rgba(27,94,32,0.10);
   --tile-bg: #E7F0E4;
+  --hero-ring: rgba(255,255,255,0.09);
+  --hero-ring-soft: rgba(255,255,255,0.06);
+  --hero-chip: rgba(255,255,255,0.14);
+  --hero-chip-border: rgba(255,255,255,0.24);
+  --overlay: rgba(0,0,0,0.5);
 
   font-size: 15px;
   font-family: var(--font);
@@ -65,6 +70,14 @@ button, input, select, textarea {
 }
 
 button { cursor: pointer; }
+
+/* Disabled state for the shared kit buttons (btn/btnPrimary/btnDanger are
+   plain style objects, so the pseudo-class lives here): ActivityLog's
+   Prev/Next and any in-flight submit must read as disabled. */
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 
 a { color: var(--primary); }
 

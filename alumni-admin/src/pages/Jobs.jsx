@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Briefcase } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, pill, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, pill, statusTone, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
+import { askConfirm } from "../components/confirmBus";
 
 const emptyForm = {
   jobTitle: "",
@@ -23,14 +23,11 @@ const emptyForm = {
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
-
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -66,7 +63,6 @@ export default function Jobs() {
 
   async function loadJobs(activeSearch = "") {
     setLoading(true);
-    setError("");
     try {
       const data = await getJobs(activeSearch);
       setJobs(data);
@@ -132,7 +128,6 @@ export default function Jobs() {
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
-    setError("");
     try {
       const payload = {
         ...form,
@@ -156,19 +151,22 @@ export default function Jobs() {
     }
   }
 
-  async function confirmDelete() {
+  async function handleDelete(job) {
+    const ok = await askConfirm(`Move "${job.jobTitle}" to trash?`, {
+      confirmLabel: "Move to trash",
+      danger: true,
+    });
+    if (!ok) return;
     try {
-      await deleteJob(confirmDeleteId);
+      await deleteJob(job.id);
       loadJobs(searchTerm);
     } catch (err) {
       notifyError(err.message);
-    } finally {
-      setConfirmDeleteId(null);
     }
   }
 
   return (
-    <div>
+    <div style={pageWrap}>
       <div style={{ ...toolbar, justifyContent: "flex-end" }}>
         <button onClick={openCreateModal} style={btnPrimary}>
           <Plus size={15} />
@@ -188,12 +186,14 @@ export default function Jobs() {
         />
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
       {loading ? (
         <GridSkeleton count={6} />
       ) : jobs.length === 0 ? (
-        <p>No jobs found.</p>
+        <EmptyState
+          icon={Briefcase}
+          title="No jobs found"
+          hint={searchTerm ? "Try a different search." : "Post the first job to see it here."}
+        />
       ) : (
         <div style={cardGrid}>
           {jobs.map((job) => {
@@ -207,7 +207,7 @@ export default function Jobs() {
                   <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <h3 style={cardTitle}>{job.jobTitle}</h3>
-                      <span style={{ ...pill, background: isJobActive ? "rgba(46,125,50,0.13)" : "rgba(194,57,43,0.10)", color: isJobActive ? "#257A2B" : "var(--danger)" }}>
+                      <span style={{ ...pill, ...(isJobActive ? statusTone("success") : statusTone("danger")) }}>
                         {isJobActive ? "Active" : "Closed"}
                       </span>
                     </div>
@@ -232,7 +232,7 @@ export default function Jobs() {
                   }}
                 >
                   {iconButton("Edit", Pencil)(() => openEditModal(job))}
-                  {iconButton("Delete", Trash2)(() => setConfirmDeleteId(job.id), { color: "var(--danger)", borderColor: "var(--danger)" })}
+                  {iconButton("Delete", Trash2)(() => handleDelete(job), { color: "var(--danger)", borderColor: "var(--danger)" })}
                   <Link
                     to={`/jobs/${job.id}/applicants`}
                     style={{ ...btn, textDecoration: "none" }}
@@ -381,7 +381,7 @@ export default function Jobs() {
             </Field>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#333", cursor: "pointer" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--text)", cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   checked={form.isActive}
@@ -402,12 +402,6 @@ export default function Jobs() {
           </form>
         </ModalShell>
       )}
-
-      <ConfirmDialog
-        message={confirmDeleteId ? "Move this job to trash?" : null}
-        onConfirm={confirmDelete}
-        onCancel={() => setConfirmDeleteId(null)}
-      />
     </div>
   );
 }

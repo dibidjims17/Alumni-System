@@ -5,6 +5,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { alert as appAlert } from '../components/AppAlert';
 import { useAuth } from '../context/AuthContext';
@@ -78,7 +79,10 @@ export default function ChangePasswordScreen({ navigation, route }) {
 
   const form = (
     <>
-      {!inScreenBack && (
+      {/* Native header (ProfileStack) and the in-screen AppHeader both
+          title this screen — only the headerless flows (forced password
+          change) need the in-screen title. */}
+      {!inScreenBack && student?.mustChangePassword && (
         <Text style={[styles.title, { color: c.text }]}>Change Password</Text>
       )}
       {student.mustChangePassword && (
@@ -152,7 +156,14 @@ export default function ChangePasswordScreen({ navigation, route }) {
           style={[styles.container, { backgroundColor: 'transparent' }]}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {form}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {form}
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     );
@@ -164,7 +175,14 @@ export default function ChangePasswordScreen({ navigation, route }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <AppBackground />
-      {form}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {form}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -174,6 +192,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 28,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,

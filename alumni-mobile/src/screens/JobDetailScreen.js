@@ -202,14 +202,14 @@ export default function JobDetailScreen({ route, navigation }) {
               style={[
                 styles.tag,
                 deadline.urgent
-                  ? { backgroundColor: c.danger }
+                  ? { backgroundColor: c.tintDanger }
                   : { backgroundColor: c.surfaceAlt },
               ]}
             >
               <Text
                 style={[
                   styles.tagText,
-                  { color: deadline.urgent ? '#fff' : c.textMuted },
+                  { color: deadline.urgent ? c.danger : c.textMuted },
                 ]}
               >
                 {deadline.text}
@@ -217,8 +217,8 @@ export default function JobDetailScreen({ route, navigation }) {
             </View>
           ) : null}
           {isClosed ? (
-            <View style={[styles.tag, { backgroundColor: c.danger }]}>
-              <Text style={[styles.tagText, { color: '#fff' }]}>Closed</Text>
+            <View style={[styles.tag, { backgroundColor: c.tintDanger }]}>
+              <Text style={[styles.tagText, { color: c.danger }]}>Closed</Text>
             </View>
           ) : null}
         </View>

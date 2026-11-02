@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ScrollView,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { alert as appAlert } from '../components/AppAlert';
@@ -71,6 +72,12 @@ export default function LoginScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <AppBackground />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       <Image
         source={require('../../assets/schoolLogo.png')}
         style={styles.logo}
@@ -139,6 +146,7 @@ export default function LoginScreen({ navigation }) {
           Forgot Password?
         </Text>
       </TouchableOpacity>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -148,6 +156,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 28,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   logo: {
     width: 130,

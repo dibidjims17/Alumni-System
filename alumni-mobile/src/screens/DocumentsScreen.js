@@ -13,6 +13,7 @@ import apiClient from '../api/client';
 import AppBackground from '../components/AppBackground';
 import { useTheme } from '../theme/ThemeContext';
 import Skeleton from '../components/ui/Skeleton';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 export default function DocumentsScreen() {
   const { theme } = useTheme();
@@ -20,15 +21,22 @@ export default function DocumentsScreen() {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
 
   async function fetchDocuments() {
     try {
       const res = await apiClient.get('/Documents/my-documents');
       setItems(res.data || []);
+      setLoadError(false);
     } catch (err) {
-      // silent — empty state shown below
+      setLoadError(true);
     }
+  }
+
+  function retryLoad() {
+    setIsLoading(true);
+    fetchDocuments().finally(() => setIsLoading(false));
   }
 
   useFocusEffect(
@@ -65,7 +73,7 @@ export default function DocumentsScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.cardHeader}>
-          <View style={styles.iconWrap}>
+          <View style={[styles.iconWrap, { backgroundColor: c.primaryTint }]}>
             <FileText size={18} color={c.primary} />
           </View>
           <View style={styles.headerText}>
@@ -84,7 +92,7 @@ export default function DocumentsScreen() {
           />
         </View>
         {isExpanded && item.notes ? (
-          <Text style={[styles.notes, { color: c.text }]}>{item.notes}</Text>
+          <Text style={[styles.notes, { color: c.text, borderTopColor: c.border }]}>{item.notes}</Text>
         ) : null}
       </TouchableOpacity>
     );
@@ -118,7 +126,12 @@ export default function DocumentsScreen() {
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[c.primary]}
+            tintColor={c.primary}
+          />
         }
         ListHeaderComponent={
           items.length > 0 ? (
@@ -128,10 +141,19 @@ export default function DocumentsScreen() {
           ) : null
         }
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: c.text }]}>
-            No documents on file yet. Contact the Alumni Office if you expect
-            to see your Transcript of Records or Diploma here.
-          </Text>
+          loadError ? (
+            <View style={styles.emptyBlock}>
+              <Text style={[styles.emptyText, { color: c.text }]}>
+                Couldn't load your documents. Check your connection and try again.
+              </Text>
+              <PrimaryButton title="Retry" onPress={retryLoad} style={styles.retryButton} />
+            </View>
+          ) : (
+            <Text style={[styles.emptyText, { color: c.text }]}>
+              No documents on file yet. Contact the Alumni Office if you expect
+              to see your Transcript of Records or Diploma here.
+            </Text>
+          )
         }
       />
     </View>
@@ -182,7 +204,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(128,128,128,0.3)',
   },
   emptyText: { textAlign: 'center', marginTop: 40, paddingHorizontal: 20, fontSize: 13, lineHeight: 20 },
+  emptyBlock: { alignItems: 'center' },
+  retryButton: { marginTop: 14 },
 });

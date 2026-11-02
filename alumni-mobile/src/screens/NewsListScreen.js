@@ -1,5 +1,5 @@
 // src/screens/NewsListScreen.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -48,6 +48,10 @@ export default function NewsListScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [heartingId, setHeartingId] = useState(null);
   const [viewerImage, setViewerImage] = useState(null);
+  // Focus callbacks are stable, so mirror search in a ref for silent refetches.
+  const searchRef = useRef('');
+  const hasLoadedRef = useRef(false);
+  searchRef.current = search;
 
   async function fetchNews(activeSearch = '') {
     try {
@@ -64,9 +68,16 @@ export default function NewsListScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      if (hasLoadedRef.current) {
+        // Refocus: refresh silently so search text and results persist.
+        fetchNews(searchRef.current);
+        return;
+      }
       setIsLoading(true);
-      setSearch('');
-      fetchNews('').finally(() => setIsLoading(false));
+      fetchNews('').finally(() => {
+        hasLoadedRef.current = true;
+        setIsLoading(false);
+      });
     }, [])
   );
 
@@ -232,7 +243,12 @@ export default function NewsListScreen({ navigation }) {
           contentContainerStyle={styles.listContent}
           style={styles.list}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[c.primary]}
+              tintColor={c.primary}
+            />
           }
           ListEmptyComponent={
             <Text style={[styles.emptyText, { color: c.textMuted }]}>

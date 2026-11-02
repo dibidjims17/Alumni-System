@@ -8,9 +8,10 @@ export default function Toast({ message, type = "error", onClose, duration = 400
 
   if (!message) return null;
 
-  const bgColor = type === "error" ? "#fee2e2" : "#dcfce7";
-  const textColor = type === "error" ? "#991b1b" : "#166534";
-  const borderColor = type === "error" ? "#fca5a5" : "#86efac";
+  const isError = type === "error";
+  const bgColor = isError ? "var(--danger-tint)" : "var(--success-tint)";
+  const textColor = isError ? "var(--danger)" : "var(--success)";
+  const borderColor = isError ? "var(--danger)" : "var(--success)";
 
   return (
     <div
@@ -24,7 +25,7 @@ export default function Toast({ message, type = "error", onClose, duration = 400
         borderRadius: 8,
         padding: "12px 16px",
         maxWidth: 360,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+        boxShadow: "var(--shadow-md)",
         zIndex: 2000,
         display: "flex",
         justifyContent: "space-between",

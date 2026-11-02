@@ -105,10 +105,7 @@ export default function NewsDetailScreen({ route, navigation }) {
     if (Platform.OS !== 'android') return;
     const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
       const winH = Dimensions.get('window').height;
-      const scrH = Dimensions.get('screen').height;
       const kbH = e.endCoordinates.height;
-      const kbTop = e.endCoordinates.screenY;
-      console.log(`[kb] win=${winH} screen=${scrH} kbTop=${kbTop} kbH=${kbH}`);
       // If the OS already shrank the window, don't double-count it.
       const resizedBy = Math.max(0, baseWindowHeight.current - winH);
       setKeyboardHeight(Math.max(0, kbH - resizedBy));

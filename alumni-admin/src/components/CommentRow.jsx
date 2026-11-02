@@ -12,8 +12,8 @@ export default function CommentRow({ data, onDelete }) {
           width: 30,
           height: 30,
           borderRadius: "50%",
-          background: "#e7eefb",
-          color: "#34558b",
+          background: "var(--info-tint)",
+          color: "var(--info)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -25,16 +25,16 @@ export default function CommentRow({ data, onDelete }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", flexWrap: "wrap", columnGap: 8, alignItems: "baseline" }}>
-          <strong style={{ fontSize: 13 }}>{data.studentName}</strong>
-          <span style={{ fontSize: 11, color: "#888" }}>
+          <strong style={{ fontSize: 13, color: "var(--text)" }}>{data.studentName}</strong>
+          <span style={{ fontSize: 11, color: "var(--muted)" }}>
             {new Date(data.commentedAt).toLocaleString()}
           </span>
         </div>
-        <p style={{ margin: "2px 0 0", fontSize: 13, color: "#333", lineHeight: 1.4, wordBreak: "break-word" }}>
+        <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--text)", lineHeight: 1.4, wordBreak: "break-word" }}>
           {data.comment}
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: "#999" }}>{data.likeCount} likes</span>
+          <span style={{ fontSize: 11, color: "var(--muted)" }}>{data.likeCount} likes</span>
           <button
             type="button"
             onClick={() => onDelete(data.id)}
@@ -45,10 +45,10 @@ export default function CommentRow({ data, onDelete }) {
               alignItems: "center",
               gap: 4,
               padding: "2px 8px",
-              border: "1px solid #e0b4b4",
+              border: "1px solid var(--danger)",
               borderRadius: 6,
-              background: "#fff",
-              color: "#c0392b",
+              background: "var(--surface)",
+              color: "var(--danger)",
               cursor: "pointer",
               fontSize: 12,
             }}

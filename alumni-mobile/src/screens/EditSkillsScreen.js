@@ -71,11 +71,11 @@ export default function EditSkillsScreen({ route, navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <DiscardDialog {...discardDialog} />
+      <AppBackground />
       <ScrollView
         style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{ padding: 16 }}
       >
-        <AppBackground />
         <Text style={[styles.label, { color: c.textMuted }]}>Add a skill</Text>
         <View style={styles.addRow}>
           <AutocompleteInput
@@ -127,13 +127,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   label: { fontSize: 12, marginTop: 12, marginBottom: 6 },
   addRow: { flexDirection: 'row' },
-  addInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 10,
-    marginRight: 8,
-  },
   addButton: {
     borderWidth: 1,
     borderRadius: 12,
@@ -151,6 +144,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
+    borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },

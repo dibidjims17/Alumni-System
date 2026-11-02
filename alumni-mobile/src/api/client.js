@@ -64,14 +64,19 @@ async function request(method, path, body) {
 }
 
 async function uploadFile(path, fileUri, fileName, mimeType) {
-  const token = await AsyncStorage.getItem('authToken');
-
   const formData = new FormData();
   formData.append('file', {
     uri: fileUri,
     name: fileName,
     type: mimeType,
   });
+  return uploadForm(path, formData);
+}
+
+// Posts a multipart body that may mix plain fields with one or more files.
+// Content-Type is intentionally left unset so fetch can add the boundary.
+async function uploadForm(path, formData) {
+  const token = await AsyncStorage.getItem('authToken');
 
   const headers = {};
   if (token) {
@@ -118,6 +123,7 @@ const apiClient = {
   put: (path, body) => request('PUT', path, body),
   delete: (path) => request('DELETE', path),
   uploadFile: (path, fileUri, fileName, mimeType) => uploadFile(path, fileUri, fileName, mimeType),
+  uploadForm: (path, formData) => uploadForm(path, formData),
 };
 
 export default apiClient;

@@ -8,18 +8,14 @@ import {
   addCustomDocument,
   deleteDocument,
 } from "../services/documentsApi";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { pageWrap, pageHeader, cardGrid, card, cardFlush, cardHead, cardBody, cardFooter, cardTitle, cardMeta, pill, iconTile, fieldLabel, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell } from "../components/kit";
+import {
+  pageWrap, pageHeader, cardGrid, card, cardFlush, cardHead, cardBody, cardFooter, cardTitle, cardMeta, pill, statusTone, iconTile, fieldLabel, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell, EmptyState,
+} from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 
 const STATUS_OPTIONS = ["Pending", "Released"];
-
-const STATUS_STYLES = {
-  Pending: { background: "rgba(239,108,0,0.14)", color: "#B45309" },
-  Released: { background: "rgba(46,125,50,0.13)", color: "var(--success)" },
-};
 
 export default function StudentDocuments() {
   const { id } = useParams();
@@ -32,8 +28,6 @@ export default function StudentDocuments() {
   const [showCustom, setShowCustom] = useState(false);
   const [customType, setCustomType] = useState("");
   const [customLabel, setCustomLabel] = useState("");
-
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   async function loadDocuments() {
     setLoading(true);
@@ -98,14 +92,14 @@ export default function StudentDocuments() {
     }
   }
 
-  async function confirmDelete() {
+  async function askDelete(docId) {
+    if (!(await askConfirm("Delete this document from the checklist?", { confirmLabel: "Delete", danger: true }))) return;
     try {
-      await deleteDocument(confirmDeleteId);
+      await deleteDocument(docId);
+      notifySuccess("Document removed.");
       await loadDocuments();
     } catch (err) {
       notifyError(err.message);
-    } finally {
-      setConfirmDeleteId(null);
     }
   }
 
@@ -165,14 +159,12 @@ export default function StudentDocuments() {
       {loading ? (
         <GridSkeleton count={6} />
       ) : documents.length === 0 ? (
-        <p>No documents found for this student yet.</p>
+        <EmptyState icon={FileText} title="No documents yet" hint="Add a custom document or initialize the checklist." />
       ) : (
         <div style={cardGrid}>
           {documents.map((doc) => {
-            const pillStyle = STATUS_STYLES[doc.status] || STATUS_STYLES.Pending;
             const currentStatus = valueOf(doc, "status");
             const edited = !!pending[doc.id];
-            const released = currentStatus === "Released";
             return (
               <div key={doc.id} style={{ ...card, ...cardFlush, ...(edited ? { outline: "2px solid var(--primary)", outlineOffset: -2 } : {}) }}>
                 <div style={cardHead}>
@@ -185,7 +177,7 @@ export default function StudentDocuments() {
                       Updated {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : "never"}
                     </p>
                   </div>
-                  <span style={{ ...pill, background: pillStyle.background, color: released ? "var(--success)" : "#B45309" }}>
+                  <span style={{ ...pill, ...statusTone(currentStatus === "Released" ? "success" : "warning") }}>
                     {currentStatus}
                   </span>
                 </div>
@@ -222,7 +214,7 @@ export default function StudentDocuments() {
                     {edited ? "● Unsaved" : "●"}
                   </span>
                   <button
-                    onClick={() => setConfirmDeleteId(doc.id)}
+                    onClick={() => askDelete(doc.id)}
                     style={btnDanger}
                     title="Remove document"
                   >
@@ -265,12 +257,6 @@ export default function StudentDocuments() {
           </form>
         </ModalShell>
       )}
-
-      <ConfirmDialog
-        message={confirmDeleteId ? "Delete this document from the checklist?" : null}
-        onConfirm={confirmDelete}
-        onCancel={() => setConfirmDeleteId(null)}
-      />
     </div>
   );
 }

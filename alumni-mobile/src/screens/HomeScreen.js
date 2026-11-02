@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
 import AppBackground from '../components/AppBackground';
+import Skeleton from '../components/ui/Skeleton';
 import { assetUrl } from '../utils/media';
 import { alert as appAlert } from '../components/AppAlert';
 
@@ -70,6 +71,7 @@ export default function HomeScreen({ navigation }) {
       ? { width: '100%', flexGrow: 0, flexBasis: 'auto' }
       : { flexBasis: numColumns === 3 ? '31%' : '48%', flexGrow: 1 };
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadLoaded, setUnreadLoaded] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(null);
 
   useFocusEffect(
@@ -77,7 +79,8 @@ export default function HomeScreen({ navigation }) {
       apiClient
         .get('/Notification/unread-count')
         .then((res) => setUnreadCount(res.data.count || 0))
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => setUnreadLoaded(true));
       // Fresh photo every visit (updates right after a Profile change).
       apiClient
         .get('/Profile')
@@ -133,8 +136,8 @@ export default function HomeScreen({ navigation }) {
           >
             <Bell size={22} color={c.primary} />
             {unreadCount > 0 && (
-              <View style={[styles.badge, { backgroundColor: c.badge }]}>
-                <Text style={styles.badgeText}>
+              <View style={[styles.badge, { backgroundColor: c.tintDanger }]}>
+                <Text style={[styles.badgeText, { color: c.danger }]}>
                   {unreadCount > 99 ? '99+' : String(unreadCount)}
                 </Text>
               </View>
@@ -151,30 +154,39 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.heroGlow} />
           <View style={styles.heroGlowSmall} />
           <Text style={[styles.heroKicker, { color: heroKickerInk }]}>REUNIO · ALUMNI CONNECT</Text>
-          <Text style={[styles.heroTitle, { color: heroInk }]}>
-            {unreadCount > 0
-              ? `${unreadCount} new notification${unreadCount === 1 ? '' : 's'}`
-              : "You're all caught up"}
-          </Text>
-          <Text style={[styles.heroSub, { color: heroSubInk }]}>
-            {unreadCount > 0
-              ? 'Application updates, jobs, and news waiting for you.'
-              : 'No new alerts. Explore jobs, news, and events below.'}
-          </Text>
-          <TouchableOpacity
-            style={styles.heroButton}
-            activeOpacity={0.85}
-            onPress={() => navigation.navigate('Notifications')}
-          >
-            {unreadCount > 0 ? (
-              <Bell size={15} color="#14471A" />
-            ) : (
-              <CheckCheck size={15} color="#14471A" />
-            )}
-            <Text style={styles.heroButtonText}>
-              {unreadCount > 0 ? 'View notifications' : 'Review anyway'}
-            </Text>
-          </TouchableOpacity>
+          {unreadLoaded ? (
+            <>
+              <Text style={[styles.heroTitle, { color: heroInk }]}>
+                {unreadCount > 0
+                  ? `${unreadCount} new notification${unreadCount === 1 ? '' : 's'}`
+                  : "You're all caught up"}
+              </Text>
+              <Text style={[styles.heroSub, { color: heroSubInk }]}>
+                {unreadCount > 0
+                  ? 'Application updates, jobs, and news waiting for you.'
+                  : 'No new alerts. Explore jobs, news, and events below.'}
+              </Text>
+              <TouchableOpacity
+                style={styles.heroButton}
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('Notifications')}
+              >
+                {unreadCount > 0 ? (
+                  <Bell size={15} color="#14471A" />
+                ) : (
+                  <CheckCheck size={15} color="#14471A" />
+                )}
+                <Text style={styles.heroButtonText}>
+                  {unreadCount > 0 ? 'View notifications' : 'Review anyway'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Skeleton width="70%" height={24} style={styles.heroSkeleton} />
+              <Skeleton width="90%" height={14} style={styles.heroSkeleton} />
+            </>
+          )}
         </View>
 
         <Text style={[styles.sectionLabel, { color: c.textMuted }]}>EXPLORE</Text>
@@ -291,7 +303,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#fff',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -341,6 +352,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginTop: 4,
+  },
+  heroSkeleton: {
+    marginBottom: 8,
+    borderRadius: 6,
   },
   heroButton: {
     flexDirection: 'row',

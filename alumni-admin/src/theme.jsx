@@ -49,6 +49,14 @@ const LIGHT = {
   "--hero-muted": "rgba(255,255,255,0.76)",
   "--stat-shadow": "0 1px 2px rgba(27,94,32,0.08), 0 10px 26px rgba(27,94,32,0.10)",
   "--tile-bg": "#E7F0E4",
+  // Decorative overlays — the hero/profile banners keep a dark gradient in
+  // both modes, so these white washes are shared by light and dark.
+  "--hero-ring": "rgba(255,255,255,0.09)",
+  "--hero-ring-soft": "rgba(255,255,255,0.06)",
+  "--hero-chip": "rgba(255,255,255,0.14)",
+  "--hero-chip-border": "rgba(255,255,255,0.24)",
+  // Scrim behind modal/dialog overlays.
+  "--overlay": "rgba(0,0,0,0.5)",
 };
 
 const DARK = {
@@ -91,11 +99,19 @@ const DARK = {
   "--hero-muted": "rgba(234,244,236,0.68)",
   "--stat-shadow": "0 1px 2px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.35)",
   "--tile-bg": "#1E2A22",
+  "--hero-ring": "rgba(255,255,255,0.09)",
+  "--hero-ring-soft": "rgba(255,255,255,0.06)",
+  "--hero-chip": "rgba(255,255,255,0.14)",
+  "--hero-chip-border": "rgba(255,255,255,0.24)",
+  "--overlay": "rgba(0,0,0,0.5)",
 };
 
-export function applyThemeVars(vars) {
+export function applyThemeVars(vars, mode = "light") {
   const root = document.documentElement;
   Object.keys(vars).forEach((key) => root.style.setProperty(key, vars[key]));
+  // Native controls (selects, date pickers, checkboxes, scrollbars) must
+  // follow the active mode too, not stay light-on-dark.
+  root.style.colorScheme = mode;
 }
 
 const ThemeCtx = createContext({ isDark: false, mode: "light", toggle: () => {} });
@@ -110,7 +126,7 @@ export function AdminThemeProvider({ children }) {
   });
 
   useEffect(() => {
-    applyThemeVars(isDark ? DARK : LIGHT);
+    applyThemeVars(isDark ? DARK : LIGHT, isDark ? "dark" : "light");
   }, [isDark]);
 
   const toggle = useCallback(() => {

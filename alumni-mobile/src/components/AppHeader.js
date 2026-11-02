@@ -62,8 +62,8 @@ export default function AppHeader({ title, navigation, showBack }) {
           >
             <Bell size={22} color={c.primary} />
             {unreadCount > 0 && (
-              <View style={[styles.badge, { backgroundColor: c.badge }]}>
-                <Text style={styles.badgeText}>
+              <View style={[styles.badge, { backgroundColor: c.tintDanger }]}>
+                <Text style={[styles.badgeText, { color: c.danger }]}>
                   {unreadCount > 99 ? '99+' : String(unreadCount)}
                 </Text>
               </View>
@@ -105,7 +105,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#fff',
     fontSize: 10,
     fontWeight: '600',
   },

@@ -15,7 +15,7 @@ import { getStudentStats } from "../services/studentsApi";
 import { getNews } from "../services/newsApi";
 import { getJobs } from "../services/jobsApi";
 import { notifyError } from "../components/toastBus";
-import { pageWrap } from "../components/kit";
+import { pageWrap, card, EmptyState, btnPrimary } from "../components/kit";
 import { Skeleton } from "../components/Skeleton";
 
 // Fill-viewport dashboard: hero + stat row + bottom row share the available
@@ -128,6 +128,9 @@ export default function Dashboard() {
   const [activeJobsCount, setActiveJobsCount] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [syncedAt, setSyncedAt] = useState(null);
+  // Set when a load fails so the page can show a Retry instead of being
+  // stuck on skeletons forever (stats stays null on failure).
+  const [loadError, setLoadError] = useState(null);
 
   async function load() {
     try {
@@ -140,7 +143,9 @@ export default function Dashboard() {
       setNewsCount(news.length);
       setActiveJobsCount(jobs.filter((j) => j.isActive).length);
       setSyncedAt(new Date());
+      setLoadError(null);
     } catch (err) {
+      setLoadError(err);
       notifyError(err.message);
     }
   }
@@ -160,7 +165,9 @@ export default function Dashboard() {
     }
   }
 
-  const loading = !stats || newsCount === null || activeJobsCount === null;
+  // A failed load must not leave `loading` stuck true — that would pin the
+  // skeletons (and the disabled Refresh button) on screen forever.
+  const loading = !loadError && (!stats || newsCount === null || activeJobsCount === null);
 
   const derived = useMemo(() => {
     const total = stats?.totalStudents ?? 0;
@@ -222,7 +229,7 @@ export default function Dashboard() {
             width: 230,
             height: 230,
             borderRadius: "50%",
-            background: "rgba(255,255,255,0.09)",
+            background: "var(--hero-ring)",
             pointerEvents: "none",
           }}
         />
@@ -234,7 +241,7 @@ export default function Dashboard() {
             width: 220,
             height: 220,
             borderRadius: "50%",
-            background: "rgba(255,255,255,0.06)",
+            background: "var(--hero-ring-soft)",
             pointerEvents: "none",
           }}
         />
@@ -267,7 +274,7 @@ export default function Dashboard() {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
             <button
               onClick={handleRefresh}
-              disabled={refreshing || loading}
+              disabled={refreshing}
               title="Re-fetch dashboard counts"
               style={{
                 display: "inline-flex",
@@ -277,15 +284,15 @@ export default function Dashboard() {
                 fontWeight: 700,
                 padding: "8px 14px",
                 borderRadius: 999,
-                background: "rgba(255,255,255,0.14)",
-                border: "1px solid rgba(255,255,255,0.24)",
+                background: "var(--hero-chip)",
+                border: "1px solid var(--hero-chip-border)",
                 color: "var(--hero-text)",
                 cursor: refreshing ? "wait" : "pointer",
                 whiteSpace: "nowrap",
               }}
             >
               <RefreshCw size={14} style={{ animation: refreshing ? "spin 1s linear infinite" : "none" }} />
-              {refreshing ? "Syncing…" : loading ? "Loading…" : "Refresh"}
+              {refreshing ? "Syncing…" : loading ? "Loading…" : loadError && !stats ? "Retry" : "Refresh"}
             </button>
             <span style={{ fontSize: 11, color: "var(--hero-muted)" }}>
               {syncedAt ? `Synced ${syncedAt.toLocaleTimeString()}` : "Not synced yet"}
@@ -294,13 +301,28 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {loadError && !stats ? (
+        <div style={{ ...card, alignItems: "center", justifyContent: "center", padding: "36px 20px" }}>
+          <EmptyState
+            icon={RefreshCw}
+            title="Dashboard data couldn't be loaded"
+            hint={loadError.message || "Check your connection and try again."}
+            action={
+              <button type="button" onClick={handleRefresh} disabled={refreshing} style={btnPrimary}>
+                <RefreshCw size={15} /> {refreshing ? "Retrying…" : "Retry"}
+              </button>
+            }
+          />
+        </div>
+      ) : (
+        <>
       <div className="dash-stat-grid" style={statGrid}>
         <StatCard label="Total" value={derived.total} sub="All records" Icon={Users} accent="var(--primary)" tint="var(--tile-bg)" loading={loading} />
-        <StatCard label="Graduates" value={derived.grads} sub={`${derived.gradPct}% of total`} Icon={GraduationCap} accent="#2E7D32" tint="rgba(46,125,50,0.13)" loading={loading} />
-        <StatCard label="Active" value={derived.active} sub={`${derived.activePct}% active`} Icon={UserCheck} accent="#1565C0" tint="rgba(21,101,192,0.12)" loading={loading} />
-        <StatCard label="News" value={newsCount ?? 0} sub="Announcements" Icon={Newspaper} accent="#6A1B9A" tint="rgba(106,27,154,0.12)" loading={loading} />
-        <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="#EF6C00" tint="rgba(239,108,0,0.13)" loading={loading} />
-        <StatCard label="Claimed" value={derived.claimed} sub={`${derived.claimedPct}% logged in`} Icon={Check} accent="#2E7D32" tint="rgba(46,125,50,0.12)" loading={loading} />
+        <StatCard label="Graduates" value={derived.grads} sub={`${derived.gradPct}% of total`} Icon={GraduationCap} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
+        <StatCard label="Active" value={derived.active} sub={`${derived.activePct}% active`} Icon={UserCheck} accent="var(--info)" tint="var(--info-tint)" loading={loading} />
+        <StatCard label="News" value={newsCount ?? 0} sub="Announcements" Icon={Newspaper} accent="var(--violet)" tint="var(--violet-tint)" loading={loading} />
+        <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="var(--warning)" tint="var(--warning-tint)" loading={loading} />
+        <StatCard label="Claimed" value={derived.claimed} sub={`${derived.claimedPct}% logged in`} Icon={Check} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
       </div>
 
       <div className="dash-bottom-grid" style={bottomGrid}>
@@ -329,7 +351,7 @@ export default function Dashboard() {
                   <span style={{ color: "var(--muted)" }}>{`${derived.grads} (${derived.gradPct}%)`}</span>
                 )}
               </div>
-              <Bar pct={derived.gradPct} color="#2E7D32" />
+              <Bar pct={derived.gradPct} color="var(--success)" />
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
@@ -338,7 +360,7 @@ export default function Dashboard() {
                   <span style={{ color: "var(--muted)" }}>{`${derived.active} (${derived.activePct}%)`}</span>
                 )}
               </div>
-              <Bar pct={derived.activePct} color="#1565C0" />
+              <Bar pct={derived.activePct} color="var(--info)" />
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
@@ -347,7 +369,7 @@ export default function Dashboard() {
                   <span style={{ color: "var(--muted)" }}>{`${derived.claimed} (${derived.claimedPct}%)`}</span>
                 )}
               </div>
-              <Bar pct={derived.claimedPct} color="#2E7D32" />
+              <Bar pct={derived.claimedPct} color="var(--success)" />
             </div>
           </div>
         </div>
@@ -400,6 +422,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+        </>
+      )}
 
       <style>{`
         @media (max-width: 1100px) {

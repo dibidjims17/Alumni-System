@@ -263,7 +263,7 @@ export const cardGrid = {
 
 export const card = {
   border: "1px solid var(--border)",
-  borderRadius: 14,
+  borderRadius: "var(--radius-md)",
   padding: "16px 18px",
   background: "var(--surface)",
   display: "flex",
@@ -271,7 +271,7 @@ export const card = {
   gap: 12,
   minWidth: 0,
   height: "100%",
-  boxShadow: "0 1px 2px rgba(16,24,20,0.06), 0 4px 14px rgba(16,24,20,0.06)",
+  boxShadow: "var(--shadow-md)",
 };
 
 // Structured variant: padding moves into head/body/footer so dividers can
@@ -489,13 +489,41 @@ export function iconButton(label, Icon) {
   };
 }
 
+// Open-modal stack: Escape must only ever reach the top-most shell so a
+// confirm raised above an edit dialog doesn't close both at once.
+const openModals = [];
+
 // Clean modal shell: overlay + titled panel. Caller supplies the body.
+// Escape closes it through the exact same onClose the backdrop uses, so any
+// guard the caller put on onClose (e.g. ignore close while saving) applies.
 export function ModalShell({ title, onClose, width = 500, zIndex = 1000, children }) {
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    const el = overlayRef.current;
+    openModals.push(el);
+    return () => {
+      const i = openModals.indexOf(el);
+      if (i >= 0) openModals.splice(i, 1);
+    };
+  }, []);
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key !== "Escape") return;
+      if (openModals[openModals.length - 1] !== overlayRef.current) return;
+      onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div
+      ref={overlayRef}
       style={{
         position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(0,0,0,0.5)", display: "flex",
+        background: "var(--overlay)", display: "flex",
         alignItems: "center", justifyContent: "center", zIndex,
       }}
       onClick={onClose}

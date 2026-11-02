@@ -53,6 +53,12 @@ export default function DirectoryScreen({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const pageRef = useRef(1);
+  // Focus callbacks are stable, so mirror filters in refs for silent refetches.
+  const searchRef = useRef('');
+  const programRef = useRef('');
+  const hasLoadedRef = useRef(false);
+  searchRef.current = search;
+  programRef.current = program;
 
   async function loadFilters() {
     try {
@@ -63,11 +69,12 @@ export default function DirectoryScreen({ navigation }) {
     }
   }
 
-  async function loadDirectory(resetPage, activeSearch, activeProgram) {
+  async function loadDirectory(resetPage, activeSearch, activeProgram, silent = false) {
     if (isLoadingMore) return;
     const targetPage = resetPage ? 1 : pageRef.current + 1;
     if (resetPage) {
-      setIsLoading(true);
+      // Silent refetches keep the current list visible (no skeleton flash).
+      if (!silent) setIsLoading(true);
     } else {
       setIsLoadingMore(true);
     }
@@ -82,6 +89,8 @@ export default function DirectoryScreen({ navigation }) {
       setTotal(res.data.total || 0);
       pageRef.current = targetPage;
     } catch (err) {
+      // Silent refetch failures keep the last good list on screen.
+      if (silent) return;
       const message = err.response?.data?.message || 'Could not load directory.';
       appAlert('Error', message);
     } finally {
@@ -92,10 +101,17 @@ export default function DirectoryScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      if (hasLoadedRef.current) {
+        loadFilters();
+        // Refresh silently, but only from page 1 — reloading would
+        // discard pages already fetched via "Load more".
+        if (pageRef.current === 1) {
+          loadDirectory(true, searchRef.current, programRef.current, true);
+        }
+        return;
+      }
+      hasLoadedRef.current = true;
       loadFilters();
-      setSearch('');
-      setProgram('');
-      setPickerOpen(false);
       loadDirectory(true, '', '');
     }, [])
   );
@@ -228,7 +244,12 @@ export default function DirectoryScreen({ navigation }) {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[c.primary]}
+              tintColor={c.primary}
+            />
           }
           ListEmptyComponent={
             <Text style={[styles.emptyText, { color: c.text }]}>
@@ -267,6 +288,7 @@ const styles = StyleSheet.create({
   filterLabel: { fontSize: 12, marginTop: 12, marginBottom: 4 },
   dropdown: {
     borderWidth: 1,
+    borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',

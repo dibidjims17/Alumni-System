@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, UserCheck, UserX, Pencil, Camera } from "lucide-react";
+import { ShieldCheck, UserCheck, UserX, Pencil, Camera, Plus } from "lucide-react";
 import { getAdmins, createAdmin, toggleAdminStatus, updateAdminRole, updateAdminProfile, uploadAdminPicture } from "../services/adminApi";
 import { getSession, patchSession } from "../services/api";
 import { API_BASE_URL } from "../config";
-import Toast from "../components/Toast";
+import { notifyError, notifySuccess } from "../components/toastBus";
 import {
   ModalShell, Field, textInput, selectStyle,
   cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton,
-  btn, btnPrimary, PasswordInput,
+  btn, btnPrimary, PasswordInput, statusTone, EmptyState, pageWrap,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
@@ -25,7 +25,6 @@ export function adminPictureUrl(path) {
 export default function ManageAdmins() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
@@ -44,7 +43,7 @@ export default function ManageAdmins() {
       const data = await getAdmins();
       setAdmins(data);
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -70,10 +69,10 @@ export default function ManageAdmins() {
     try {
       await createAdmin(form);
       closeModal();
-      setToast({ message: "Admin created successfully.", type: "success" });
+      notifySuccess("Admin created successfully.");
       loadAdmins();
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     } finally {
       setSaving(false);
     }
@@ -87,29 +86,29 @@ export default function ManageAdmins() {
 
   async function handleToggleStatus(admin) {
     if (isSelf(admin)) {
-      setToast({ message: "You can't deactivate your own account.", type: "error" });
+      notifyError("You can't deactivate your own account.");
       return;
     }
     try {
       await toggleAdminStatus(admin.id);
-      setToast({ message: "Admin status updated.", type: "success" });
+      notifySuccess("Admin status updated.");
       loadAdmins();
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     }
   }
 
   async function handleRoleChange(admin, newRole) {
     if (isSelf(admin)) {
-      setToast({ message: "You can't change your own role.", type: "error" });
+      notifyError("You can't change your own role.");
       return;
     }
     try {
       await updateAdminRole(admin.id, newRole);
-      setToast({ message: "Admin role updated.", type: "success" });
+      notifySuccess("Admin role updated.");
       loadAdmins();
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     }
   }
 
@@ -138,7 +137,7 @@ export default function ManageAdmins() {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > MAX_PICTURE_BYTES) {
-      setToast({ message: "Image size must not exceed 5MB.", type: "error" });
+      notifyError("Image size must not exceed 5MB.");
       return;
     }
     if (editPreview && editPreview.startsWith("blob:")) {
@@ -166,26 +165,22 @@ export default function ManageAdmins() {
       if (isSelf(editingAdmin)) {
         patchSession({ fullName: updated.fullName, profilePicturePath: picturePath });
       }
-      setToast({ message: "Profile updated.", type: "success" });
+      notifySuccess("Profile updated.");
       closeEditModal();
       loadAdmins();
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     } finally {
       setEditSaving(false);
     }
   }
 
   function rolePillStyle(role) {
-    return role === "SuperAdmin"
-      ? { background: "#ede7f6", color: "#5e35b1" }
-      : { background: "#e3f2fd", color: "#1565c0" };
+    return statusTone(role === "SuperAdmin" ? "violet" : "info");
   }
 
   function statusPillStyle(isActive) {
-    return isActive
-      ? { background: "#e6f4ea", color: "#1e7e34" }
-      : { background: "#fdecea", color: "#c0392b" };
+    return statusTone(isActive ? "success" : "danger");
   }
 
   function renderAdminCard(a, self) {
@@ -206,9 +201,9 @@ export default function ManageAdmins() {
             />
           ) : (
             <div style={{
-              width: 44, height: 44, borderRadius: "50%", background: "#eceaf6",
+              width: 44, height: 44, borderRadius: "50%", background: "var(--violet-tint)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontWeight: 700, color: "#4a3b8f", flexShrink: 0,
+              fontWeight: 700, color: "var(--violet)", flexShrink: 0,
             }}>
               {avatarInitial(a)}
             </div>
@@ -292,21 +287,17 @@ export default function ManageAdmins() {
   }
 
   return (
-    <div>
-      <Toast
-        message={toast?.message}
-        type={toast?.type}
-        onClose={() => setToast(null)}
-      />
-
+    <div style={pageWrap}>
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-        <button onClick={openCreateModal} style={btnPrimary}>+ Add Admin</button>
+        <button onClick={openCreateModal} style={btnPrimary}>
+          <Plus size={15} /> Add Admin
+        </button>
       </div>
 
       {loading ? (
         <GridSkeleton count={6} />
       ) : admins.length === 0 ? (
-        <p style={{ ...cardMeta }}>No admins found.</p>
+        <EmptyState icon={ShieldCheck} title="No admins yet" hint="Create the first admin account to get started." />
       ) : (
         <div style={cardGrid}>
           {selfAdmin && renderAdminCard(selfAdmin, true)}
@@ -364,11 +355,11 @@ export default function ManageAdmins() {
             </Field>
 
             <div style={actionsRow}>
-              <button type="submit" disabled={saving} style={btnPrimary}>
-                {saving ? "Creating..." : "Create Admin"}
-              </button>
               <button type="button" onClick={closeModal} style={btn}>
                 Cancel
+              </button>
+              <button type="submit" disabled={saving} style={btnPrimary}>
+                {saving ? "Creating..." : "Create Admin"}
               </button>
             </div>
           </form>
@@ -387,9 +378,9 @@ export default function ManageAdmins() {
                 />
               ) : (
                 <div style={{
-                  width: 64, height: 64, borderRadius: "50%", background: "#eceaf6",
+                  width: 64, height: 64, borderRadius: "50%", background: "var(--violet-tint)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 700, fontSize: 22, color: "#4a3b8f", flexShrink: 0,
+                  fontWeight: 700, fontSize: 22, color: "var(--violet)", flexShrink: 0,
                 }}>
                   {avatarInitial(editingAdmin)}
                 </div>
@@ -424,11 +415,11 @@ export default function ManageAdmins() {
               />
             </Field>
             <div style={actionsRow}>
-              <button type="submit" disabled={editSaving} style={btnPrimary}>
-                {editSaving ? "Saving..." : "Save changes"}
-              </button>
               <button type="button" onClick={closeEditModal} style={btn}>
                 Cancel
+              </button>
+              <button type="submit" disabled={editSaving} style={btnPrimary}>
+                {editSaving ? "Saving..." : "Save changes"}
               </button>
             </div>
           </form>

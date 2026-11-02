@@ -3,9 +3,9 @@ import { RotateCcw, Trash2, Briefcase, Newspaper, CalendarDays } from "lucide-re
 import { getDeletedJobs, restoreJob, permanentlyDeleteJob } from "../services/jobsApi";
 import { getDeletedNews, restoreNews, permanentlyDeleteNews } from "../services/newsApi";
 import { getDeletedEvents, restoreEvent, permanentlyDeleteEvent } from "../services/eventsApi";
-import ConfirmDialog from "../components/ConfirmDialog";
-import Toast from "../components/Toast";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, iconButton, selectStyle, btn, btnDanger, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
+import { notifyError, notifySuccess } from "../components/toastBus";
+import { askConfirm } from "../components/confirmBus";
 import { GridSkeleton } from "../components/Skeleton";
 import { getSession } from "../services/api";
 
@@ -14,8 +14,6 @@ export default function Trash() {
   const [deletedNews, setDeletedNews] = useState([]);
   const [deletedEvents, setDeletedEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
-  const [confirmAction, setConfirmAction] = useState(null);
 
   const [typeFilter, setTypeFilter] = useState("all"); // "all" | "jobs" | "news" | "events"
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,7 +29,7 @@ export default function Trash() {
       setDeletedNews(news);
       setDeletedEvents(events);
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -41,134 +39,92 @@ export default function Trash() {
     loadTrash();
   }, []);
 
-  function askRestoreJob(job) {
-    setConfirmAction({
-      message: `Restore "${job.jobTitle}"?`,
-      onConfirm: async () => {
-        try {
-          await restoreJob(job.id);
-          setToast({ message: "Job restored.", type: "success" });
-          loadTrash();
-        } catch (err) {
-          setToast({ message: err.message, type: "error" });
-        } finally {
-          setConfirmAction(null);
-        }
-      },
-    });
+  async function askRestoreJob(job) {
+    if (!(await askConfirm(`Restore "${job.jobTitle}"?`, { confirmLabel: "Restore" }))) return;
+    try {
+      await restoreJob(job.id);
+      notifySuccess("Job restored.");
+      loadTrash();
+    } catch (err) {
+      notifyError(err.message);
+    }
   }
 
-  function askPermanentDeleteJob(job) {
-    setConfirmAction({
-      message: `Permanently delete "${job.jobTitle}"? This cannot be undone.`,
-      onConfirm: async () => {
-        try {
-          await permanentlyDeleteJob(job.id);
-          setToast({ message: "Job permanently deleted.", type: "success" });
-          loadTrash();
-        } catch (err) {
-          setToast({ message: err.message, type: "error" });
-        } finally {
-          setConfirmAction(null);
-        }
-      },
-    });
+  async function askPermanentDeleteJob(job) {
+    if (!(await askConfirm(`Permanently delete "${job.jobTitle}"? This cannot be undone.`, { confirmLabel: "Delete forever", danger: true }))) return;
+    try {
+      await permanentlyDeleteJob(job.id);
+      notifySuccess("Job permanently deleted.");
+      loadTrash();
+    } catch (err) {
+      notifyError(err.message);
+    }
   }
 
-  function askRestoreNews(item) {
-    setConfirmAction({
-      message: `Restore "${item.title}"?`,
-      onConfirm: async () => {
-        try {
-          await restoreNews(item.id);
-          setToast({ message: "News restored.", type: "success" });
-          loadTrash();
-        } catch (err) {
-          setToast({ message: err.message, type: "error" });
-        } finally {
-          setConfirmAction(null);
-        }
-      },
-    });
+  async function askRestoreNews(item) {
+    if (!(await askConfirm(`Restore "${item.title}"?`, { confirmLabel: "Restore" }))) return;
+    try {
+      await restoreNews(item.id);
+      notifySuccess("News restored.");
+      loadTrash();
+    } catch (err) {
+      notifyError(err.message);
+    }
   }
 
-  function askPermanentDeleteNews(item) {
-    setConfirmAction({
-      message: `Permanently delete "${item.title}"? This cannot be undone.`,
-      onConfirm: async () => {
-        try {
-          await permanentlyDeleteNews(item.id);
-          setToast({ message: "News permanently deleted.", type: "success" });
-          loadTrash();
-        } catch (err) {
-          setToast({ message: err.message, type: "error" });
-        } finally {
-          setConfirmAction(null);
-        }
-      },
-    });
+  async function askPermanentDeleteNews(item) {
+    if (!(await askConfirm(`Permanently delete "${item.title}"? This cannot be undone.`, { confirmLabel: "Delete forever", danger: true }))) return;
+    try {
+      await permanentlyDeleteNews(item.id);
+      notifySuccess("News permanently deleted.");
+      loadTrash();
+    } catch (err) {
+      notifyError(err.message);
+    }
   }
 
   const trashCount = deletedJobs.length + deletedNews.length + deletedEvents.length;
 
-  function askRestoreEvent(event) {
-    setConfirmAction({
-      message: `Restore "${event.title}"?`,
-      onConfirm: async () => {
-        try {
-          await restoreEvent(event.id);
-          setToast({ message: "Event restored.", type: "success" });
-          loadTrash();
-        } catch (err) {
-          setToast({ message: err.message, type: "error" });
-        } finally {
-          setConfirmAction(null);
-        }
-      },
-    });
+  async function askRestoreEvent(event) {
+    if (!(await askConfirm(`Restore "${event.title}"?`, { confirmLabel: "Restore" }))) return;
+    try {
+      await restoreEvent(event.id);
+      notifySuccess("Event restored.");
+      loadTrash();
+    } catch (err) {
+      notifyError(err.message);
+    }
   }
 
-  function askPermanentDeleteEvent(event) {
-    setConfirmAction({
-      message: `Permanently delete "${event.title}"? This cannot be undone.`,
-      onConfirm: async () => {
-        try {
-          await permanentlyDeleteEvent(event.id);
-          setToast({ message: "Event permanently deleted.", type: "success" });
-          loadTrash();
-        } catch (err) {
-          setToast({ message: err.message, type: "error" });
-        } finally {
-          setConfirmAction(null);
-        }
-      },
-    });
+  async function askPermanentDeleteEvent(event) {
+    if (!(await askConfirm(`Permanently delete "${event.title}"? This cannot be undone.`, { confirmLabel: "Delete forever", danger: true }))) return;
+    try {
+      await permanentlyDeleteEvent(event.id);
+      notifySuccess("Event permanently deleted.");
+      loadTrash();
+    } catch (err) {
+      notifyError(err.message);
+    }
   }
 
-  function askEmptyTrash() {
+  async function askEmptyTrash() {
     if (trashCount === 0) return;
-    setConfirmAction({
-      message: `Permanently delete all ${trashCount} item${trashCount === 1 ? "" : "s"} in trash? This cannot be undone.`,
-      onConfirm: async () => {
-        try {
-          for (const job of deletedJobs) {
-            await permanentlyDeleteJob(job.id);
-          }
-          for (const item of deletedNews) {
-            await permanentlyDeleteNews(item.id);
-          }
-          for (const event of deletedEvents) {
-            await permanentlyDeleteEvent(event.id);
-          }
-          setToast({ message: `Emptied trash (${trashCount} item${trashCount === 1 ? "" : "s"} deleted).`, type: "success" });
-          loadTrash();
-        } catch (err) {
-          setToast({ message: err.message, type: "error" });
-        } finally {
-          setConfirmAction(null);
-        }
-      },
-    });
+    if (!(await askConfirm(`Permanently delete all ${trashCount} item${trashCount === 1 ? "" : "s"} in trash? This cannot be undone.`, { confirmLabel: "Empty trash", danger: true }))) return;
+    try {
+      for (const job of deletedJobs) {
+        await permanentlyDeleteJob(job.id);
+      }
+      for (const item of deletedNews) {
+        await permanentlyDeleteNews(item.id);
+      }
+      for (const event of deletedEvents) {
+        await permanentlyDeleteEvent(event.id);
+      }
+      notifySuccess(`Emptied trash (${trashCount} item${trashCount === 1 ? "" : "s"} deleted).`);
+      loadTrash();
+    } catch (err) {
+      notifyError(err.message);
+    }
   }
 
   const combinedItems = useMemo(() => {
@@ -235,14 +191,7 @@ export default function Trash() {
   }, [deletedJobs, deletedNews, deletedEvents, typeFilter, searchTerm]);
 
   return (
-    <div>
-      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
-      <ConfirmDialog
-        message={confirmAction?.message}
-        onConfirm={confirmAction?.onConfirm}
-        onCancel={() => setConfirmAction(null)}
-      />
-
+    <div style={pageWrap}>
       <div style={{ ...toolbar, justifyContent: "space-between" }}>
         <span style={{ ...cardMeta }}>
           {canManage
@@ -269,9 +218,7 @@ export default function Trash() {
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}
         />
-      </div>
 
-      <div style={{ ...filterRow, marginTop: -4 }}>
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="all">All Types</option>
           <option value="jobs">Jobs Only</option>
@@ -293,7 +240,15 @@ export default function Trash() {
       {loading ? (
         <GridSkeleton count={6} />
       ) : combinedItems.length === 0 ? (
-        <p>Nothing in trash{searchTerm ? " matching your search." : "."}</p>
+        <EmptyState
+          icon={Trash2}
+          title={searchTerm ? "Nothing matches your search" : "Trash is empty"}
+          hint={
+            searchTerm
+              ? "Try a different search or clear the filters."
+              : "Deleted jobs, news, and events will show up here."
+          }
+        />
       ) : (
         <div style={cardGrid}>
           {combinedItems.map((item) => (
@@ -322,8 +277,7 @@ export default function Trash() {
                     marginLeft: "auto", flexShrink: 0,
                     display: "inline-flex", alignItems: "center", gap: 5,
                     fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                    background: item.type === "Job" ? "#e3f2fd" : item.type === "Event" ? "#e0f2f1" : "#f3e5f5",
-                    color: item.type === "Job" ? "#1565c0" : item.type === "Event" ? "#00796b" : "#6a1b9a",
+                    ...statusTone(item.type === "Job" ? "info" : item.type === "Event" ? "success" : "violet"),
                   }}
                 >
                   {item.type === "Job" ? <Briefcase size={13} /> : item.type === "Event" ? <CalendarDays size={13} /> : <Newspaper size={13} />}

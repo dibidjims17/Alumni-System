@@ -3,11 +3,11 @@ import { ShieldCheck, Pencil, Camera } from "lucide-react";
 import { getMyProfile, updateMyProfile, uploadMyPicture } from "../services/adminApi";
 import { patchSession } from "../services/api";
 import { API_BASE_URL } from "../config";
-import Toast from "../components/Toast";
+import { notifyError, notifySuccess } from "../components/toastBus";
 import {
   ModalShell, Field, textInput,
   card, cardTitle, cardMeta, actionsRow,
-  btn, btnPrimary,
+  btn, btnPrimary, statusTone, EmptyState, pageWrap,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
@@ -25,15 +25,12 @@ function avatarInitial(admin) {
 }
 
 function statusPillStyle(isActive) {
-  return isActive
-    ? { background: "#e6f4ea", color: "#1e7e34" }
-    : { background: "#fdecea", color: "#c0392b" };
+  return statusTone(isActive ? "success" : "danger");
 }
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
 
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState("");
@@ -47,7 +44,7 @@ export default function Profile() {
     try {
       setProfile(await getMyProfile());
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -79,7 +76,7 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > MAX_PICTURE_BYTES) {
-      setToast({ message: "Image size must not exceed 5MB.", type: "error" });
+      notifyError("Image size must not exceed 5MB.");
       return;
     }
     if (editPreview && editPreview.startsWith("blob:")) {
@@ -104,28 +101,27 @@ export default function Profile() {
       }
       // Keep the header in sync without forcing a re-login.
       patchSession({ fullName: updated.fullName, profilePicturePath: picturePath });
-      setToast({ message: "Profile updated.", type: "success" });
+      notifySuccess("Profile updated.");
       closeEditModal();
       loadProfile();
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      notifyError(err.message);
     } finally {
       setEditSaving(false);
     }
   }
 
   return (
-    <div>
-      <Toast
-        message={toast?.message}
-        type={toast?.type}
-        onClose={() => setToast(null)}
-      />
-
+    <div style={pageWrap}>
       {loading ? (
         <GridSkeleton count={1} />
       ) : !profile ? (
-        <p>Could not load your profile.</p>
+        <EmptyState
+          icon={ShieldCheck}
+          title="Could not load your profile"
+          hint="Check your connection and try again."
+          action={<button type="button" onClick={loadProfile} style={btnPrimary}>Retry</button>}
+        />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ ...card, padding: 0, overflow: "hidden" }}>
@@ -138,17 +134,17 @@ export default function Profile() {
               <div style={{
                 position: "absolute", right: -60, top: -70,
                 width: 240, height: 240, borderRadius: "50%",
-                background: "rgba(255,255,255,0.09)", pointerEvents: "none",
+                background: "var(--hero-ring)", pointerEvents: "none",
               }} />
               <div style={{
                 position: "absolute", right: 90, bottom: -110,
                 width: 200, height: 200, borderRadius: "50%",
-                background: "rgba(255,255,255,0.06)", pointerEvents: "none",
+                background: "var(--hero-ring-soft)", pointerEvents: "none",
               }} />
               <div style={{
                 position: "absolute", right: 24, bottom: 12,
                 fontSize: 12, fontWeight: 700, letterSpacing: 1.5,
-                color: "rgba(255,255,255,0.65)", textAlign: "right",
+                color: "var(--hero-muted)", textAlign: "right",
               }}>
                 REUNIO · ADMIN CONSOLE
               </div>
@@ -167,7 +163,7 @@ export default function Profile() {
                       width: 120, height: 120, borderRadius: "50%", objectFit: "cover", flexShrink: 0,
                       border: "4px solid var(--surface)",
                       background: "var(--surface)",
-                      boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                      boxShadow: "var(--shadow-md)",
                       position: "relative", zIndex: 2,
                     }}
                   />
@@ -178,7 +174,7 @@ export default function Profile() {
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontWeight: 800, fontSize: 46, flexShrink: 0,
                     border: "4px solid var(--surface)",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                    boxShadow: "var(--shadow-md)",
                     position: "relative", zIndex: 2,
                   }}>
                     {avatarInitial(profile)}
@@ -192,7 +188,7 @@ export default function Profile() {
                       display: "inline-flex", alignItems: "center", gap: 5,
                       fontSize: 12, fontWeight: 600, padding: "3px 10px",
                       borderRadius: 999, whiteSpace: "nowrap",
-                      background: "rgba(46,125,50,0.13)", color: "var(--success)",
+                      background: "var(--success-tint)", color: "var(--success)",
                     }}>
                       <ShieldCheck size={13} />
                       {profile.role}
@@ -258,9 +254,9 @@ export default function Profile() {
                 />
               ) : (
                 <div style={{
-                  width: 64, height: 64, borderRadius: "50%", background: "#eceaf6",
+                  width: 64, height: 64, borderRadius: "50%", background: "var(--violet-tint)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 700, fontSize: 22, color: "#4a3b8f", flexShrink: 0,
+                  fontWeight: 700, fontSize: 22, color: "var(--violet)", flexShrink: 0,
                 }}>
                   {avatarInitial({ fullName: editName, username: profile?.username })}
                 </div>
@@ -298,11 +294,11 @@ export default function Profile() {
               Only you can change these — role and account status stay with a SuperAdmin.
             </p>
             <div style={actionsRow}>
-              <button type="submit" disabled={editSaving} style={btnPrimary}>
-                {editSaving ? "Saving..." : "Save changes"}
-              </button>
               <button type="button" onClick={closeEditModal} style={btn}>
                 Cancel
+              </button>
+              <button type="submit" disabled={editSaving} style={btnPrimary}>
+                {editSaving ? "Saving..." : "Save changes"}
               </button>
             </div>
           </form>

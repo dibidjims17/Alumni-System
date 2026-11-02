@@ -71,11 +71,11 @@ export default function EditProfileScreen({ route, navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <DiscardDialog {...discardDialog} />
+      <AppBackground />
       <ScrollView
         style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={styles.content}
       >
-        <AppBackground />
         <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
           <Text style={[styles.cardTitle, { color: c.text }]}>Basic info</Text>
 

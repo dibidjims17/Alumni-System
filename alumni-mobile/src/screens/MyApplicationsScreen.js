@@ -17,6 +17,7 @@ import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
+import PrimaryButton from '../components/ui/PrimaryButton';
 import { useTheme } from '../theme/ThemeContext';
 
 const CAREER_TABS = [
@@ -29,10 +30,11 @@ export default function MyApplicationsScreen({ navigation }) {
   const c = theme.colors;
 
   const STATUS_STYLES = {
-    Pending: { backgroundColor: c.surfaceAlt, color: c.textMuted },
-    Reviewed: { backgroundColor: c.primaryTint, color: c.primary },
-    Shortlisted: { backgroundColor: c.primaryTint, color: c.success },
-    Rejected: { backgroundColor: c.surfaceAlt, color: c.danger },
+    Pending: { backgroundColor: c.tintWarning, color: c.warning },
+    Reviewed: { backgroundColor: c.tintInfo, color: c.info },
+    Shortlisted: { backgroundColor: c.tintSuccess, color: c.success },
+    Accepted: { backgroundColor: c.tintSuccess, color: c.success },
+    Rejected: { backgroundColor: c.tintDanger, color: c.danger },
   };
 
   function statusStyle(status) {
@@ -42,6 +44,7 @@ export default function MyApplicationsScreen({ navigation }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const [historyFor, setHistoryFor] = useState(null);
   const [history, setHistory] = useState([]);
@@ -51,9 +54,15 @@ export default function MyApplicationsScreen({ navigation }) {
     try {
       const res = await apiClient.get('/Jobs/my-applications');
       setItems(res.data || []);
+      setLoadError(false);
     } catch (err) {
-      // silent
+      setLoadError(true);
     }
+  }
+
+  function retryLoad() {
+    setIsLoading(true);
+    fetchApplications().finally(() => setIsLoading(false));
   }
 
   useFocusEffect(
@@ -134,18 +143,38 @@ export default function MyApplicationsScreen({ navigation }) {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[c.primary]}
+              tintColor={c.primary}
+            />
           }
           ListEmptyComponent={
-            <Text style={[styles.emptyText, { color: c.text }]}>
-              You haven't applied to any jobs yet.
-            </Text>
+            loadError ? (
+              <View style={styles.emptyBlock}>
+                <Text style={[styles.emptyText, { color: c.text }]}>
+                  Couldn't load your applications. Check your connection and try again.
+                </Text>
+                <PrimaryButton title="Retry" onPress={retryLoad} style={styles.retryButton} />
+              </View>
+            ) : (
+              <Text style={[styles.emptyText, { color: c.text }]}>
+                You haven't applied to any jobs yet.
+              </Text>
+            )
           }
         />
       )}
 
       <Modal visible={historyFor != null} animationType="slide" transparent onRequestClose={() => setHistoryFor(null)}>
         <View style={[styles.modalBackdrop, { backgroundColor: c.overlay }]}>
+          <TouchableOpacity
+            style={styles.modalBackdropTouch}
+            onPress={() => setHistoryFor(null)}
+            activeOpacity={1}
+            accessibilityLabel="Dismiss timeline"
+          />
           <View style={[styles.modalBody, { backgroundColor: c.surface }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: c.text }]}>Timeline</Text>
@@ -225,8 +254,11 @@ const styles = StyleSheet.create({
   timelineButton: { marginTop: 8, alignSelf: 'flex-start' },
   timelineText: { fontSize: 12, textDecorationLine: 'underline' },
   emptyText: { textAlign: 'center', marginTop: 40, fontSize: 13 },
+  emptyBlock: { alignItems: 'center' },
+  retryButton: { marginTop: 14 },
   modalBackdrop: { flex: 1, justifyContent: 'center', padding: 24 },
-  modalBody: { padding: 16, maxHeight: '80%' },
+  modalBackdropTouch: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  modalBody: { padding: 16, maxHeight: '80%', borderRadius: 18 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   modalTitle: { fontSize: 16, fontWeight: 'bold' },
   closeText: { fontSize: 13 },

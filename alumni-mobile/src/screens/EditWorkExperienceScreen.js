@@ -99,11 +99,11 @@ export default function EditWorkExperienceScreen({ route, navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <DiscardDialog {...discardDialog} />
+      <AppBackground />
       <ScrollView
         style={[styles.container, { backgroundColor: 'transparent' }]}
         contentContainerStyle={{ padding: 16 }}
       >
-        <AppBackground />
         <Text style={[styles.label, { color: c.textMuted }]}>Job Title *</Text>
         <TextInput
           style={[
@@ -210,6 +210,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     padding: 10,
+    fontSize: 14,
   },
   multiline: {
     minHeight: 70,

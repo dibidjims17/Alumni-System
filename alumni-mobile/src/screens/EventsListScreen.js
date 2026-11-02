@@ -1,5 +1,5 @@
 // src/screens/EventsListScreen.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +31,10 @@ export default function EventsListScreen({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
   const [search, setSearch] = useState('');
+  // Focus callbacks are stable, so mirror search in a ref for silent refetches.
+  const searchRef = useRef('');
+  const hasLoadedRef = useRef(false);
+  searchRef.current = search;
 
   async function loadEvents(activeSearch = '') {
     try {
@@ -49,9 +53,15 @@ export default function EventsListScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+      if (hasLoadedRef.current) {
+        // Refocus: refresh silently so search text and results persist.
+        loadEvents(searchRef.current);
+        return;
+      }
       setLoading(true);
-      setSearch('');
-      loadEvents('');
+      loadEvents('').finally(() => {
+        hasLoadedRef.current = true;
+      });
     }, [])
   );
 
@@ -119,7 +129,7 @@ export default function EventsListScreen({ navigation }) {
             style={[
               styles.rsvpButton,
               { borderColor: c.border },
-              item.isRsvped && { backgroundColor: c.border },
+              item.isRsvped && { backgroundColor: c.tintSuccess, borderColor: c.success },
             ]}
             onPress={() => toggleRsvp(item)}
             disabled={togglingId === item.id}
@@ -127,7 +137,7 @@ export default function EventsListScreen({ navigation }) {
             {togglingId === item.id ? (
               <ActivityIndicator size="small" color={c.primary} />
             ) : (
-              <Text style={[styles.rsvpText, { color: c.text }]}>
+              <Text style={[styles.rsvpText, { color: item.isRsvped ? c.success : c.text }]}>
                 {item.isRsvped ? 'Cancel RSVP' : "I'm Going"}
               </Text>
             )}
@@ -175,7 +185,12 @@ export default function EventsListScreen({ navigation }) {
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[c.primary]}
+              tintColor={c.primary}
+            />
           }
           ListEmptyComponent={
             <Text style={[styles.infoText, { color: c.textMuted }]}>

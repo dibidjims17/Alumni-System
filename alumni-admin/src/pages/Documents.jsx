@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../config";
 import { getStudents } from "../services/studentsApi";
 import { importDocuments } from "../services/documentsApi";
 import { notifyError, notifySuccess } from "../components/toastBus";
-import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, ModalShell, btn, btnPrimary, toolbar, filterRow } from "../components/kit";
+import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
@@ -73,7 +73,7 @@ export default function Documents() {
   );
 
   return (
-    <div>
+    <div style={pageWrap}>
       <div style={{ ...toolbar, justifyContent: "flex-end" }}>
         <button style={btnPrimary} onClick={() => { setImportResult(null); setShowImport(true); }}>
           <Upload size={15} />
@@ -93,7 +93,7 @@ export default function Documents() {
       {loading ? (
         <GridSkeleton count={6} />
       ) : filteredStudents.length === 0 ? (
-        <p>No matching students.</p>
+        <EmptyState icon={FileText} title="No matching students" hint="Try a different search." />
       ) : (
         <div style={cardGrid}>
           {filteredStudents.map((s) => (
@@ -119,7 +119,7 @@ export default function Documents() {
                   <p style={{ ...cardMeta, margin: "2px 0 0", fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{s.studentNumber}</p>
                   <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.program} • {s.schoolYear}</p>
                 </div>
-                <span style={{ ...pill, marginLeft: "auto", background: s.isActive === false ? "rgba(194,57,43,0.10)" : "rgba(46,125,50,0.13)", color: s.isActive === false ? "var(--danger)" : "var(--success)" }}>
+                <span style={{ ...pill, marginLeft: "auto", ...statusTone(s.isActive === false ? "danger" : "success") }}>
                   {s.isActive === false ? "Inactive" : "Active"}
                 </span>
               </div>

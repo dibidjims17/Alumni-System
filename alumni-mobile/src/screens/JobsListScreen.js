@@ -1,5 +1,5 @@
 // src/screens/JobsListScreen.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import SectionTabs from '../components/SectionTabs';
 import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
+import PrimaryButton from '../components/ui/PrimaryButton';
 
 const CAREER_TABS = [
   { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
@@ -34,7 +35,12 @@ export default function JobsListScreen({ navigation }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState('');
+  // Focus callbacks are stable, so mirror search in a ref for silent refetches.
+  const searchRef = useRef('');
+  const hasLoadedRef = useRef(false);
+  searchRef.current = search;
 
   async function fetchJobs(activeSearch = '') {
     try {
@@ -43,8 +49,9 @@ export default function JobsListScreen({ navigation }) {
         : '/Jobs?page=1';
       const res = await apiClient.get(query);
       setItems(res.data.items || []);
+      setLoadError(false);
     } catch (err) {
-      // silent — empty list will show
+      setLoadError(true);
     }
   }
 
@@ -54,9 +61,17 @@ export default function JobsListScreen({ navigation }) {
         setIsLoading(false);
         return;
       }
+      if (hasLoadedRef.current) {
+        // Refocus: refresh silently with the current query so search
+        // text and results survive the round-trip.
+        fetchJobs(searchRef.current);
+        return;
+      }
       setIsLoading(true);
-      setSearch('');
-      fetchJobs('').finally(() => setIsLoading(false));
+      fetchJobs('').finally(() => {
+        hasLoadedRef.current = true;
+        setIsLoading(false);
+      });
     }, [isGraduate])
   );
 
@@ -64,6 +79,11 @@ export default function JobsListScreen({ navigation }) {
     setIsRefreshing(true);
     await fetchJobs(search);
     setIsRefreshing(false);
+  }
+
+  function retryLoad() {
+    setIsLoading(true);
+    fetchJobs(search).finally(() => setIsLoading(false));
   }
 
   function submitSearch() {
@@ -109,14 +129,14 @@ export default function JobsListScreen({ navigation }) {
               style={[
                 styles.tag,
                 deadline.urgent
-                  ? { backgroundColor: c.danger }
+                  ? { backgroundColor: c.tintDanger }
                   : { backgroundColor: c.surfaceAlt },
               ]}
             >
               <Text
                 style={[
                   styles.tagText,
-                  { color: deadline.urgent ? '#fff' : c.textMuted },
+                  { color: deadline.urgent ? c.danger : c.textMuted },
                 ]}
               >
                 {deadline.text}
@@ -192,12 +212,26 @@ export default function JobsListScreen({ navigation }) {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[c.primary]}
+              tintColor={c.primary}
+            />
           }
           ListEmptyComponent={
-            <Text style={[styles.emptyText, { color: c.text }]}>
-              {search.trim() ? 'No jobs match your search.' : 'No jobs posted yet.'}
-            </Text>
+            loadError ? (
+              <View style={styles.emptyBlock}>
+                <Text style={[styles.emptyText, { color: c.text }]}>
+                  Couldn't load jobs. Check your connection and try again.
+                </Text>
+                <PrimaryButton title="Retry" onPress={retryLoad} style={styles.retryButton} />
+              </View>
+            ) : (
+              <Text style={[styles.emptyText, { color: c.text }]}>
+                {search.trim() ? 'No jobs match your search.' : 'No jobs posted yet.'}
+              </Text>
+            )
           }
         />
       )}
@@ -248,5 +282,7 @@ const styles = StyleSheet.create({
   },
   tagText: { fontSize: 11, fontWeight: '600' },
   emptyText: { textAlign: 'center', marginTop: 40 },
+  emptyBlock: { alignItems: 'center' },
+  retryButton: { marginTop: 14 },
   infoText: { fontSize: 13, textAlign: 'center' },
 });
