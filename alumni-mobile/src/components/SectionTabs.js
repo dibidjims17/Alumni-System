@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   },
   segment: {
     paddingVertical: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: 'transparent',

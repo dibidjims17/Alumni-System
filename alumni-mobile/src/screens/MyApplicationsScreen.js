@@ -21,6 +21,7 @@ import PrimaryButton from '../components/ui/PrimaryButton';
 import { useTheme } from '../theme/ThemeContext';
 
 const CAREER_TABS = [
+  { key: 'Overview', label: 'Overview', screen: 'CareerHome' },
   { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
   { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
 ];

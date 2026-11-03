@@ -29,6 +29,7 @@ import ResumeScreen from '../screens/ResumeScreen';
 import DocumentsScreen from '../screens/DocumentsScreen';
 import CareerProofScreen from '../screens/CareerProofScreen';
 
+import CareerHomeScreen from '../screens/CareerHomeScreen';
 import JobsListScreen from '../screens/JobsListScreen';
 import JobDetailScreen from '../screens/JobDetailScreen';
 import MyApplicationsScreen from '../screens/MyApplicationsScreen';
@@ -109,6 +110,8 @@ function CareerStack() {
     <CareerStackNav.Navigator
       screenOptions={{ ...headerOptions(theme.colors), headerShown: false }}
     >
+      <CareerStackNav.Screen name="CareerHome" component={CareerHomeScreen} />
+      <CareerStackNav.Screen name="CareerProof" component={CareerProofScreen} />
       <CareerStackNav.Screen name="JobsList" component={JobsListScreen} />
       <CareerStackNav.Screen name="MyApplications" component={MyApplicationsScreen} />
       <CareerStackNav.Screen
@@ -137,7 +140,6 @@ function ProfileStack() {
       <ProfileStackNav.Screen name="EditEducation" component={EditEducationScreen} options={{ title: 'Education' }} />
       <ProfileStackNav.Screen name="Resume" component={ResumeScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen name="Documents" component={DocumentsScreen} options={{ title: 'My Documents' }} />
-      <ProfileStackNav.Screen name="CareerProof" component={CareerProofScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen name="YearCorrection" component={YearCorrectionScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen
         name="ChangePassword"

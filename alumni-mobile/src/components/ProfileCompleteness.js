@@ -82,7 +82,7 @@ export function computeCompleteness(profile, jobPreferences, hasResume, hasCaree
       label: 'Get your career verified',
       weight: 10,
       done: !!hasCareerProof,
-      target: { screen: 'CareerProof', params: {} },
+      target: { screen: 'CareerTab', params: { screen: 'CareerProof' } },
     },
   ];
 

@@ -22,6 +22,7 @@ import Skeleton from '../components/ui/Skeleton';
 import PrimaryButton from '../components/ui/PrimaryButton';
 
 const CAREER_TABS = [
+  { key: 'Overview', label: 'Overview', screen: 'CareerHome' },
   { key: 'Jobs', label: 'Jobs', screen: 'JobsList' },
   { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
 ];

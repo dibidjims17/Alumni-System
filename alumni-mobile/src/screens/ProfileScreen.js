@@ -487,24 +487,12 @@ export default function ProfileScreen({ navigation }) {
 
         {/* ── Account ─────────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
-          <Text style={[styles.sectionHeader, { color: c.text }]}>Account</Text>
-          <TouchableOpacity
-            style={styles.accountRow}
-            onPress={() => navigation.navigate('CareerTab', { screen: 'MyApplications' })}
-          >
-            <Text style={[styles.accountRowText, { color: c.text }]}>My Applications</Text>
-          </TouchableOpacity>
+          <Text style={[styles.sectionHeader, { color: c.text }]}>Documents &amp; Security</Text>
           <TouchableOpacity
             style={styles.accountRow}
             onPress={() => navigation.navigate('Documents')}
           >
             <Text style={[styles.accountRowText, { color: c.text }]}>My Documents</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.accountRow}
-            onPress={() => navigation.navigate('CareerProof')}
-          >
-            <Text style={[styles.accountRowText, { color: c.text }]}>Career &amp; Employment</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.accountRow}

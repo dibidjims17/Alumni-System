@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
-import { BadgeCheck, FileImage, Clock, XCircle, Plus } from 'lucide-react-native';
+import { BadgeCheck, FileImage, Clock, XCircle, Plus, Target } from 'lucide-react-native';
 import apiClient from '../api/client';
 import AppBackground from '../components/AppBackground';
 import AppHeader from '../components/AppHeader';
@@ -288,6 +288,18 @@ export default function CareerProofScreen({ navigation }) {
                 {record.industry ? ` · ${record.industry}` : ''}
               </Text>
 
+              {isApproved ? (
+                <View style={[styles.alignmentBox, { backgroundColor: c.tintInfo }]}>
+                  <Target size={15} color={c.info} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.alignmentLabel, { color: c.info }]}>Course alignment</Text>
+                    <Text style={[styles.alignmentValue, { color: c.text }]}>
+                      {record.courseAlignment || 'Not assessed yet'}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+
               {record.status === 'Rejected' && record.reviewNote ? (
                 <View style={[styles.noteBox, { backgroundColor: c.tintDanger }]}>
                   <Text style={[styles.noteLabel, { color: c.danger }]}>Reason</Text>
@@ -548,6 +560,16 @@ const styles = StyleSheet.create({
   verifiedText: { fontSize: 12, fontWeight: '700' },
   summary: { fontSize: 15, fontWeight: '700' },
   summarySub: { fontSize: 12, marginTop: 3 },
+  alignmentBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 12,
+  },
+  alignmentLabel: { fontSize: 10.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  alignmentValue: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   introTitle: { fontSize: 15, fontWeight: '700', marginBottom: 6 },
   introText: { fontSize: 12.5, lineHeight: 19 },
   noteBox: {
