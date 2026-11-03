@@ -3,17 +3,17 @@ import { Link } from "react-router-dom";
 import {
   Users,
   GraduationCap,
-  UserCheck,
-  Newspaper,
   Briefcase,
   ArrowUpRight,
   FileText,
   RefreshCw,
-  Check,
+  BadgeCheck,
+  Clock3,
+  Target,
 } from "lucide-react";
 import { getStudentStats } from "../services/studentsApi";
-import { getNews } from "../services/newsApi";
 import { getJobs } from "../services/jobsApi";
+import { getCareerStats } from "../services/careersApi";
 import { notifyError } from "../components/toastBus";
 import { pageWrap, card, EmptyState, btnPrimary } from "../components/kit";
 import { Skeleton } from "../components/Skeleton";
@@ -124,7 +124,7 @@ function Bar({ pct, color }) {
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
-  const [newsCount, setNewsCount] = useState(null);
+  const [careerStats, setCareerStats] = useState(null);
   const [activeJobsCount, setActiveJobsCount] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [syncedAt, setSyncedAt] = useState(null);
@@ -134,14 +134,14 @@ export default function Dashboard() {
 
   async function load() {
     try {
-      const [studentStats, news, jobs] = await Promise.all([
+      const [studentStats, jobs, careers] = await Promise.all([
         getStudentStats(),
-        getNews(),
         getJobs(),
+        getCareerStats(),
       ]);
       setStats(studentStats);
-      setNewsCount(news.length);
       setActiveJobsCount(jobs.filter((j) => j.isActive).length);
+      setCareerStats(careers);
       setSyncedAt(new Date());
       setLoadError(null);
     } catch (err) {
@@ -167,23 +167,31 @@ export default function Dashboard() {
 
   // A failed load must not leave `loading` stuck true — that would pin the
   // skeletons (and the disabled Refresh button) on screen forever.
-  const loading = !loadError && (!stats || newsCount === null || activeJobsCount === null);
+  const loading = !loadError && (!stats || !careerStats || activeJobsCount === null);
 
   const derived = useMemo(() => {
     const total = stats?.totalStudents ?? 0;
     const grads = stats?.graduateStudents ?? 0;
-    const active = stats?.activeStudents ?? 0;
-    const claimed = stats?.claimed ?? 0;
+    const submitted = careerStats?.submitted ?? 0;
+    const verified = careerStats?.approved ?? 0;
+    const pending = careerStats?.pending ?? 0;
+    const employed = (careerStats?.employed ?? 0) + (careerStats?.selfEmployed ?? 0);
+    const courseRelated = (careerStats?.aligned ?? 0) + (careerStats?.related ?? 0);
     return {
       total,
       grads,
-      active,
-      claimed,
       gradPct: total ? Math.round((grads / total) * 100) : 0,
-      activePct: total ? Math.round((active / total) * 100) : 0,
-      claimedPct: total ? Math.round((claimed / total) * 100) : 0,
+      submitted,
+      verified,
+      pending,
+      employed,
+      courseRelated,
+      submittedPct: grads ? Math.round((submitted / grads) * 100) : 0,
+      verifiedPct: grads ? Math.round((verified / grads) * 100) : 0,
+      employedPct: verified ? Math.round((employed / verified) * 100) : 0,
+      alignmentRate: careerStats?.alignmentRate ?? 0,
     };
-  }, [stats]);
+  }, [stats, careerStats]);
 
   const today = useMemo(
     () =>
@@ -196,10 +204,10 @@ export default function Dashboard() {
   );
 
   const quickLinks = [
+    { to: "/careers", label: "Careers", desc: `${derived.pending} pending`, Icon: BadgeCheck },
     { to: "/students", label: "Alumni", desc: "Directory", Icon: Users },
-    { to: "/documents", label: "Documents", desc: "Checklists", Icon: FileText },
-    { to: "/news", label: "News", desc: "Publish", Icon: Newspaper },
     { to: "/jobs", label: "Jobs", desc: "Board", Icon: Briefcase },
+    { to: "/documents", label: "Documents", desc: "Checklists", Icon: FileText },
   ];
 
   return (
@@ -253,7 +261,7 @@ export default function Dashboard() {
             Alumni at a glance
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--hero-muted)" }}>
-            Alumni, content, and hiring health.
+            Alumni and career outcomes in one place.
           </p>
         </div>
         <div
@@ -319,10 +327,10 @@ export default function Dashboard() {
       <div className="dash-stat-grid" style={statGrid}>
         <StatCard label="Total" value={derived.total} sub="All records" Icon={Users} accent="var(--primary)" tint="var(--tile-bg)" loading={loading} />
         <StatCard label="Graduates" value={derived.grads} sub={`${derived.gradPct}% of total`} Icon={GraduationCap} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
-        <StatCard label="Active" value={derived.active} sub={`${derived.activePct}% active`} Icon={UserCheck} accent="var(--info)" tint="var(--info-tint)" loading={loading} />
-        <StatCard label="News" value={newsCount ?? 0} sub="Announcements" Icon={Newspaper} accent="var(--violet)" tint="var(--violet-tint)" loading={loading} />
+        <StatCard label="Verified Careers" value={derived.verified} sub={`${derived.verifiedPct}% of graduates`} Icon={BadgeCheck} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
+        <StatCard label="Awaiting Review" value={derived.pending} sub="Career submissions" Icon={Clock3} accent="var(--warning)" tint="var(--warning-tint)" loading={loading} />
+        <StatCard label="Course-Related" value={`${derived.alignmentRate}%`} sub={`${derived.courseRelated} aligned or related`} Icon={Target} accent="var(--info)" tint="var(--info-tint)" loading={loading} />
         <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="var(--warning)" tint="var(--warning-tint)" loading={loading} />
-        <StatCard label="Claimed" value={derived.claimed} sub={`${derived.claimedPct}% logged in`} Icon={Check} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
       </div>
 
       <div className="dash-bottom-grid" style={bottomGrid}>
@@ -340,36 +348,45 @@ export default function Dashboard() {
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-            <h3 style={{ margin: 0, fontSize: 14.5 }}>Class mix</h3>
-            <span style={{ fontSize: 12, color: "var(--muted)" }}>Graduates vs active</span>
+            <h3 style={{ margin: 0, fontSize: 14.5 }}>Career outcomes</h3>
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>Approved records only</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16 }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
-                <span style={{ fontWeight: 650 }}>Graduates</span>
+                <span style={{ fontWeight: 650 }}>Submitted</span>
                 {loading ? <Skeleton width={90} height={12} /> : (
-                  <span style={{ color: "var(--muted)" }}>{`${derived.grads} (${derived.gradPct}%)`}</span>
+                  <span style={{ color: "var(--muted)" }}>{`${derived.submitted} (${derived.submittedPct}%)`}</span>
                 )}
               </div>
-              <Bar pct={derived.gradPct} color="var(--success)" />
+              <Bar pct={derived.submittedPct} color="var(--violet)" />
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
-                <span style={{ fontWeight: 650 }}>Active</span>
+                <span style={{ fontWeight: 650 }}>Verified</span>
                 {loading ? <Skeleton width={90} height={12} /> : (
-                  <span style={{ color: "var(--muted)" }}>{`${derived.active} (${derived.activePct}%)`}</span>
+                  <span style={{ color: "var(--muted)" }}>{`${derived.verified} (${derived.verifiedPct}%)`}</span>
                 )}
               </div>
-              <Bar pct={derived.activePct} color="var(--info)" />
+              <Bar pct={derived.verifiedPct} color="var(--success)" />
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
-                <span style={{ fontWeight: 650 }}>Claimed</span>
+                <span style={{ fontWeight: 650 }}>Employed</span>
                 {loading ? <Skeleton width={90} height={12} /> : (
-                  <span style={{ color: "var(--muted)" }}>{`${derived.claimed} (${derived.claimedPct}%)`}</span>
+                  <span style={{ color: "var(--muted)" }}>{`${derived.employed} (${derived.employedPct}%)`}</span>
                 )}
               </div>
-              <Bar pct={derived.claimedPct} color="var(--success)" />
+              <Bar pct={derived.employedPct} color="var(--info)" />
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+                <span style={{ fontWeight: 650 }}>Course-related</span>
+                {loading ? <Skeleton width={90} height={12} /> : (
+                  <span style={{ color: "var(--muted)" }}>{`${derived.courseRelated} (${derived.alignmentRate}%)`}</span>
+                )}
+              </div>
+              <Bar pct={derived.alignmentRate} color="var(--success)" />
             </div>
           </div>
         </div>
