@@ -33,11 +33,11 @@ export async function getStudentCareer(studentId) {
   return response.json();
 }
 
-export async function reviewCareer(id, status, note = null) {
+export async function reviewCareer(id, status, note = null, courseAlignment = null) {
   const response = await fetch(`${API_BASE_URL}/Career/${id}/review`, {
     method: "PUT",
     headers: authHeaders(),
-    body: JSON.stringify({ status, note }),
+    body: JSON.stringify({ status, note, courseAlignment }),
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || "Failed to review submission");

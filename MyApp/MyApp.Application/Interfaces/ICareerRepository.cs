@@ -6,6 +6,7 @@ namespace MyApp.Application.Interfaces
     {
         // Newest submission for a student — the record the app shows them.
         Task<CareerRecord?> GetLatestByStudentAsync(int studentId);
+        Task<IReadOnlyDictionary<int, CareerRecord>> GetLatestByStudentIdsAsync(IEnumerable<int> studentIds);
         Task<CareerRecord?> GetByIdAsync(int id);
 
         // Admin queue, newest first, optionally filtered by review status.

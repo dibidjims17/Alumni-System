@@ -17,10 +17,31 @@ namespace MyApp.Infrastructure.Repositories
         public async Task<CareerRecord?> GetLatestByStudentAsync(int studentId)
         {
             return await _context.CareerRecords
+                .Include(r => r.Student)
                 .Include(r => r.ReviewedByAdmin)
                 .Where(r => r.StudentId == studentId)
                 .OrderByDescending(r => r.Id)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<IReadOnlyDictionary<int, CareerRecord>> GetLatestByStudentIdsAsync(
+            IEnumerable<int> studentIds)
+        {
+            var ids = studentIds.Distinct().ToList();
+            if (ids.Count == 0)
+                return new Dictionary<int, CareerRecord>();
+
+            // Fetch once and group in memory. This avoids one query per alumni
+            // card while remaining compatible with the current MySQL provider.
+            var records = await _context.CareerRecords
+                .AsNoTracking()
+                .Where(r => ids.Contains(r.StudentId))
+                .OrderByDescending(r => r.Id)
+                .ToListAsync();
+
+            return records
+                .GroupBy(r => r.StudentId)
+                .ToDictionary(group => group.Key, group => group.First());
         }
 
         public async Task<CareerRecord?> GetByIdAsync(int id)
@@ -50,10 +71,11 @@ namespace MyApp.Infrastructure.Repositories
                 .Select(r => new CareerRecord
                 {
                     Id = r.Id,
-                    StudentId = r.StudentId,
-                    EmploymentStatus = r.EmploymentStatus,
-                    Status = r.Status
-                })
+                     StudentId = r.StudentId,
+                     EmploymentStatus = r.EmploymentStatus,
+                     Status = r.Status,
+                     CourseAlignment = r.CourseAlignment
+                 })
                 .ToListAsync();
         }
 

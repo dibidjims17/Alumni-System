@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Briefcase, Users, Clock3, BadgeCheck, XCircle, RotateCcw,
-  Eye, Check, ExternalLink, Search as SearchIcon,
+  Eye, Check, ExternalLink, Search as SearchIcon, Target,
 } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getCareers, getCareerStats, reviewCareer } from "../services/careersApi";
@@ -17,6 +17,7 @@ import { GridSkeleton } from "../components/Skeleton";
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 
 const STATUS_FILTERS = ["", "Pending", "Approved", "Rejected"];
+const ALIGNMENT_OPTIONS = ["Aligned", "Related", "Not Aligned", "Not Applicable"];
 
 function fileUrl(path) {
   if (!path) return null;
@@ -27,6 +28,14 @@ function statusToneFor(status) {
   if (status === "Approved") return statusTone("success");
   if (status === "Rejected") return statusTone("danger");
   return statusTone("warning");
+}
+
+function alignmentToneFor(alignment) {
+  if (alignment === "Aligned") return statusTone("success");
+  if (alignment === "Related") return statusTone("info");
+  if (alignment === "Not Aligned") return statusTone("danger");
+  if (alignment === "Needs Review") return statusTone("warning");
+  return statusTone("violet");
 }
 
 // Small metric tile used across the stats strip.
@@ -102,6 +111,7 @@ export default function Careers() {
 
   const [selected, setSelected] = useState(null);
   const [note, setNote] = useState("");
+  const [alignment, setAlignment] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function loadRecords() {
@@ -139,6 +149,10 @@ export default function Careers() {
   function openReview(record) {
     setSelected(record);
     setNote("");
+    setAlignment(
+      record.courseAlignment ||
+      (record.suggestedCourseAlignment !== "Needs Review" ? record.suggestedCourseAlignment : "")
+    );
   }
 
   async function handleReview(status) {
@@ -149,10 +163,15 @@ export default function Careers() {
       return;
     }
 
+    if (status === "Approved" && !alignment) {
+      notifyError("Confirm how this career path aligns with the graduate program.");
+      return;
+    }
+
     const who = `${selected.studentName} (${selected.studentNumber})`;
     const ok = await askConfirm(
       status === "Approved"
-        ? `Approve the career record for ${who}? Their profile will show it as verified.`
+        ? `Approve the career record for ${who} as ${alignment}? Their profile will show it as verified.`
         : `Reject the career record for ${who}? They will see your reason and can resubmit.`,
       { confirmLabel: status === "Approved" ? "Approve" : "Reject", danger: status === "Rejected" }
     );
@@ -160,7 +179,7 @@ export default function Careers() {
 
     setSaving(true);
     try {
-      const res = await reviewCareer(selected.id, status, note.trim() || null);
+      const res = await reviewCareer(selected.id, status, note.trim() || null, alignment || null);
       notifySuccess(res.message || "Submission reviewed.");
       setSelected(null);
       await loadAll();
@@ -212,8 +231,15 @@ export default function Careers() {
             <StatTile icon={XCircle} label="Unemployed" value={stats.unemployed} tone="warning" />
             <StatTile icon={BadgeCheck} label="Further Studies" value={stats.furtherStudies} tone="info" />
           </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 14, marginTop: 14 }}>
+            <StatTile icon={Target} label="Course-Related" value={`${stats.alignmentRate}%`} tone="success" />
+            <StatTile icon={BadgeCheck} label="Aligned" value={stats.aligned} tone="success" />
+            <StatTile icon={Target} label="Related" value={stats.related} tone="info" />
+            <StatTile icon={XCircle} label="Not Aligned" value={stats.notAligned} tone="danger" />
+            <StatTile icon={Clock3} label="Unassessed" value={stats.unassessed} tone="warning" />
+          </div>
           <p style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0 0" }}>
-            Employment figures count approved records only.
+            Employment and alignment figures count approved records only. Course-related includes Aligned and Related records among assessed paths.
           </p>
         </>
       )}
@@ -286,6 +312,14 @@ export default function Careers() {
                     Submitted {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}
                     {r.dateStarted ? ` • Started ${new Date(r.dateStarted).toLocaleDateString()}` : ""}
                   </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 8, flexWrap: "wrap" }}>
+                    <span style={{ ...cardMeta, margin: 0 }}>
+                      {r.courseAlignment ? "Course alignment" : "Suggested"}
+                    </span>
+                    <span style={{ ...pill, ...alignmentToneFor(r.courseAlignment || r.suggestedCourseAlignment) }}>
+                      {r.courseAlignment || r.suggestedCourseAlignment}
+                    </span>
+                  </div>
                 </div>
 
                 {r.status === "Rejected" && r.reviewNote && (
@@ -351,6 +385,46 @@ export default function Careers() {
                   {selected.dateStarted ? new Date(selected.dateStarted).toLocaleDateString() : "—"}
                 </span>
               </div>
+            </div>
+
+            <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", marginBottom: 12, background: "var(--surface-alt)" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--muted)", marginBottom: 8 }}>
+                Course-to-career alignment
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 13, color: "var(--muted)" }}>System suggestion</span>
+                <span style={{ ...pill, ...alignmentToneFor(selected.suggestedCourseAlignment) }}>
+                  {selected.suggestedCourseAlignment}
+                </span>
+              </div>
+              <p style={{ ...cardMeta, margin: "7px 0 0", lineHeight: 1.5 }}>
+                {selected.alignmentSuggestionReason}
+              </p>
+
+              {selected.status === "Pending" ? (
+                <Field
+                  label="Admin confirmation"
+                  hint="Confirm or override the suggestion before approving."
+                >
+                  <select
+                    value={alignment}
+                    onChange={(e) => setAlignment(e.target.value)}
+                    style={textInput}
+                  >
+                    <option value="">Select alignment</option>
+                    {ALIGNMENT_OPTIONS.map((value) => (
+                      <option key={value} value={value}>{value}</option>
+                    ))}
+                  </select>
+                </Field>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                  <span style={{ fontSize: 13, color: "var(--muted)" }}>Admin-confirmed</span>
+                  <span style={{ ...pill, ...alignmentToneFor(selected.courseAlignment || "Needs Review") }}>
+                    {selected.courseAlignment || "Unassessed"}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", marginBottom: 12, display: "flex", flexDirection: "column", gap: 14 }}>

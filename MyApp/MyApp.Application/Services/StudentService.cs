@@ -15,6 +15,7 @@ namespace MyApp.Application.Services
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly IYearLevelChangeRepository _yearChangeRepository;
+        private readonly ICareerRepository _careerRepository;
 
         public StudentService(
             IStudentRepository studentRepository,
@@ -23,7 +24,8 @@ namespace MyApp.Application.Services
             IAlumniProfileRepository profileRepository,
             IEmailService emailService,
             IConfiguration configuration,
-            IYearLevelChangeRepository yearChangeRepository)
+            IYearLevelChangeRepository yearChangeRepository,
+            ICareerRepository careerRepository)
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
@@ -32,16 +34,19 @@ namespace MyApp.Application.Services
             _emailService = emailService;
             _configuration = configuration;
             _yearChangeRepository = yearChangeRepository;
+            _careerRepository = careerRepository;
         }
 
         public async Task<List<StudentDto>> GetAllStudentsAsync()
         {
             var students = await _studentRepository.GetAllAsync();
             var profiles = await _profileRepository.GetByStudentIdsAsync(students.Select(s => s.Id));
+            var careers = await _careerRepository.GetLatestByStudentIdsAsync(students.Select(s => s.Id));
 
             return students.Select(s =>
             {
                 profiles.TryGetValue(s.Id, out var profile);
+                careers.TryGetValue(s.Id, out var career);
                 return new StudentDto
                 {
                     Id = s.Id,
@@ -54,7 +59,19 @@ namespace MyApp.Application.Services
                     CreatedAt = s.CreatedAt,
                     ActivatedAt = s.ActivatedAt,
                     IsClaimed = s.ActivatedAt != null || !s.MustChangePassword,
-                    ProfilePicturePath = profile?.ProfilePicturePath
+                    ProfilePicturePath = profile?.ProfilePicturePath,
+                    Career = career == null ? null : new CareerSummaryDto
+                    {
+                        RecordId = career.Id,
+                        EmploymentStatus = career.EmploymentStatus,
+                        JobTitle = career.JobTitle,
+                        Company = career.Company,
+                        Industry = career.Industry,
+                        ReviewStatus = career.Status,
+                        CourseAlignment = career.CourseAlignment,
+                        IsVerified = career.Status == "Approved",
+                        UpdatedAt = career.UpdatedAt
+                    }
                 };
             }).ToList();
         }

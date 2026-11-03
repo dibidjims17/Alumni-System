@@ -224,6 +224,9 @@ namespace MyApp.Infrastructure.Migrations
                     b.Property<string>("Company")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("CourseAlignment")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 

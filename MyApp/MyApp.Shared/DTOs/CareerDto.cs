@@ -17,6 +17,9 @@ namespace MyApp.Shared.DTOs
         public string? Company { get; set; }
         public string? Industry { get; set; }
         public DateTime? DateStarted { get; set; }
+        public string? CourseAlignment { get; set; }
+        public string SuggestedCourseAlignment { get; set; } = "Needs Review";
+        public string AlignmentSuggestionReason { get; set; } = string.Empty;
 
         public string CertificatePath { get; set; } = string.Empty;
         public string CertificateFileName { get; set; } = string.Empty;
@@ -52,6 +55,7 @@ namespace MyApp.Shared.DTOs
         // "Approved" | "Rejected"
         public string Status { get; set; } = string.Empty;
         public string? Note { get; set; }
+        public string? CourseAlignment { get; set; }
     }
 
     // Counts are based on each student's newest record so a re-submission
@@ -67,5 +71,11 @@ namespace MyApp.Shared.DTOs
         public int SelfEmployed { get; set; }
         public int Unemployed { get; set; }
         public int FurtherStudies { get; set; }
+        public int Aligned { get; set; }
+        public int Related { get; set; }
+        public int NotAligned { get; set; }
+        public int NotApplicable { get; set; }
+        public int Unassessed { get; set; }
+        public int AlignmentRate { get; set; }
     }
 }

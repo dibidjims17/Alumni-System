@@ -16,6 +16,11 @@ namespace MyApp.Domain.Entities
         public string? Industry { get; set; }
         public DateTime? DateStarted { get; set; }
 
+        // Admin-confirmed relationship between the alumnus's program and
+        // current career path: Aligned | Related | Not Aligned | Not Applicable.
+        // Null while the submission is awaiting review.
+        public string? CourseAlignment { get; set; }
+
         // Relative paths under Uploads/CareerProofs/, served as static files.
         public string CertificatePath { get; set; } = string.Empty;
         public string CertificateFileName { get; set; } = string.Empty;

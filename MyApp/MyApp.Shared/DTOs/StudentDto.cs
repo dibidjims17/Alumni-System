@@ -18,5 +18,21 @@ namespace MyApp.Shared.DTOs
         // Populated only on creation responses so the admin can relay it.
         public string? TemporaryPassword { get; set; }
         public bool InviteEmailSent { get; set; }
+        public CareerSummaryDto? Career { get; set; }
+    }
+
+    // Lightweight newest-career-record projection used by the alumni
+    // directory. Proof paths and review notes intentionally stay out.
+    public class CareerSummaryDto
+    {
+        public int RecordId { get; set; }
+        public string EmploymentStatus { get; set; } = string.Empty;
+        public string? JobTitle { get; set; }
+        public string? Company { get; set; }
+        public string? Industry { get; set; }
+        public string ReviewStatus { get; set; } = string.Empty;
+        public string? CourseAlignment { get; set; }
+        public bool IsVerified { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

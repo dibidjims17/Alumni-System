@@ -76,6 +76,7 @@ namespace MyApp.Application.Services
                 existing.Company = company;
                 existing.Industry = industry;
                 existing.DateStarted = request.DateStarted;
+                existing.CourseAlignment = null;
                 existing.CertificatePath = request.CertificatePath;
                 existing.CertificateFileName = request.CertificateFileName;
                 existing.WorkIdPath = request.WorkIdPath;
@@ -151,6 +152,17 @@ namespace MyApp.Application.Services
             if (status == "Rejected" && note == null)
                 return (false, "A reason is required when rejecting a submission.");
 
+            string? courseAlignment = null;
+            if (status == "Approved")
+            {
+                var requestedAlignment = NullIfEmpty(request.CourseAlignment);
+                courseAlignment = CareerAlignmentSuggester.ConfirmedValues.FirstOrDefault(value =>
+                    value.Equals(requestedAlignment, StringComparison.OrdinalIgnoreCase));
+
+                if (courseAlignment == null)
+                    return (false, "Confirm how this career path aligns with the graduate program.");
+            }
+
             var record = await _careerRepository.GetByIdAsync(recordId);
             if (record == null)
                 return (false, "Career record not found.");
@@ -158,15 +170,33 @@ namespace MyApp.Application.Services
             if (record.Status != "Pending")
                 return (false, "This submission has already been reviewed.");
 
+            if (status == "Approved" &&
+                OccupiedStatuses.Contains(record.EmploymentStatus) &&
+                courseAlignment == CareerAlignmentSuggester.NotApplicable)
+            {
+                return (false, "An employed career path cannot be marked Not Applicable.");
+            }
+
+            if (status == "Approved" &&
+                record.EmploymentStatus == "Unemployed" &&
+                courseAlignment != CareerAlignmentSuggester.NotApplicable)
+            {
+                return (false, "Unemployed records must use Not Applicable for course alignment.");
+            }
+
             record.Status = status;
             record.ReviewNote = note;
+            record.CourseAlignment = status == "Approved" ? courseAlignment : null;
             record.ReviewedByAdminId = adminId;
             record.ReviewedAt = DateTime.UtcNow;
             record.UpdatedAt = DateTime.UtcNow;
 
             await _careerRepository.UpdateAsync(record);
             await _activityLogRepository.LogAdminAsync(adminId, "REVIEW_CAREER_PROOF",
-                $"Marked career proof for alumni record {record.StudentId} as {status}", ipAddress);
+                status == "Approved"
+                    ? $"Approved career proof for alumni record {record.StudentId} ({courseAlignment})"
+                    : $"Rejected career proof for alumni record {record.StudentId}",
+                ipAddress);
 
             return (true, status == "Approved"
                 ? "Submission approved."
@@ -185,6 +215,11 @@ namespace MyApp.Application.Services
                 .ToList();
 
             var approved = latest.Where(r => r.Status == "Approved").ToList();
+            var aligned = approved.Count(r => r.CourseAlignment == CareerAlignmentSuggester.Aligned);
+            var related = approved.Count(r => r.CourseAlignment == CareerAlignmentSuggester.Related);
+            var notAligned = approved.Count(r => r.CourseAlignment == CareerAlignmentSuggester.NotAligned);
+            var notApplicable = approved.Count(r => r.CourseAlignment == CareerAlignmentSuggester.NotApplicable);
+            var assessed = aligned + related + notAligned;
 
             return new CareerStatsDto
             {
@@ -196,34 +231,54 @@ namespace MyApp.Application.Services
                 Employed = approved.Count(r => r.EmploymentStatus == "Employed"),
                 SelfEmployed = approved.Count(r => r.EmploymentStatus == "Self-Employed"),
                 Unemployed = approved.Count(r => r.EmploymentStatus == "Unemployed"),
-                FurtherStudies = approved.Count(r => r.EmploymentStatus == "Further Studies")
+                FurtherStudies = approved.Count(r => r.EmploymentStatus == "Further Studies"),
+                Aligned = aligned,
+                Related = related,
+                NotAligned = notAligned,
+                NotApplicable = notApplicable,
+                Unassessed = approved.Count(r => string.IsNullOrWhiteSpace(r.CourseAlignment)),
+                AlignmentRate = assessed == 0
+                    ? 0
+                    : (int)Math.Round((aligned + related) * 100.0 / assessed)
             };
         }
 
-        private static CareerRecordDto Map(CareerRecord r) => new()
+        private static CareerRecordDto Map(CareerRecord r)
         {
-            Id = r.Id,
-            StudentId = r.StudentId,
-            StudentName = r.Student?.FullName,
-            StudentNumber = r.Student?.StudentNumber,
-            Program = r.Student?.Program,
-            SchoolYear = r.Student?.SchoolYear,
-            EmploymentStatus = r.EmploymentStatus,
-            JobTitle = r.JobTitle,
-            Company = r.Company,
-            Industry = r.Industry,
-            DateStarted = r.DateStarted,
-            CertificatePath = r.CertificatePath,
-            CertificateFileName = r.CertificateFileName,
-            WorkIdPath = r.WorkIdPath,
-            WorkIdFileName = r.WorkIdFileName,
-            Status = r.Status,
-            ReviewNote = r.ReviewNote,
-            ReviewedByAdminName = r.ReviewedByAdmin?.Username,
-            CreatedAt = r.CreatedAt,
-            UpdatedAt = r.UpdatedAt,
-            ReviewedAt = r.ReviewedAt
-        };
+            var suggestion = CareerAlignmentSuggester.Suggest(
+                r.Student?.Program,
+                r.EmploymentStatus,
+                r.JobTitle,
+                r.Industry);
+
+            return new CareerRecordDto
+            {
+                Id = r.Id,
+                StudentId = r.StudentId,
+                StudentName = r.Student?.FullName,
+                StudentNumber = r.Student?.StudentNumber,
+                Program = r.Student?.Program,
+                SchoolYear = r.Student?.SchoolYear,
+                EmploymentStatus = r.EmploymentStatus,
+                JobTitle = r.JobTitle,
+                Company = r.Company,
+                Industry = r.Industry,
+                DateStarted = r.DateStarted,
+                CourseAlignment = r.CourseAlignment,
+                SuggestedCourseAlignment = suggestion.Value,
+                AlignmentSuggestionReason = suggestion.Reason,
+                CertificatePath = r.CertificatePath,
+                CertificateFileName = r.CertificateFileName,
+                WorkIdPath = r.WorkIdPath,
+                WorkIdFileName = r.WorkIdFileName,
+                Status = r.Status,
+                ReviewNote = r.ReviewNote,
+                ReviewedByAdminName = r.ReviewedByAdmin?.Username,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                ReviewedAt = r.ReviewedAt
+            };
+        }
 
         private static string? NullIfEmpty(string? value) =>
             string.IsNullOrWhiteSpace(value) ? null : value.Trim();
