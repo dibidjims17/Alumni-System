@@ -129,7 +129,7 @@ export default function StudentDocuments() {
           <p style={{ ...cardMeta, margin: 0 }}>
             {documents.length > 0
               ? `${documents.length} document${documents.length === 1 ? "" : "s"}${pendingCount ? ` • ${pendingCount} unsaved` : ""}`
-              : "Review and release student documents"}
+              : "Review and release alumni documents"}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

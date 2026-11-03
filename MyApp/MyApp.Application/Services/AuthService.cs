@@ -76,7 +76,7 @@ namespace MyApp.Application.Services
             }
 
             // 3. Log the activity
-            await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN", "Student logged in", ipAddress);
+            await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN", "Alumni user logged in", ipAddress);
 
             // Settled accounts only: temp-password holders go straight to
             // the forced-change screen, where a nudge would be noise.
@@ -139,7 +139,7 @@ namespace MyApp.Application.Services
             if (changed)
                 await _studentRepository.UpdateAsync(student);
 
-            await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN_GOOGLE", "Student logged in with Google", ipAddress);
+            await _activityLogRepository.LogStudentAsync(student.Id, "LOGIN_GOOGLE", "Alumni user logged in with Google", ipAddress);
 
             if (student.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase))
             {
@@ -228,7 +228,7 @@ namespace MyApp.Application.Services
                 await _studentRepository.UpdateAsync(student);
 
                 // 5. Log the activity
-                await _activityLogRepository.LogStudentAsync(studentId, "CHANGE_PASSWORD", "Student changed password", ipAddress);
+                await _activityLogRepository.LogStudentAsync(studentId, "CHANGE_PASSWORD", "Alumni user changed password", ipAddress);
 
                 return (true, "Password changed successfully.");
             }
@@ -240,11 +240,12 @@ namespace MyApp.Application.Services
 
         public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
         {
-            var student = await _studentRepository.GetByEmailAsync(request.Identifier);
+            var identifier = request.Identifier.Trim();
+            var student = await _studentRepository.GetByStudentNumberAsync(identifier)
+                ?? await _studentRepository.GetByEmailAsync(identifier);
 
-            // Always behave the same whether or not the email matched a real
-            // student — prevents attackers from using this endpoint to discover
-            // which emails are registered in the system.
+            // Always behave the same whether or not the identifier matched a real
+            // alumni account, preventing account enumeration through the response.
             if (student == null || !student.IsActive)
                 return;
 
@@ -259,7 +260,9 @@ namespace MyApp.Application.Services
 
         public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request)
         {
-            var student = await _studentRepository.GetByEmailAsync(request.Identifier);
+            var identifier = request.Identifier.Trim();
+            var student = await _studentRepository.GetByStudentNumberAsync(identifier)
+                ?? await _studentRepository.GetByEmailAsync(identifier);
             if (student == null || !student.IsActive)
                 return (false, "Invalid or expired reset code.");
 

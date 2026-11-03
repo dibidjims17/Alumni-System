@@ -221,7 +221,7 @@ export default function Careers() {
       {/* ── Filters ───────────────────────────────────────── */}
       <div style={filterRow}>
         <SearchBox
-          placeholder="Search name, student number, job, company, industry"
+          placeholder="Search name, alumni number, job, company, industry"
           value={searchTerm}
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}

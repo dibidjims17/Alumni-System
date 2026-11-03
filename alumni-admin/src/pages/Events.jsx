@@ -199,7 +199,7 @@ export default function Events() {
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = [
-      ["Name", "Student Number", "Program", "School Year", "RSVP Date"],
+      ["Name", "Alumni Number", "Program", "School Year", "RSVP Date"],
       ...attendees.map((a) => [
         esc(a.fullName),
         esc(a.studentNumber),
@@ -375,7 +375,7 @@ export default function Events() {
                 <thead>
                   <tr>
                     <th scope="col" style={attendeeTh}>Name</th>
-                    <th scope="col" style={attendeeTh}>Student #</th>
+                    <th scope="col" style={attendeeTh}>Alumni #</th>
                     <th scope="col" style={attendeeTh}>Program</th>
                     <th scope="col" style={attendeeTh}>Year</th>
                     <th scope="col" style={attendeeTh}>RSVP Date</th>

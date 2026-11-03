@@ -22,7 +22,7 @@ import { askConfirm } from "./confirmBus";
 
 const SEGMENT_TITLES = {
   dashboard: "Dashboard",
-  students: "Students",
+  students: "Alumni",
   careers: "Careers",
   documents: "Documents",
   news: "News",
@@ -49,7 +49,7 @@ const GROUPS = [
   {
     label: "Directory",
     items: [
-      { path: "/students", label: "Students", Icon: Users },
+      { path: "/students", label: "Alumni", Icon: Users },
       { path: "/careers", label: "Careers", Icon: BadgeCheck },
       { path: "/documents", label: "Documents", Icon: FileText },
     ],

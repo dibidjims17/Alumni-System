@@ -164,7 +164,7 @@ export default function JobsListScreen({ navigation }) {
         <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
         <View style={styles.centered}>
           <Text style={[styles.infoText, { color: c.text }]}>
-            Job listings are available for Graduate students only.
+            Job listings are available to graduates only.
           </Text>
         </View>
       </SafeAreaView>

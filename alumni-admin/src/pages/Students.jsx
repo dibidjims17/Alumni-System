@@ -258,7 +258,7 @@ export default function Students() {
       <div style={{ ...toolbar, justifyContent: "flex-end" }}>
         <button onClick={openAddModal} style={btnPrimary}>
           <UserPlus size={15} />
-          Add Student
+          Add Alumni
         </button>
         <button onClick={openImportModal} style={btn}>
           <Upload size={15} />
@@ -268,7 +268,7 @@ export default function Students() {
 
       <div style={filterRow}>
         <SearchBox
-          placeholder="Search by Student Number, Name, or Email"
+          placeholder="Search by alumni number, name, or email"
           value={searchTerm}
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}
@@ -364,10 +364,10 @@ export default function Students() {
       {!loading && filteredStudents.length === 0 && (
         <EmptyState
           icon={students.length === 0 ? Users : Search}
-          title={students.length === 0 ? "No students yet" : "No students found"}
+          title={students.length === 0 ? "No alumni yet" : "No alumni found"}
           hint={
             students.length === 0
-              ? "Add a student or import a CSV to populate the directory."
+              ? "Add alumni or import a CSV to populate the directory."
               : "Try a different search or clear your filters."
           }
           action={
@@ -392,7 +392,7 @@ export default function Students() {
 
       {!loading && filteredStudents.length > 0 && (
         <>
-          <p>{filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} found</p>
+          <p>{filteredStudents.length} alumni record{filteredStudents.length === 1 ? "" : "s"} found</p>
           <div style={cardGrid}>
             {filteredStudents.map((s) => (
               <div key={s.id} style={card}>
@@ -419,6 +419,14 @@ export default function Students() {
                     <p style={{ ...cardMeta, margin: "2px 0 0" }}>{s.program} • {s.schoolYear}</p>
                   </div>
                   <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
+                    <span
+                      style={{
+                        ...pill,
+                        ...(s.schoolYear === "Graduate" ? statusTone("violet") : statusTone("info")),
+                      }}
+                    >
+                      {s.schoolYear === "Graduate" ? "Graduate" : `Year ${s.schoolYear}`}
+                    </span>
                     <span
                       style={{
                         ...pill,
@@ -508,7 +516,7 @@ export default function Students() {
       )}
 
       {showImportModal && (
-        <ModalShell title="Import Students (CSV)" onClose={closeImportModal} width={480}>
+        <ModalShell title="Import Alumni (CSV)" onClose={closeImportModal} width={480}>
           <div>
             <input
               type="file"
@@ -525,7 +533,7 @@ export default function Students() {
             )}
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
               Expected columns: StudentNumber, FullName, Email, Program, SchoolYear.
-              Existing student numbers are updated; new Graduate accounts get a
+              Existing alumni numbers are updated; new Graduate accounts get a
               unique 12-character temporary password (valid 7 days) emailed to
               them with the app download link, once Site:WebsiteUrl is configured.
             </p>
@@ -659,7 +667,7 @@ export default function Students() {
       )}
 
       {editingStudent && (
-        <ModalShell title={`Edit Student — ${editingStudent.studentNumber}`} onClose={requestCloseEdit} width={480}>
+        <ModalShell title={`Edit Alumni — ${editingStudent.studentNumber}`} onClose={requestCloseEdit} width={480}>
           <form onSubmit={handleEditSave}>
             <Field label="Full Name">
               <input
@@ -718,9 +726,9 @@ export default function Students() {
       )}
 
       {showAddModal && (
-        <ModalShell title="Add Student" onClose={closeAddModal} width={480}>
+        <ModalShell title="Add Alumni" onClose={closeAddModal} width={480}>
           <form onSubmit={handleAddSave}>
-            <Field label="Student Number">
+            <Field label="Alumni Number">
               <input
                 type="text"
                 value={addForm.studentNumber}
@@ -773,7 +781,7 @@ export default function Students() {
             </Field>
 
             <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}>
-              Default password is the student number; they must change it on first login.
+              A unique temporary password will be generated and must be changed on first login.
             </p>
 
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
@@ -781,7 +789,7 @@ export default function Students() {
                 Cancel
               </button>
               <button type="submit" disabled={savingAdd} style={btnPrimary}>
-                {savingAdd ? "Saving..." : "Add Student"}
+                {savingAdd ? "Saving..." : "Add Alumni"}
               </button>
             </div>
           </form>
@@ -804,7 +812,7 @@ export default function Students() {
               {resetResult.temporaryPassword}
             </p>
             <p style={{ fontSize: 13, color: "var(--muted)" }}>
-              Relay this to the student. It is shown only once, expires in
+              Relay this to them. It is shown only once, expires in
               7 days, and must be changed on next login — afterwards they
               can use Forgot Password.
               {resetResult.inviteEmailSent !== undefined && (

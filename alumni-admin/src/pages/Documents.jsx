@@ -83,7 +83,7 @@ export default function Documents() {
 
       <div style={filterRow}>
         <SearchBox
-          placeholder="Search by Student Number, Name, or Program"
+          placeholder="Search by alumni number, name, or program"
           value={searchTerm}
           onChange={setSearchTerm}
           onReset={() => setSearchTerm("")}
@@ -93,7 +93,7 @@ export default function Documents() {
       {loading ? (
         <GridSkeleton count={6} />
       ) : filteredStudents.length === 0 ? (
-        <EmptyState icon={FileText} title="No matching students" hint="Try a different search." />
+        <EmptyState icon={FileText} title="No matching alumni" hint="Try a different search." />
       ) : (
         <div style={cardGrid}>
           {filteredStudents.map((s) => (
@@ -153,7 +153,7 @@ export default function Documents() {
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
               Upload a CSV of document statuses to bulk-update the checklist.
               Use <RotateCcw size={12} style={{ verticalAlign: "middle" }} /> Initialize on a
-              student's checklist to seed the standard documents first.
+              alumni checklist to seed the standard documents first.
             </p>
             <div style={{ marginTop: 16, textAlign: "right" }}>
               <button style={btn} onClick={() => setShowImport(false)}>Close</button>

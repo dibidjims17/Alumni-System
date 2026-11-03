@@ -25,7 +25,7 @@ namespace MyApp.API.Controllers
             var result = await _authService.LoginAsync(request, ipAddress);
 
             if (result == null)
-                return Unauthorized(new { message = "Invalid student number or password." });
+                return Unauthorized(new { message = "Invalid alumni number or password." });
 
             if (result.TemporaryPasswordExpired)
                 return Unauthorized(new { message = "Temporary password expired. Use Forgot Password to set a new one." });
@@ -68,7 +68,7 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             await _authService.ForgotPasswordAsync(request);
-            return Ok(new { message = "If that email is registered, a reset code has been sent." });
+            return Ok(new { message = "If that account exists, a reset code has been sent to its registered email." });
         }
 
         [HttpPost("reset-password")]

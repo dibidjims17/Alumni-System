@@ -222,7 +222,7 @@ export default function CareerProofScreen({ navigation }) {
         <AppHeader title="Career & Employment" navigation={navigation} showBack />
         <View style={[styles.centered, { backgroundColor: c.background }]}>
           <Text style={[styles.infoText, { color: c.textMuted }]}>
-            Career tracking is available for Graduate students only.
+            Career tracking is available to graduates only.
           </Text>
         </View>
       </SafeAreaView>

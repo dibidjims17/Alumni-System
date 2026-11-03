@@ -229,7 +229,7 @@ export default function ResumeScreen({ navigation }) {
         <AppHeader title="Résumé" navigation={navigation} showBack />
         <View style={[styles.centered, { backgroundColor: c.background }]}>
           <Text style={[styles.infoText, { color: c.textMuted }]}>
-            Resume upload is available for Graduate students only.
+            Resume upload is available to graduates only.
           </Text>
         </View>
       </SafeAreaView>

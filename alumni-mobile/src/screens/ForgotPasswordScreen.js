@@ -24,7 +24,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   async function handleSubmit() {
     if (!identifier.trim()) {
-      appAlert('Missing info', 'Please enter your student number or email.');
+      appAlert('Missing info', 'Please enter your alumni number or email.');
       return;
     }
 
@@ -88,7 +88,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       >
       <Text style={[styles.title, { color: c.text }]}>Forgot Password</Text>
       <Text style={[styles.subtitle, { color: c.textMuted }]}>
-        Enter your student number or email and we'll send you a reset code.
+        Enter your alumni number or email and we'll send you a reset code.
       </Text>
 
       <TextInput
@@ -96,7 +96,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           styles.input,
           { backgroundColor: c.surface, borderColor: c.border, color: c.text },
         ]}
-        placeholder="Student Number or Email"
+        placeholder="Alumni Number or Email"
         placeholderTextColor={c.placeholder}
         value={identifier}
         onChangeText={setIdentifier}

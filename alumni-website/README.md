@@ -27,7 +27,7 @@ server, or even a USB stick).
    version changed.
 3. **Host this folder** and open it on a PC connected to the demo WiFi.
    Panel members on the same WiFi open the site, scan the QR, install,
-   and log in with their student accounts.
+   and log in with their alumni accounts.
 
 ## Notes
 

@@ -45,7 +45,7 @@ namespace MyApp.API.Controllers
         {
             var success = await _studentService.ToggleStudentStatusAsync(id, GetUserId());
             if (!success) return NotFound();
-            return Ok(new { message = "Student status updated." });
+            return Ok(new { message = "Alumni status updated." });
         }
 
         [Authorize(Roles = "SuperAdmin,Staff")]
@@ -81,7 +81,7 @@ namespace MyApp.API.Controllers
         {
             var success = await _studentService.UpdateStudentAsync(id, request, GetUserId());
             if (!success) return NotFound();
-            return Ok(new { message = "Student record updated." });
+            return Ok(new { message = "Alumni record updated." });
         }
 
         // Issues a one-time temporary password (shown to the admin once).
@@ -120,7 +120,7 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> CreateStudent([FromBody] CreateStudentRequest request)
         {
             var created = await _studentService.CreateStudentAsync(request, GetUserId());
-            if (created == null) return Conflict(new { message = "Student number already exists." });
+            if (created == null) return Conflict(new { message = "Alumni number already exists." });
             return Ok(created);
         }
 

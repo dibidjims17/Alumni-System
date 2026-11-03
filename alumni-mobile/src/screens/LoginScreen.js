@@ -30,7 +30,7 @@ export default function LoginScreen({ navigation }) {
 
   async function handleLogin() {
     if (!identifier.trim() || !password) {
-      appAlert('Missing info', 'Please enter your student number and password.');
+      appAlert('Missing info', 'Please enter your alumni number and password.');
       return;
     }
 
@@ -41,7 +41,7 @@ export default function LoginScreen({ navigation }) {
       const message =
         err.response?.data?.message ||
         err.response?.data ||
-        'Invalid student number or password.';
+        'Invalid alumni number or password.';
       appAlert('Login failed', typeof message === 'string' ? message : 'Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -91,7 +91,7 @@ export default function LoginScreen({ navigation }) {
           styles.input,
           { backgroundColor: c.surface, borderColor: c.border, color: c.text },
         ]}
-        placeholder="Student Number or Email"
+        placeholder="Alumni Number or Email"
         placeholderTextColor={c.placeholder}
         value={identifier}
         onChangeText={setIdentifier}

@@ -137,7 +137,7 @@ namespace MyApp.Application.Services
             }
 
             await _activityLogRepository.LogAdminAsync(adminId, "BULK_IMPORT",
-                $"Imported {result.Imported} students, {result.Skipped} updated, {result.Errors} errors", "system");
+                $"Imported {result.Imported} alumni records, {result.Skipped} updated, {result.Errors} errors", "system");
 
             // Invite every newly created account to the promo site so they can
             // download the app. Best effort per address — one bad email must
@@ -184,7 +184,7 @@ namespace MyApp.Application.Services
         {
             var student = await _studentRepository.GetByIdAsync(studentId);
             if (student == null)
-                return (false, "Student not found.", null);
+                return (false, "Alumni record not found.", null);
 
             if (!IsGraduate(student))
                 return (false, "Invites are only sent to Graduate accounts.", null);
@@ -262,7 +262,7 @@ namespace MyApp.Application.Services
 
             var action = student.IsActive ? "ACTIVATE_STUDENT" : "DEACTIVATE_STUDENT";
             await _activityLogRepository.LogAdminAsync(adminId, action,
-                $"Student {student.StudentNumber} {(student.IsActive ? "activated" : "deactivated")}", "system");
+                $"Alumni account {student.StudentNumber} {(student.IsActive ? "activated" : "deactivated")}", "system");
 
             return true;
         }
@@ -279,7 +279,7 @@ namespace MyApp.Application.Services
             await _studentRepository.UpdateAsync(student);
 
             await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_STUDENT",
-                $"Updated student record: {student.StudentNumber}", "system");
+                $"Updated alumni record: {student.StudentNumber}", "system");
 
             return true;
         }
@@ -300,7 +300,7 @@ namespace MyApp.Application.Services
             await _studentRepository.UpdateAsync(student);
 
             await _activityLogRepository.LogAdminAsync(adminId, "RESET_STUDENT_PASSWORD",
-                $"Reset password for student: {student.StudentNumber}", "system");
+                $"Reset password for alumni account: {student.StudentNumber}", "system");
 
             return temporaryPassword;
         }
@@ -335,7 +335,7 @@ namespace MyApp.Application.Services
             }
 
             await _activityLogRepository.LogAdminAsync(adminId, "CREATE_STUDENT",
-                $"Created student: {request.StudentNumber}", "system");
+                $"Created alumni record: {request.StudentNumber}", "system");
 
             var inviteSent = await SendInviteEmailsAsync(
                 new List<(Student Student, string TemporaryPassword)> { (student, temporaryPassword) });
@@ -386,7 +386,7 @@ namespace MyApp.Application.Services
 
             var student = await _studentRepository.GetByIdAsync(request.StudentId);
             if (student == null)
-                return (false, "Student not found.");
+                return (false, "Alumni record not found.");
 
             request.Status = approve ? "Approved" : "Declined";
             request.ReviewNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();

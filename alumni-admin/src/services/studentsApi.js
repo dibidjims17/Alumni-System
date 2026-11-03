@@ -12,7 +12,7 @@ export async function getStudents() {
   const response = await fetch(`${API_BASE_URL}/Students`, {
     headers: authHeaders(),
   });
-  if (!response.ok) throw new Error("Failed to fetch students");
+  if (!response.ok) throw new Error("Failed to fetch alumni");
   return response.json();
 }
 
@@ -20,7 +20,7 @@ export async function getStudentStats() {
   const response = await fetch(`${API_BASE_URL}/Students/stats`, {
     headers: authHeaders(),
   });
-  if (!response.ok) throw new Error("Failed to fetch student stats");
+  if (!response.ok) throw new Error("Failed to fetch alumni stats");
   return response.json();
 }
 
@@ -29,7 +29,7 @@ export async function toggleStudentStatus(id) {
     method: "PUT",
     headers: authHeaders(),
   });
-  if (!response.ok) throw new Error("Failed to toggle student status");
+  if (!response.ok) throw new Error("Failed to toggle alumni status");
   return response.json();
 }
 
@@ -37,7 +37,7 @@ export async function getStudentProfile(id) {
   const response = await fetch(`${API_BASE_URL}/Students/${id}/profile`, {
     headers: authHeaders(),
   });
-  if (!response.ok) throw new Error("Failed to fetch student profile");
+  if (!response.ok) throw new Error("Failed to fetch alumni profile");
   return response.json();
 }
 
@@ -49,7 +49,7 @@ export async function updateStudent(id, payload) {
   });
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(errText || "Failed to update student");
+    throw new Error(errText || "Failed to update alumni");
   }
   return response.json();
 }
@@ -105,7 +105,7 @@ export async function createStudent(payload) {
   });
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(errText || "Failed to create student");
+    throw new Error(errText || "Failed to create alumni");
   }
   return response.json();
 }

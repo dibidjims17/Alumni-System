@@ -196,7 +196,7 @@ export default function Dashboard() {
   );
 
   const quickLinks = [
-    { to: "/students", label: "Students", desc: "Directory", Icon: Users },
+    { to: "/students", label: "Alumni", desc: "Directory", Icon: Users },
     { to: "/documents", label: "Documents", desc: "Checklists", Icon: FileText },
     { to: "/news", label: "News", desc: "Publish", Icon: Newspaper },
     { to: "/jobs", label: "Jobs", desc: "Board", Icon: Briefcase },
@@ -253,7 +253,7 @@ export default function Dashboard() {
             Alumni at a glance
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--hero-muted)" }}>
-            Students, content, and hiring health.
+            Alumni, content, and hiring health.
           </p>
         </div>
         <div
@@ -269,7 +269,7 @@ export default function Dashboard() {
             {loading ? <Skeleton width={64} height={28} /> : (
               <div style={{ fontSize: 28, fontWeight: 800 }}>{derived.total}</div>
             )}
-            <div style={{ fontSize: 11.5, color: "var(--hero-muted)" }}>total students</div>
+            <div style={{ fontSize: 11.5, color: "var(--hero-muted)" }}>total alumni</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
             <button
@@ -340,7 +340,7 @@ export default function Dashboard() {
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-            <h3 style={{ margin: 0, fontSize: 14.5 }}>Student mix</h3>
+            <h3 style={{ margin: 0, fontSize: 14.5 }}>Class mix</h3>
             <span style={{ fontSize: 12, color: "var(--muted)" }}>Graduates vs active</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16 }}>

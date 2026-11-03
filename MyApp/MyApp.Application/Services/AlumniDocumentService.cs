@@ -60,7 +60,7 @@ namespace MyApp.Application.Services
             }
 
             await _activityLogRepository.LogAdminAsync(adminId, "INIT_DOCUMENTS",
-                $"Initialized document checklist for student {studentId}", "system");
+                $"Initialized document checklist for alumni record {studentId}", "system");
         }
 
         public async Task<bool> UpdateStatusAsync(int documentId, UpdateDocumentStatusRequest request, int adminId)
@@ -93,7 +93,7 @@ namespace MyApp.Application.Services
             });
 
             await _activityLogRepository.LogAdminAsync(adminId, "ADD_DOCUMENT",
-                $"Added document {request.DocumentType} for student {studentId}", "system");
+                $"Added document {request.DocumentType} for alumni record {studentId}", "system");
 
             return true;
         }
@@ -131,7 +131,7 @@ namespace MyApp.Application.Services
                     if (studentDocs == null)
                     {
                         result.Errors++;
-                        result.ErrorMessages.Add($"Student not found: {dto.StudentNumber}");
+                        result.ErrorMessages.Add($"Alumni record not found: {dto.StudentNumber}");
                         continue;
                     }
 
@@ -143,7 +143,7 @@ namespace MyApp.Application.Services
                     if (document == null)
                     {
                         result.Errors++;
-                        result.ErrorMessages.Add($"Document '{dto.DocumentType}' not found for student {dto.StudentNumber}");
+                        result.ErrorMessages.Add($"Document '{dto.DocumentType}' not found for alumni record {dto.StudentNumber}");
                         continue;
                     }
 

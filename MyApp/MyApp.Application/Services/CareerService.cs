@@ -166,7 +166,7 @@ namespace MyApp.Application.Services
 
             await _careerRepository.UpdateAsync(record);
             await _activityLogRepository.LogAdminAsync(adminId, "REVIEW_CAREER_PROOF",
-                $"Marked career proof for student {record.StudentId} as {status}", ipAddress);
+                $"Marked career proof for alumni record {record.StudentId} as {status}", ipAddress);
 
             return (true, status == "Approved"
                 ? "Submission approved."

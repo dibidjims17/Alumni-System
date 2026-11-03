@@ -85,7 +85,7 @@ export default function ActivityLog() {
         <select value={actorTypeFilter} onChange={(e) => setActorTypeFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>
           <option value="">All Actor Types</option>
           <option value="Admin">Admin</option>
-          <option value="Student">Student</option>
+          <option value="Student">Alumni</option>
         </select>
 
         <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} style={{ ...selectStyle, width: "auto" }}>

@@ -310,7 +310,7 @@ namespace MyApp.Application.Services
                 await _profileRepository.UpdateAsync(profile);
             }
 
-            await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_PROFILE", "Student updated their profile", ipAddress);
+            await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_PROFILE", "Alumni user updated their profile", ipAddress);
             return true;
         }
 
@@ -337,7 +337,7 @@ namespace MyApp.Application.Services
             }
 
             await _activityLogRepository.LogStudentAsync(studentId, "UPLOAD_PROFILE_PICTURE",
-                "Student updated their profile picture", ipAddress);
+                "Alumni user updated their profile picture", ipAddress);
             return relativePath;
         }
 
@@ -353,7 +353,7 @@ namespace MyApp.Application.Services
             await _profileRepository.UpdateAsync(profile);
 
             await _activityLogRepository.LogStudentAsync(studentId, "DELETE_PROFILE_PICTURE",
-                "Student removed their profile picture", ipAddress);
+                "Alumni user removed their profile picture", ipAddress);
             return true;
         }
 
@@ -417,7 +417,7 @@ namespace MyApp.Application.Services
                 await _jobPreferenceRepository.UpdateAsync(preference);
             }
 
-            await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_JOB_PREFERENCES", "Student updated job preferences", ipAddress);
+            await _activityLogRepository.LogStudentAsync(studentId, "UPDATE_JOB_PREFERENCES", "Alumni user updated job preferences", ipAddress);
             return true;
         }
         public async Task AddWorkExperienceAsync(int studentId, WorkExperienceDto request, string ipAddress)
