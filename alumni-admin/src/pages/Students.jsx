@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
-import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search } from "lucide-react";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, MoreVertical, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite, getYearChangeRequests, reviewYearChangeRequest } from "../services/studentsApi";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, btnDanger, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
@@ -13,6 +13,35 @@ const FILE_ROOT = API_BASE_URL.replace("/api", "");
 const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "Graduate" };
 
 const YEAR_OPTIONS = ["Graduate", "4"];
+
+function careerReviewTone(status) {
+  if (status === "Approved") return statusTone("success");
+  if (status === "Rejected") return statusTone("danger");
+  return statusTone("warning");
+}
+
+function alignmentTone(alignment) {
+  if (alignment === "Aligned") return statusTone("success");
+  if (alignment === "Related") return statusTone("info");
+  if (alignment === "Not Aligned") return statusTone("danger");
+  return statusTone("violet");
+}
+
+function careerHeadline(career) {
+  if (!career) return "No career details submitted";
+  if (career.jobTitle && career.company) return `${career.jobTitle} at ${career.company}`;
+  if (career.jobTitle) return career.jobTitle;
+  return career.employmentStatus;
+}
+
+function careerDescription(career, schoolYear) {
+  if (!career && schoolYear !== "Graduate") return "Career tracking becomes available after graduation.";
+  if (!career) return "Employment status has not been added yet.";
+  if (career.reviewStatus === "Pending") return "Career proof is awaiting admin review.";
+  if (career.reviewStatus === "Rejected") return "Career proof needs correction and resubmission.";
+  if (career.courseAlignment) return `${career.courseAlignment} with the graduate program.`;
+  return "Career information is verified.";
+}
 
 export default function Students() {
   const [students, setStudents] = useState([]);
@@ -28,6 +57,7 @@ export default function Students() {
   const [yearFilter, setYearFilter] = useState("");
   const [programFilter, setProgramFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // "", "active", "inactive", "unclaimed"
+  const [openActionsId, setOpenActionsId] = useState(null);
 
   const [viewingProfile, setViewingProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -114,6 +144,25 @@ export default function Students() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadYearRequests();
   }, []);
+
+  useEffect(() => {
+    if (openActionsId == null) return;
+
+    function closeOnOutsideClick(event) {
+      if (!event.target.closest("[data-alumni-actions]")) setOpenActionsId(null);
+    }
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setOpenActionsId(null);
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [openActionsId]);
 
   function openImportModal() {
     setImportResult(null);
@@ -225,6 +274,42 @@ export default function Students() {
     } catch (err) {
       notifyError(err.message);
     }
+  }
+
+  async function confirmSendInvite(student) {
+    const ok = await askConfirm(
+      `Send the app invite + a fresh temporary password to ${student.fullName} (${student.email})?`,
+      { confirmLabel: "Send invite" }
+    );
+    if (!ok) return;
+
+    try {
+      const result = await sendInvite(student.id);
+      notifySuccess(result.message || "Invite sent.");
+      setResetResult({
+        student: { fullName: student.fullName, studentNumber: student.studentNumber },
+        temporaryPassword: result.temporaryPassword,
+        inviteEmailSent: true,
+      });
+    } catch (err) {
+      notifyError(err.message);
+      if (err.temporaryPassword) {
+        setResetResult({
+          student: { fullName: student.fullName, studentNumber: student.studentNumber },
+          temporaryPassword: err.temporaryPassword,
+          inviteEmailSent: false,
+        });
+      }
+    }
+  }
+
+  async function confirmToggleStatus(student) {
+    const action = student.isActive ? "deactivate" : "activate";
+    const ok = await askConfirm(
+      `Are you sure you want to ${action} ${student.fullName}?`,
+      { confirmLabel: student.isActive ? "Deactivate" : "Activate", danger: student.isActive }
+    );
+    if (ok) await handleToggleStatus(student.id);
   }
 
   const programOptions = useMemo(() => {
@@ -395,7 +480,7 @@ export default function Students() {
           <p>{filteredStudents.length} alumni record{filteredStudents.length === 1 ? "" : "s"} found</p>
           <div style={cardGrid}>
             {filteredStudents.map((s) => (
-              <div key={s.id} style={card}>
+              <div key={s.id} style={{ ...card, position: "relative" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   {s.profilePicturePath ? (
                     <img
@@ -445,68 +530,127 @@ export default function Students() {
                     )}
                   </div>
                 </div>
-                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => openViewProfile(s)}>
-                      <Eye size={15} /> View
-                    </button>
-                    <button type="button" style={{ ...btnPrimary, padding: "6px 12px" }} onClick={() => openEditModal(s)}>
-                      <Pencil size={15} /> Edit
-                    </button>
-                    <button
-                      type="button"
-                      style={{ ...btn, padding: "6px 12px" }}
-                      title="Send app invite with a fresh temporary password (Graduates only)"
-                      onClick={async () => {
-                        if (await askConfirm(
-                          `Send the app invite + a fresh temporary password to ${s.fullName} (${s.email})?`,
-                          { confirmLabel: "Send invite" }
-                        )) {
-                          try {
-                            const res = await sendInvite(s.id);
-                            notifySuccess(res.message || "Invite sent.");
-                            setResetResult({
-                              student: { fullName: s.fullName, studentNumber: s.studentNumber },
-                              temporaryPassword: res.temporaryPassword,
-                              inviteEmailSent: true,
-                            });
-                          } catch (err) {
-                            notifyError(err.message);
-                            if (err.temporaryPassword) {
-                              setResetResult({
-                                student: { fullName: s.fullName, studentNumber: s.studentNumber },
-                                temporaryPassword: err.temporaryPassword,
-                                inviteEmailSent: false,
-                              });
-                            }
-                          }
-                        }
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 11, marginTop: 8 }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div
+                      style={{
+                        width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        background: s.career ? "var(--info-tint)" : "var(--surface-alt)",
+                        color: s.career ? "var(--info)" : "var(--muted)",
                       }}
                     >
-                      <Send size={15} /> Invite
-                    </button>
+                      <BriefcaseBusiness size={17} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)", lineHeight: 1.35 }}>
+                        {careerHeadline(s.career)}
+                      </div>
+                      <p style={{ ...cardMeta, margin: "3px 0 0", lineHeight: 1.4 }}>
+                        {careerDescription(s.career, s.schoolYear)}
+                      </p>
+                      {s.career && (
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                          <span style={{ ...pill, ...statusTone("violet") }}>
+                            {s.career.employmentStatus}
+                          </span>
+                          <span style={{ ...pill, ...careerReviewTone(s.career.reviewStatus), display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            {s.career.reviewStatus === "Approved" ? <BadgeCheck size={12} /> :
+                              s.career.reviewStatus === "Rejected" ? <CircleAlert size={12} /> : <Clock3 size={12} />}
+                            {s.career.reviewStatus === "Approved" ? "Verified" : s.career.reviewStatus}
+                          </span>
+                          {s.career.courseAlignment && (
+                            <span style={{ ...pill, ...alignmentTone(s.career.courseAlignment) }}>
+                              {s.career.courseAlignment}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <Link to={`/documents/${s.id}`} style={{ ...btn, padding: "6px 12px", textDecoration: "none" }}>
-                      <FileText size={15} /> Documents
-                    </Link>
-                    <button type="button" style={{ ...btn, padding: "6px 12px" }} onClick={() => confirmResetPassword(s)}>
-                      <KeyRound size={15} /> Reset PW
-                    </button>
+                </div>
+
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 11, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <button
+                    type="button"
+                    style={{ ...btnPrimary, padding: "7px 13px" }}
+                    onClick={() => openViewProfile(s)}
+                  >
+                    <Eye size={15} /> View profile
+                  </button>
+
+                  <div data-alumni-actions style={{ position: "relative" }}>
                     <button
                       type="button"
-                      style={{ ...btn, padding: "6px 12px", color: s.isActive ? "var(--danger)" : "var(--success)" }}
-                      onClick={async () => {
-                        if (await askConfirm(
-                          `Are you sure you want to ${s.isActive ? "deactivate" : "activate"} ${s.fullName}?`,
-                          { confirmLabel: s.isActive ? "Deactivate" : "Activate", danger: s.isActive }
-                        )) {
-                          handleToggleStatus(s.id);
-                        }
-                      }}
+                      aria-label={`More actions for ${s.fullName}`}
+                      aria-haspopup="menu"
+                      aria-expanded={openActionsId === s.id}
+                      title="More actions"
+                      style={{ ...btn, width: 36, height: 34, padding: 0, justifyContent: "center" }}
+                      onClick={() => setOpenActionsId((current) => current === s.id ? null : s.id)}
                     >
-                      {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />} {s.isActive ? "Deactivate" : "Activate"}
+                      <MoreVertical size={17} />
                     </button>
+
+                    {openActionsId === s.id && (
+                      <div
+                        role="menu"
+                        aria-label={`Actions for ${s.fullName}`}
+                        style={{
+                          position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 20,
+                          width: 210, padding: 6, border: "1px solid var(--border)",
+                          borderRadius: "var(--radius-md)", background: "var(--surface)",
+                          boxShadow: "var(--shadow-md)", display: "flex", flexDirection: "column", gap: 2,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          role="menuitem"
+                          style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
+                          onClick={() => { setOpenActionsId(null); openEditModal(s); }}
+                        >
+                          <Pencil size={15} /> Edit alumni
+                        </button>
+                        {s.schoolYear === "Graduate" && (
+                          <>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
+                              onClick={() => { setOpenActionsId(null); confirmSendInvite(s); }}
+                            >
+                              <Send size={15} /> Send invite
+                            </button>
+                            <Link
+                              to={`/documents/${s.id}`}
+                              role="menuitem"
+                              style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none", textDecoration: "none", boxSizing: "border-box" }}
+                              onClick={() => setOpenActionsId(null)}
+                            >
+                              <FileText size={15} /> Documents
+                            </Link>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          role="menuitem"
+                          style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
+                          onClick={() => { setOpenActionsId(null); confirmResetPassword(s); }}
+                        >
+                          <KeyRound size={15} /> Reset password
+                        </button>
+                        <div style={{ height: 1, background: "var(--border)", margin: "4px 2px" }} />
+                        <button
+                          type="button"
+                          role="menuitem"
+                          style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none", color: s.isActive ? "var(--danger)" : "var(--success)" }}
+                          onClick={() => { setOpenActionsId(null); confirmToggleStatus(s); }}
+                        >
+                          {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />}
+                          {s.isActive ? "Deactivate" : "Activate"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
