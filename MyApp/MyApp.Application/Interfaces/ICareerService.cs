@@ -18,6 +18,9 @@ namespace MyApp.Application.Interfaces
         Task<(bool Success, string Message)> ReviewAsync(
             int recordId, CareerReviewRequest request, int adminId, string ipAddress);
 
+        Task<(bool Success, string Message)> SendReminderAsync(
+            int studentId, int adminId, string ipAddress);
+
         Task<CareerStatsDto> GetStatsAsync();
     }
 }

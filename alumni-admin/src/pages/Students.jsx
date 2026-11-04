@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Papa from "papaparse";
-import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, MoreVertical, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert } from "lucide-react";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, MoreVertical, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert, BellRing, CheckCircle2 } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite, getYearChangeRequests, reviewYearChangeRequest } from "../services/studentsApi";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, btnDanger, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
+import { sendCareerReminder } from "../services/careersApi";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "Graduate" };
@@ -58,6 +59,8 @@ export default function Students() {
   const [programFilter, setProgramFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // "", "active", "inactive", "unclaimed"
   const [openActionsId, setOpenActionsId] = useState(null);
+  const [sendingCareerReminderId, setSendingCareerReminderId] = useState(null);
+  const [remindedCareerIds, setRemindedCareerIds] = useState([]);
 
   const [viewingProfile, setViewingProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -312,6 +315,32 @@ export default function Students() {
     if (ok) await handleToggleStatus(student.id);
   }
 
+  async function confirmCareerReminder(student) {
+    const needsResubmission = student.career?.reviewStatus === "Rejected";
+    const ok = await askConfirm(
+      needsResubmission
+        ? `Remind ${student.fullName} to review the rejection note and resubmit their career proof?`
+        : `Remind ${student.fullName} to report their employment status and upload career proof?`,
+      { confirmLabel: "Send reminder" }
+    );
+    if (!ok) return;
+
+    setSendingCareerReminderId(student.id);
+    try {
+      const result = await sendCareerReminder(student.id);
+      notifySuccess(result.message || "Career reminder sent.");
+      setRemindedCareerIds((current) => [...current, student.id]);
+    } catch (err) {
+      notifyError(err.message);
+    } finally {
+      setSendingCareerReminderId(null);
+    }
+  }
+
+  function careerReminderAlreadySent(student) {
+    return student.careerReminderActive || remindedCareerIds.includes(student.id);
+  }
+
   const programOptions = useMemo(() => {
     const unique = new Set(students.map((s) => s.program).filter(Boolean));
     return Array.from(unique).sort();
@@ -480,7 +509,7 @@ export default function Students() {
           <p>{filteredStudents.length} alumni record{filteredStudents.length === 1 ? "" : "s"} found</p>
           <div style={cardGrid}>
             {filteredStudents.map((s) => (
-              <div key={s.id} style={{ ...card, position: "relative" }}>
+              <div key={s.id} className="alumni-card" style={{ ...card, position: "relative" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   {s.profilePicturePath ? (
                     <img
@@ -566,6 +595,50 @@ export default function Students() {
                           )}
                         </div>
                       )}
+                      {s.schoolYear === "Graduate" && s.isActive &&
+                        (!s.career || s.career.reviewStatus === "Rejected") && (
+                          <button
+                            type="button"
+                            className="career-reminder-button"
+                            title={
+                              careerReminderAlreadySent(s) && s.careerReminderSentAt
+                                ? `Reminder sent ${new Date(s.careerReminderSentAt).toLocaleString()}`
+                                : undefined
+                            }
+                            disabled={
+                              sendingCareerReminderId === s.id ||
+                              careerReminderAlreadySent(s)
+                            }
+                            style={{
+                              ...btn,
+                              marginTop: 10,
+                              padding: "6px 10px",
+                              background: careerReminderAlreadySent(s)
+                                ? "var(--success-tint)"
+                                : "var(--warning-tint)",
+                              borderColor: careerReminderAlreadySent(s)
+                                ? "var(--success)"
+                                : "var(--warning)",
+                              color: careerReminderAlreadySent(s)
+                                ? "var(--success)"
+                                : "var(--warning)",
+                            }}
+                            onClick={() => confirmCareerReminder(s)}
+                          >
+                            {careerReminderAlreadySent(s) ? (
+                              <CheckCircle2 size={14} />
+                            ) : (
+                              <BellRing size={14} />
+                            )}
+                            {sendingCareerReminderId === s.id
+                              ? "Sending…"
+                              : careerReminderAlreadySent(s)
+                                ? "Reminder sent"
+                                : s.career?.reviewStatus === "Rejected"
+                                  ? "Remind to resubmit"
+                                  : "Remind to report"}
+                          </button>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -606,6 +679,7 @@ export default function Students() {
                         <button
                           type="button"
                           role="menuitem"
+                          className="alumni-menu-item"
                           style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
                           onClick={() => { setOpenActionsId(null); openEditModal(s); }}
                         >
@@ -616,6 +690,7 @@ export default function Students() {
                             <button
                               type="button"
                               role="menuitem"
+                              className="alumni-menu-item"
                               style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
                               onClick={() => { setOpenActionsId(null); confirmSendInvite(s); }}
                             >
@@ -624,6 +699,7 @@ export default function Students() {
                             <Link
                               to={`/documents/${s.id}`}
                               role="menuitem"
+                              className="alumni-menu-item"
                               style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none", textDecoration: "none", boxSizing: "border-box" }}
                               onClick={() => setOpenActionsId(null)}
                             >
@@ -634,6 +710,7 @@ export default function Students() {
                         <button
                           type="button"
                           role="menuitem"
+                          className="alumni-menu-item"
                           style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
                           onClick={() => { setOpenActionsId(null); confirmResetPassword(s); }}
                         >
@@ -643,6 +720,7 @@ export default function Students() {
                         <button
                           type="button"
                           role="menuitem"
+                          className="alumni-menu-item"
                           style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none", color: s.isActive ? "var(--danger)" : "var(--success)" }}
                           onClick={() => { setOpenActionsId(null); confirmToggleStatus(s); }}
                         >
@@ -974,6 +1052,27 @@ export default function Students() {
           </div>
         </ModalShell>
       )}
+
+      <style>{`
+        .alumni-card {
+          transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+        .alumni-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md) !important;
+        }
+        .alumni-card:focus-within {
+          outline: 2px solid var(--primary);
+          outline-offset: 2px;
+        }
+        .alumni-menu-item:hover,
+        .alumni-menu-item:focus-visible {
+          background: var(--surface-alt) !important;
+        }
+        .career-reminder-button:hover:not(:disabled) {
+          filter: brightness(0.97);
+        }
+      `}</style>
     </div>
   );
 }

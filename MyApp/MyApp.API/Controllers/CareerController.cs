@@ -160,6 +160,17 @@ namespace MyApp.API.Controllers
             return Ok(new { message });
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpPost("student/{studentId:int}/remind")]
+        public async Task<IActionResult> SendReminder(int studentId)
+        {
+            var (success, message) = await _careerService.SendReminderAsync(
+                studentId, GetAdminId(), IpAddress());
+
+            if (!success) return BadRequest(new { message });
+            return Ok(new { message });
+        }
+
         // ------------------------------------------------------------------
         // Helpers
         // ------------------------------------------------------------------

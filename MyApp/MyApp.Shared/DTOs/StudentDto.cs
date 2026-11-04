@@ -19,6 +19,9 @@ namespace MyApp.Shared.DTOs
         public string? TemporaryPassword { get; set; }
         public bool InviteEmailSent { get; set; }
         public CareerSummaryDto? Career { get; set; }
+        public bool CareerReminderActive { get; set; }
+        public DateTime? CareerReminderSentAt { get; set; }
+        public string? CareerReminderType { get; set; }
     }
 
     // Lightweight newest-career-record projection used by the alumni

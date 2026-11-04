@@ -89,6 +89,14 @@ export default function NotificationsScreen({ navigation }) {
           navigation.navigate('HomeTab');
         }
         break;
+      case 'CAREER_REMINDER':
+      case 'CAREER_RESUBMIT_REMINDER':
+        if (isGraduate) {
+          navigation.navigate('CareerTab', { screen: 'CareerProof' });
+        } else {
+          navigation.navigate('HomeTab');
+        }
+        break;
       case 'JOB':
         if (isGraduate) {
           navigation.navigate('CareerTab', {

@@ -16,6 +16,7 @@ namespace MyApp.Application.Services
         private readonly IConfiguration _configuration;
         private readonly IYearLevelChangeRepository _yearChangeRepository;
         private readonly ICareerRepository _careerRepository;
+        private readonly INotificationRepository _notificationRepository;
 
         public StudentService(
             IStudentRepository studentRepository,
@@ -25,7 +26,8 @@ namespace MyApp.Application.Services
             IEmailService emailService,
             IConfiguration configuration,
             IYearLevelChangeRepository yearChangeRepository,
-            ICareerRepository careerRepository)
+            ICareerRepository careerRepository,
+            INotificationRepository notificationRepository)
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
@@ -35,6 +37,7 @@ namespace MyApp.Application.Services
             _configuration = configuration;
             _yearChangeRepository = yearChangeRepository;
             _careerRepository = careerRepository;
+            _notificationRepository = notificationRepository;
         }
 
         public async Task<List<StudentDto>> GetAllStudentsAsync()
@@ -42,11 +45,26 @@ namespace MyApp.Application.Services
             var students = await _studentRepository.GetAllAsync();
             var profiles = await _profileRepository.GetByStudentIdsAsync(students.Select(s => s.Id));
             var careers = await _careerRepository.GetLatestByStudentIdsAsync(students.Select(s => s.Id));
+            var careerReminders = await _notificationRepository
+                .GetActiveCareerRemindersByStudentIdsAsync(
+                    students.Select(s => s.Id),
+                    DateTime.UtcNow.AddDays(-NotificationService.CareerReminderCooldownDays));
+            var careerReminderLookup = careerReminders
+                .GroupBy(reminder => (reminder.StudentId, reminder.Type))
+                .ToDictionary(group => group.Key, group => group.First());
 
             return students.Select(s =>
             {
                 profiles.TryGetValue(s.Id, out var profile);
                 careers.TryGetValue(s.Id, out var career);
+                var careerReminderType = career?.Status == "Rejected"
+                    ? "CAREER_RESUBMIT_REMINDER"
+                    : career == null
+                        ? "CAREER_REMINDER"
+                        : null;
+                Notification? careerReminder = null;
+                if (careerReminderType != null)
+                    careerReminderLookup.TryGetValue((s.Id, careerReminderType), out careerReminder);
                 return new StudentDto
                 {
                     Id = s.Id,
@@ -60,6 +78,9 @@ namespace MyApp.Application.Services
                     ActivatedAt = s.ActivatedAt,
                     IsClaimed = s.ActivatedAt != null || !s.MustChangePassword,
                     ProfilePicturePath = profile?.ProfilePicturePath,
+                    CareerReminderActive = careerReminder != null,
+                    CareerReminderSentAt = careerReminder?.CreatedAt,
+                    CareerReminderType = careerReminder?.Type,
                     Career = career == null ? null : new CareerSummaryDto
                     {
                         RecordId = career.Id,

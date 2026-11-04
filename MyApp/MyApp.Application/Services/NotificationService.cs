@@ -6,6 +6,8 @@ namespace MyApp.Application.Services
 {
     public class NotificationService : INotificationService
     {
+        public const int CareerReminderCooldownDays = 7;
+
         private readonly INotificationRepository _notificationRepository;
         private readonly IEmailService _emailService;
         private readonly IStudentRepository _studentRepository;
@@ -62,6 +64,47 @@ namespace MyApp.Application.Services
         public async Task MarkAllAsReadAsync(int studentId)
         {
             await _notificationRepository.MarkAllAsReadAsync(studentId);
+        }
+
+        // Admin-triggered career reminder. An unread reminder or one sent in
+        // the last seven days suppresses repeats so the feature cannot become
+        // a spam button. Push is best-effort; the in-app notification remains.
+        public async Task<(bool Sent, string Message)> NotifyCareerReminderAsync(
+            int studentId,
+            bool needsResubmission)
+        {
+            var type = needsResubmission ? "CAREER_RESUBMIT_REMINDER" : "CAREER_REMINDER";
+            var existing = await _notificationRepository.GetLatestByTypeAsync(studentId, type);
+            if (existing != null &&
+                (!existing.IsRead || existing.CreatedAt > DateTime.UtcNow.AddDays(-CareerReminderCooldownDays)))
+            {
+                return (false, "A career reminder is already unread or was sent within the last 7 days.");
+            }
+
+            var notification = new Notification
+            {
+                StudentId = studentId,
+                Title = needsResubmission
+                    ? "Your career proof needs an update"
+                    : "Please report your career status",
+                Message = needsResubmission
+                    ? "Open Career to review the Alumni Office note, correct your details, and resubmit your proof."
+                    : "Open Career to report your current employment status and upload your proof of occupation.",
+                Type = type,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _notificationRepository.CreateAsync(notification);
+
+            var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(studentId);
+            await _pushService.SendAsync(
+                tokens,
+                notification.Title,
+                notification.Message,
+                notification.Type,
+                null);
+
+            return (true, "Career reminder sent by in-app notification and device push when available.");
         }
 
         // One-shot encouragement: graduates with no active resume get a

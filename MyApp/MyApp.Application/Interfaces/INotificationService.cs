@@ -14,6 +14,7 @@ namespace MyApp.Application.Interfaces
         Task NotifyNewsPostedAsync(string newsTitle, int newsId);
         Task NotifyJobPostedAsync(string jobTitle, int jobId);
         Task NotifyEventPostedAsync(string eventTitle, int eventId);
+        Task<(bool Sent, string Message)> NotifyCareerReminderAsync(int studentId, bool needsResubmission);
         Task MaybeNudgeResumeAsync(int studentId);
         Task RegisterPushTokenAsync(int studentId, string token, string platform);
         Task UnregisterPushTokenAsync(string token);

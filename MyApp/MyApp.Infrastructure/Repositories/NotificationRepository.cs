@@ -33,6 +33,31 @@ namespace MyApp.Infrastructure.Repositories
             return await _context.Notifications.FirstOrDefaultAsync(n => n.Id == id);
         }
 
+        public async Task<Notification?> GetLatestByTypeAsync(int studentId, string type)
+        {
+            return await _context.Notifications
+                .Where(n => n.StudentId == studentId && n.Type == type)
+                .OrderByDescending(n => n.CreatedAt)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Notification>> GetActiveCareerRemindersByStudentIdsAsync(
+            IEnumerable<int> studentIds,
+            DateTime recentSince)
+        {
+            var ids = studentIds.Distinct().ToList();
+            if (ids.Count == 0)
+                return new List<Notification>();
+
+            return await _context.Notifications
+                .AsNoTracking()
+                .Where(n => ids.Contains(n.StudentId) &&
+                    (n.Type == "CAREER_REMINDER" || n.Type == "CAREER_RESUBMIT_REMINDER") &&
+                    (!n.IsRead || n.CreatedAt > recentSince))
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task CreateAsync(Notification notification)
         {
             await _context.Notifications.AddAsync(notification);

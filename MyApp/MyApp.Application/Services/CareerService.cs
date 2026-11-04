@@ -21,15 +21,18 @@ namespace MyApp.Application.Services
         private readonly ICareerRepository _careerRepository;
         private readonly IStudentRepository _studentRepository;
         private readonly IActivityLogRepository _activityLogRepository;
+        private readonly INotificationService _notificationService;
 
         public CareerService(
             ICareerRepository careerRepository,
             IStudentRepository studentRepository,
-            IActivityLogRepository activityLogRepository)
+            IActivityLogRepository activityLogRepository,
+            INotificationService notificationService)
         {
             _careerRepository = careerRepository;
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
+            _notificationService = notificationService;
         }
 
         public async Task<CareerRecordDto?> GetMyRecordAsync(int studentId)
@@ -241,6 +244,46 @@ namespace MyApp.Application.Services
                     ? 0
                     : (int)Math.Round((aligned + related) * 100.0 / assessed)
             };
+        }
+
+        public async Task<(bool Success, string Message)> SendReminderAsync(
+            int studentId,
+            int adminId,
+            string ipAddress)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId);
+            if (student == null)
+                return (false, "Alumni record not found.");
+
+            if (!student.IsActive)
+                return (false, "Career reminders can only be sent to active alumni accounts.");
+
+            if (!student.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase))
+                return (false, "Career reminders are available to graduates only.");
+
+            var record = await _careerRepository.GetLatestByStudentAsync(studentId);
+            if (record?.Status == "Approved")
+                return (false, "This alumnus already has a verified career record.");
+
+            if (record?.Status == "Pending")
+                return (false, "This alumnus already has a career submission awaiting review.");
+
+            var needsResubmission = record?.Status == "Rejected";
+            var (sent, message) = await _notificationService.NotifyCareerReminderAsync(
+                studentId,
+                needsResubmission);
+
+            if (!sent) return (false, message);
+
+            await _activityLogRepository.LogAdminAsync(
+                adminId,
+                "SEND_CAREER_REMINDER",
+                needsResubmission
+                    ? $"Reminded alumni account {student.StudentNumber} to resubmit career proof"
+                    : $"Reminded alumni account {student.StudentNumber} to report career status",
+                ipAddress);
+
+            return (true, message);
         }
 
         private static CareerRecordDto Map(CareerRecord r)

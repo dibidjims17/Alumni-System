@@ -7,6 +7,9 @@ namespace MyApp.Application.Interfaces
         Task<List<Notification>> GetByStudentIdAsync(int studentId);
         Task<int> GetUnreadCountAsync(int studentId);
         Task<Notification?> GetByIdAsync(int id);
+        Task<Notification?> GetLatestByTypeAsync(int studentId, string type);
+        Task<List<Notification>> GetActiveCareerRemindersByStudentIdsAsync(
+            IEnumerable<int> studentIds, DateTime recentSince);
         Task CreateAsync(Notification notification);
         Task MarkAsReadAsync(Notification notification);
         Task MarkAllAsReadAsync(int studentId);

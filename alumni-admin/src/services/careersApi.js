@@ -43,3 +43,13 @@ export async function reviewCareer(id, status, note = null, courseAlignment = nu
   if (!response.ok) throw new Error(data.message || "Failed to review submission");
   return data;
 }
+
+export async function sendCareerReminder(studentId) {
+  const response = await fetch(`${API_BASE_URL}/Career/student/${studentId}/remind`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || "Failed to send career reminder");
+  return data;
+}
