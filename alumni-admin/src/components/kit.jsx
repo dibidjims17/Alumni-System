@@ -600,10 +600,14 @@ export const btn = {
   "--btn-variant": "neutral",
 };
 
+// NOTE: `border` must be written as a whole shorthand here. These spread
+// `btn` (which sets `border`), and React drops a longhand `borderColor`
+// whenever a conflicting shorthand is present — so setting borderColor
+// alone silently left primary/danger buttons with the neutral grey edge.
 export const btnPrimary = {
   ...btn,
   background: "var(--primary)",
-  borderColor: "var(--primary)",
+  border: "1px solid var(--primary)",
   color: "var(--on-primary)",
   fontWeight: 600,
   "--btn-variant": "primary",
@@ -612,7 +616,7 @@ export const btnPrimary = {
 export const btnDanger = {
   ...btn,
   color: "var(--danger)",
-  borderColor: "var(--danger)",
+  border: "1px solid var(--danger)",
   background: "transparent",
   fontWeight: 600,
   "--btn-variant": "danger",

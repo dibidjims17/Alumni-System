@@ -596,9 +596,9 @@ export default function Students() {
                               background: careerReminderAlreadySent(s)
                                 ? "var(--success-tint)"
                                 : "var(--warning-tint)",
-                              borderColor: careerReminderAlreadySent(s)
-                                ? "var(--success)"
-                                : "var(--warning)",
+                              border: careerReminderAlreadySent(s)
+                                ? "1px solid var(--success)"
+                                : "1px solid var(--warning)",
                               color: careerReminderAlreadySent(s)
                                 ? "var(--success)"
                                 : "var(--warning)",
