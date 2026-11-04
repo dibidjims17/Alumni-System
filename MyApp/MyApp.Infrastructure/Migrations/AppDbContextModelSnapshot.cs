@@ -590,6 +590,9 @@ namespace MyApp.Infrastructure.Migrations
                     b.Property<int>("PostedByAdminId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("PublishAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("longtext");

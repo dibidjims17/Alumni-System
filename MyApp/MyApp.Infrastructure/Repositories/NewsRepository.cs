@@ -16,7 +16,11 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<List<News>> GetPublishedAsync(int page, int pageSize, string? search = null)
         {
-            var query = _context.News.Where(n => n.IsPublished && !n.IsDeleted);
+            // Students only ever see effectively-published posts: drafts are
+            // out, and a scheduled post stays out until its PublishAt elapses.
+            var now = DateTime.UtcNow;
+            var query = _context.News.Where(n => n.IsPublished && !n.IsDeleted &&
+                (n.PublishAt == null || n.PublishAt <= now));
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -90,7 +94,9 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<int> GetTotalCountAsync(string? search = null)
         {
-            var query = _context.News.Where(n => n.IsPublished && !n.IsDeleted);
+            var now = DateTime.UtcNow;
+            var query = _context.News.Where(n => n.IsPublished && !n.IsDeleted &&
+                (n.PublishAt == null || n.PublishAt <= now));
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -99,6 +105,50 @@ namespace MyApp.Infrastructure.Repositories
             }
 
             return await query.CountAsync();
+        }
+
+        public async Task<List<News>> GetAdminListAsync(int page, int pageSize, string? search = null)
+        {
+            var query = _context.News.Where(n => !n.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(n => n.Title.Contains(term) || n.Content.Contains(term));
+            }
+
+            return await query
+                .Include(n => n.PostedByAdmin)
+                .Include(n => n.Hearts)
+                .Include(n => n.Comments.Where(c => !c.IsDeleted))
+                    .ThenInclude(c => c.Likes)
+                .OrderByDescending(n => n.PostedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetAdminTotalCountAsync(string? search = null)
+        {
+            var query = _context.News.Where(n => !n.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(n => n.Title.Contains(term) || n.Content.Contains(term));
+            }
+
+            return await query.CountAsync();
+        }
+
+        public async Task<List<News>> GetDueScheduledAsync()
+        {
+            var now = DateTime.UtcNow;
+            return await _context.News
+                .Where(n => n.IsPublished && !n.IsDeleted &&
+                            n.PublishAt != null && n.PublishAt <= now)
+                .Include(n => n.PostedByAdmin)
+                .ToListAsync();
         }
 
         public async Task CreateAsync(News news)

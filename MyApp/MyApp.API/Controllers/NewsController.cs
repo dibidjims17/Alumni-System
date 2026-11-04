@@ -21,6 +21,11 @@ namespace MyApp.API.Controllers
         private int GetUserId() =>
             int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        // Drafts and scheduled posts are visible on the admin console only —
+        // students (and any other role) get the published feed.
+        private bool CanSeeUnpublished =>
+            User.IsInRole("SuperAdmin") || User.IsInRole("Staff");
+
         // Validates and saves a news image. Returns (true, path, null) on success,
         // (false, null, errorMessage) when the image fails validation.
         private async Task<(bool Success, string? ImagePath, string? Error)> SaveNewsImageAsync(IFormFile? image)
@@ -60,14 +65,14 @@ namespace MyApp.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetNews([FromQuery] int page = 1, [FromQuery] string? search = null)
         {
-            var (items, total) = await _newsService.GetNewsAsync(page, GetUserId(), search);
+            var (items, total) = await _newsService.GetNewsAsync(page, GetUserId(), search, CanSeeUnpublished);
             return Ok(new { items, total, page, pageSize = 10 });
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetNewsById(int id)
         {
-            var result = await _newsService.GetNewsByIdAsync(id, GetUserId());
+            var result = await _newsService.GetNewsByIdAsync(id, GetUserId(), CanSeeUnpublished);
             if (result == null) return NotFound();
             return Ok(result);
         }

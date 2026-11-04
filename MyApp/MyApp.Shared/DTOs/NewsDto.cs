@@ -9,6 +9,8 @@ namespace MyApp.Shared.DTOs
         public string PostedByAdminName { get; set; } = string.Empty;
         public string? PostedByAdminPicture { get; set; }
         public DateTime PostedAt { get; set; }
+        public bool IsPublished { get; set; }
+        public DateTime? PublishAt { get; set; }
         public int HeartCount { get; set; }
         public bool IsHearted { get; set; }
         public int CommentCount { get; set; }

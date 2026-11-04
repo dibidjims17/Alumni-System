@@ -58,6 +58,9 @@ builder.Services.AddHttpClient<MyApp.Infrastructure.Services.PushService>();
 builder.Services.AddScoped<IPushService>(sp =>
     sp.GetRequiredService<MyApp.Infrastructure.Services.PushService>());
 
+// Time-gated news: promotes scheduled posts (and announces them) on a timer.
+builder.Services.AddHostedService<MyApp.API.Services.NewsPublishHostedService>();
+
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtKey)
@@ -100,7 +103,16 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-builder.Services.AddControllers();
+// Every stored timestamp is UTC (MySQL `datetime` carries no zone, so values
+// read back as Kind=Unspecified). Without an explicit "Z" the browser and
+// React Native read naive strings as *local* time and render them 8 hours
+// early on a UTC+8 machine — and edit forms round-trip that skew back into
+// the database. See Json/UtcDateTimeConverter.cs.
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new MyApp.API.Json.UtcDateTimeConverter());
+    options.JsonSerializerOptions.Converters.Add(new MyApp.API.Json.UtcNullableDateTimeConverter());
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

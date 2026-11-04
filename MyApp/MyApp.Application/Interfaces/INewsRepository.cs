@@ -7,6 +7,14 @@ namespace MyApp.Application.Interfaces
         Task<List<News>> GetPublishedAsync(int page, int pageSize, string? search = null);
         Task<News?> GetByIdAsync(int id);
         Task<int> GetTotalCountAsync(string? search = null);
+
+        // Admin list: everything that isn't in the trash, drafts included.
+        Task<List<News>> GetAdminListAsync(int page, int pageSize, string? search = null);
+        Task<int> GetAdminTotalCountAsync(string? search = null);
+
+        // Scheduled posts whose PublishAt has elapsed — promoted (and
+        // announced) by NewsPublishHostedService.
+        Task<List<News>> GetDueScheduledAsync();
         Task CreateAsync(News news);
         Task UpdateAsync(News news);
         Task DeleteAsync(News news);

@@ -38,12 +38,15 @@ export async function getNewsById(id) {
   return response.json();
 }
 
-// title, content, isPublished, imageFile (File object or null)
-export async function createNews({ title, content, isPublished, imageFile }) {
+// title, content, isPublished, publishAt (ISO string | null), imageFile,
+// removeImage — publishAt only makes sense alongside isPublished.
+export async function createNews({ title, content, isPublished, publishAt, imageFile, removeImage }) {
   const formData = new FormData();
   formData.append("Title", title);
   formData.append("Content", content);
   formData.append("IsPublished", isPublished);
+  if (publishAt) formData.append("PublishAt", publishAt);
+  if (removeImage) formData.append("RemoveImage", "true");
   if (imageFile) formData.append("image", imageFile);
 
   const response = await fetch(`${API_BASE_URL}/News`, {
@@ -58,11 +61,13 @@ export async function createNews({ title, content, isPublished, imageFile }) {
   return response.json();
 }
 
-export async function updateNews(id, { title, content, isPublished, imageFile }) {
+export async function updateNews(id, { title, content, isPublished, publishAt, imageFile, removeImage }) {
   const formData = new FormData();
   formData.append("Title", title);
   formData.append("Content", content);
   formData.append("IsPublished", isPublished);
+  if (publishAt) formData.append("PublishAt", publishAt);
+  if (removeImage) formData.append("RemoveImage", "true");
   if (imageFile) formData.append("image", imageFile);
 
   const response = await fetch(`${API_BASE_URL}/News/${id}`, {

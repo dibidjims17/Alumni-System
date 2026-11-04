@@ -4,10 +4,13 @@ namespace MyApp.Application.Interfaces
 {
     public interface INewsService
     {
-        Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null);
-        Task<NewsDetailDto?> GetNewsByIdAsync(int newsId, int studentId);
+        Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null, bool includeUnpublished = false);
+        Task<NewsDetailDto?> GetNewsByIdAsync(int newsId, int studentId, bool includeUnpublished = false);
         Task<NewsDto> CreateNewsAsync(CreateNewsRequest request, int adminId, string? imagePath);
         Task<bool> UpdateNewsAsync(int newsId, CreateNewsRequest request, string? imagePath, int adminId);
+
+        // Timer-driven promotion of scheduled posts (see NewsPublishHostedService).
+        Task PublishDueNewsAsync();
         Task<bool> DeleteNewsAsync(int newsId);
         Task<bool> ToggleHeartAsync(int newsId, int studentId);
 

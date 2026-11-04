@@ -45,10 +45,16 @@ namespace MyApp.Application.Services
                 id => profiles.TryGetValue(id, out var p) ? p.ProfilePicturePath : null);
         }
 
-        public async Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null)
+        public async Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null, bool includeUnpublished = false)
         {
-            var newsList = await _newsRepository.GetPublishedAsync(page, PageSize, search);
-            var total = await _newsRepository.GetTotalCountAsync(search);
+            // Students get the published feed only; admins get every post
+            // (drafts and scheduled ones included) so the list can show them.
+            var newsList = includeUnpublished
+                ? await _newsRepository.GetAdminListAsync(page, PageSize, search)
+                : await _newsRepository.GetPublishedAsync(page, PageSize, search);
+            var total = includeUnpublished
+                ? await _newsRepository.GetAdminTotalCountAsync(search)
+                : await _newsRepository.GetTotalCountAsync(search);
 
             var items = newsList.Select(n => new NewsDto
             {
@@ -59,6 +65,8 @@ namespace MyApp.Application.Services
                 PostedByAdminName = n.PostedByAdmin.FullName,
                 PostedByAdminPicture = n.PostedByAdmin.ProfilePicturePath,
                 PostedAt = n.PostedAt,
+                IsPublished = n.IsPublished,
+                PublishAt = n.PublishAt,
                 HeartCount = n.Hearts.Count,
                 IsHearted = n.Hearts.Any(h => h.StudentId == studentId),
                 CommentCount = n.Comments.Count(c => !c.IsDeleted)
@@ -67,10 +75,14 @@ namespace MyApp.Application.Services
             return (items, total);
         }
 
-        public async Task<NewsDetailDto?> GetNewsByIdAsync(int newsId, int studentId)
+        public async Task<NewsDetailDto?> GetNewsByIdAsync(int newsId, int studentId, bool includeUnpublished = false)
         {
             var news = await _newsRepository.GetByIdAsync(newsId);
             if (news == null) return null;
+
+            // A draft or not-yet-due schedule is a 404 for everyone but an
+            // admin — otherwise an id guess would leak unpublished content.
+            if (!includeUnpublished && !IsVisible(news)) return null;
 
             var topComments = news.Comments
                 .Where(c => !c.IsDeleted && c.ParentCommentId == null)
@@ -139,6 +151,8 @@ namespace MyApp.Application.Services
 
         public async Task<NewsDto> CreateNewsAsync(CreateNewsRequest request, int adminId, string? imagePath)
         {
+            var publishAt = NormalizePublishAt(request.IsPublished, request.PublishAt);
+
             var news = new News
             {
                 Title = request.Title,
@@ -146,13 +160,18 @@ namespace MyApp.Application.Services
                 ImagePath = imagePath,
                 PostedByAdminId = adminId,
                 IsPublished = request.IsPublished,
+                PublishAt = publishAt,
                 PostedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             await _newsRepository.CreateAsync(news);
             await _activityLogRepository.LogAdminAsync(adminId, "CREATE_NEWS", $"Created news: {request.Title}", "system");
-            await _notificationService.NotifyNewsPostedAsync(news.Title, news.Id);
+
+            // Drafts and future-scheduled posts stay quiet until they really
+            // go live; NewsPublishHostedService announces the scheduled ones.
+            if (IsVisible(news))
+                await _notificationService.NotifyNewsPostedAsync(news.Title, news.Id);
 
             return new NewsDto
             {
@@ -160,7 +179,9 @@ namespace MyApp.Application.Services
                 Title = news.Title,
                 Content = news.Content,
                 ImagePath = news.ImagePath,
-                PostedAt = news.PostedAt
+                PostedAt = news.PostedAt,
+                IsPublished = news.IsPublished,
+                PublishAt = news.PublishAt
             };
         }
 
@@ -272,15 +293,63 @@ namespace MyApp.Application.Services
             var news = await _newsRepository.GetByIdAsync(newsId);
             if (news == null) return false;
 
+            var wasVisible = IsVisible(news);
+
             news.Title = request.Title;
             news.Content = request.Content;
             news.IsPublished = request.IsPublished;
+            news.PublishAt = NormalizePublishAt(request.IsPublished, request.PublishAt);
             news.UpdatedAt = DateTime.UtcNow;
-            if (imagePath != null) news.ImagePath = imagePath;
+            if (request.RemoveImage) news.ImagePath = null;
+            else if (imagePath != null) news.ImagePath = imagePath;
 
             await _newsRepository.UpdateAsync(news);
             await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_NEWS", $"Updated news: {request.Title}", "system");
+
+            // First time this post becomes readable (draft published, or a
+            // schedule whose moment has arrived) it earns the same "New Post"
+            // announcement an immediate publish would have given it.
+            if (!wasVisible && IsVisible(news))
+                await _notificationService.NotifyNewsPostedAsync(news.Title, news.Id);
+
             return true;
+        }
+
+        // Announces scheduled posts whose PublishAt has elapsed. Runs on a
+        // timer (NewsPublishHostedService) so publishing doesn't depend on
+        // anyone opening the app.
+        public async Task PublishDueNewsAsync()
+        {
+            var due = await _newsRepository.GetDueScheduledAsync();
+
+            foreach (var news in due)
+            {
+                // Clear the schedule BEFORE announcing: the row then stops
+                // matching GetDueScheduledAsync, so a crash can only ever lose
+                // this one announcement — never repeat it on the next tick.
+                news.PublishAt = null;
+                news.UpdatedAt = DateTime.UtcNow;
+                await _newsRepository.UpdateAsync(news);
+
+                await _activityLogRepository.LogAdminAsync(news.PostedByAdminId, "PUBLISH_NEWS",
+                    $"Published scheduled news: {news.Title}", "system");
+                await _notificationService.NotifyNewsPostedAsync(news.Title, news.Id);
+            }
+        }
+
+        // A post is readable by students once it's marked published and its
+        // schedule (if any) has elapsed.
+        private static bool IsVisible(News news) =>
+            news.IsPublished && (news.PublishAt == null || news.PublishAt <= DateTime.UtcNow);
+
+        // A due (or past) schedule really means "publish now": collapse it to
+        // null so a non-null PublishAt always means "still waiting". That
+        // invariant is what keeps the save path and the hosted service from
+        // ever announcing the same post twice.
+        private static DateTime? NormalizePublishAt(bool isPublished, DateTime? publishAt)
+        {
+            if (!isPublished || publishAt == null) return null;
+            return publishAt > DateTime.UtcNow ? publishAt : null;
         }
 
         public async Task<bool> DeleteNewsAsync(int newsId)
@@ -337,6 +406,8 @@ namespace MyApp.Application.Services
                 PostedByAdminName = n.PostedByAdmin.FullName,
                 PostedByAdminPicture = n.PostedByAdmin.ProfilePicturePath,
                 PostedAt = n.PostedAt,
+                IsPublished = n.IsPublished,
+                PublishAt = n.PublishAt,
                 HeartCount = n.Hearts.Count,
                 CommentCount = 0 // not needed in trash view
             }).ToList();
