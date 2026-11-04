@@ -332,7 +332,7 @@ export default function Jobs() {
               <div style={{ flex: 1 }}>
                 <Field label={`Salary Min — ${formatPeso(form.salaryMin)}`}>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <button type="button" onClick={() => stepSalary("salaryMin", -FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>−</button>
+                    <button type="button" onClick={() => stepSalary("salaryMin", -FORM_SALARY_STEP)} style={{ ...btn, minHeight: 28, padding: "0 9px", borderRadius: 6 }}>−</button>
                     <input
                       type="range"
                       min={0}
@@ -342,7 +342,7 @@ export default function Jobs() {
                       onChange={(e) => updateField({ salaryMin: Number(e.target.value) })}
                       style={{ flex: 1 }}
                     />
-                    <button type="button" onClick={() => stepSalary("salaryMin", FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>+</button>
+                    <button type="button" onClick={() => stepSalary("salaryMin", FORM_SALARY_STEP)} style={{ ...btn, minHeight: 28, padding: "0 9px", borderRadius: 6 }}>+</button>
                   </div>
                   <input
                     type="number"
@@ -356,7 +356,7 @@ export default function Jobs() {
               <div style={{ flex: 1 }}>
                 <Field label={`Salary Max — ${formatPeso(form.salaryMax)}`}>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <button type="button" onClick={() => stepSalary("salaryMax", -FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>−</button>
+                    <button type="button" onClick={() => stepSalary("salaryMax", -FORM_SALARY_STEP)} style={{ ...btn, minHeight: 28, padding: "0 9px", borderRadius: 6 }}>−</button>
                     <input
                       type="range"
                       min={0}
@@ -366,7 +366,7 @@ export default function Jobs() {
                       onChange={(e) => updateField({ salaryMax: Number(e.target.value) })}
                       style={{ flex: 1 }}
                     />
-                    <button type="button" onClick={() => stepSalary("salaryMax", FORM_SALARY_STEP)} style={{ padding: "2px 10px" }}>+</button>
+                    <button type="button" onClick={() => stepSalary("salaryMax", FORM_SALARY_STEP)} style={{ ...btn, minHeight: 28, padding: "0 9px", borderRadius: 6 }}>+</button>
                   </div>
                   <input
                     type="number"

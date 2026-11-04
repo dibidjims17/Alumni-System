@@ -194,6 +194,7 @@ export default function Login() {
                 border: "none", borderRadius: 8, cursor: "pointer",
                 background: "var(--primary)", color: "var(--on-primary)",
                 fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                "--btn-variant": "primary",
               }}
             >
               <LogIn size={16} />
@@ -267,6 +268,7 @@ export default function Login() {
                 border: "none", borderRadius: 8, cursor: "pointer",
                 background: "var(--primary)", color: "var(--on-primary)",
                 fontWeight: 600,
+                "--btn-variant": "primary",
               }}
             >
               {loading ? "Sending..." : "Send reset code"}
@@ -319,6 +321,7 @@ export default function Login() {
                 border: "none", borderRadius: 8, cursor: "pointer",
                 background: "var(--primary)", color: "var(--on-primary)",
                 fontWeight: 600,
+                "--btn-variant": "primary",
               }}
             >
               {loading ? "Resetting..." : "Reset password"}

@@ -1,4 +1,5 @@
 import { Trash2 } from "lucide-react";
+import { btnDanger } from "./kit";
 
 // Shared admin comment row: avatar initial, author, timestamp, body,
 // like count, and an admin Delete action. Used by News list + detail.
@@ -40,18 +41,7 @@ export default function CommentRow({ data, onDelete }) {
             onClick={() => onDelete(data.id)}
             title="Delete comment"
             aria-label="Delete comment"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "2px 8px",
-              border: "1px solid var(--danger)",
-              borderRadius: 6,
-              background: "var(--surface)",
-              color: "var(--danger)",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
+            style={{ ...btnDanger, minHeight: 26, padding: "0 8px", fontSize: 12, borderRadius: 6 }}
           >
             <Trash2 size={12} />
             Delete

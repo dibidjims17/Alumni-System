@@ -435,14 +435,14 @@ export default function Students() {
                 </div>
                 <button
                   type="button"
-                  style={{ ...btnPrimary, padding: "6px 12px" }}
+                  style={{ ...btnPrimary }}
                   onClick={() => handleReviewYearRequest(req, true)}
                 >
                   Approve
                 </button>
                 <button
                   type="button"
-                  style={{ ...btnDanger, padding: "6px 12px" }}
+                  style={{ ...btnDanger }}
                   onClick={() => handleReviewYearRequest(req, false)}
                 >
                   Decline
@@ -626,7 +626,7 @@ export default function Students() {
                 <div style={{ borderTop: "1px solid var(--border)", paddingTop: 11, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <button
                     type="button"
-                    style={{ ...btnPrimary, padding: "7px 13px" }}
+                    style={{ ...btnPrimary }}
                     onClick={() => openViewProfile(s)}
                   >
                     <Eye size={15} /> View profile

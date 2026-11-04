@@ -22,7 +22,7 @@ export function SearchBox({ placeholder, value, onChange, onSubmit, onReset }) {
         <button
           type="button"
           onClick={onReset}
-          style={{ border: "none", background: "none", cursor: "pointer", display: "flex", color: "var(--muted)" }}
+          style={{ border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", color: "var(--muted)", borderRadius: 6, padding: 3, "--btn-variant": "neutral" }}
           aria-label="Clear search"
         >
           <X size={16} />
@@ -61,6 +61,7 @@ export function PasswordInput({ value, onChange, autoComplete = "current-passwor
           border: "none", background: "none", cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
           color: "var(--muted)", padding: 4, height: 28, width: 28,
+          borderRadius: 6, "--btn-variant": "neutral",
         }}
       >
         {show ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -469,16 +470,8 @@ export function iconButton(label, Icon) {
         title={label}
         aria-label={label}
         style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          padding: "6px 10px",
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          background: "var(--surface)",
-          color: "var(--text)",
-          cursor: "pointer",
-          fontSize: 13,
+          ...btn,
+          padding: "0 10px",
           ...style,
         }}
       >
@@ -538,7 +531,7 @@ export function ModalShell({ title, onClose, width = 500, zIndex = 1000, childre
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <h3 style={{ margin: 0, fontSize: 17, color: "var(--text)" }}>{title}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ border: "none", background: "none", cursor: "pointer", fontSize: 16, color: "var(--muted)" }}>✕</button>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ border: "none", background: "none", cursor: "pointer", fontSize: 16, color: "var(--muted)", padding: "2px 7px", borderRadius: 6, "--btn-variant": "neutral" }}>✕</button>
         </div>
         {children}
       </div>
@@ -584,11 +577,17 @@ export const control = {
   width: "100%",
 };
 
+// Shared button base. Layout lives here; colour + hover/active/focus
+// feedback lives in index.css keyed off the `--btn-variant` marker —
+// inline styles can't express :hover, so CSS hooks onto that custom
+// property instead (every call site inherits the states for free).
 export const btn = {
   display: "inline-flex",
   alignItems: "center",
+  justifyContent: "center",
   gap: 6,
-  padding: "7px 12px",
+  minHeight: 34,
+  padding: "0 13px",
   borderRadius: 8,
   border: "1px solid var(--border)",
   background: "var(--surface)",
@@ -596,6 +595,9 @@ export const btn = {
   cursor: "pointer",
   fontSize: 13,
   fontWeight: 500,
+  lineHeight: 1.15,
+  whiteSpace: "nowrap",
+  "--btn-variant": "neutral",
 };
 
 export const btnPrimary = {
@@ -604,10 +606,14 @@ export const btnPrimary = {
   borderColor: "var(--primary)",
   color: "var(--on-primary)",
   fontWeight: 600,
+  "--btn-variant": "primary",
 };
 
 export const btnDanger = {
   ...btn,
   color: "var(--danger)",
   borderColor: "var(--danger)",
+  background: "transparent",
+  fontWeight: 600,
+  "--btn-variant": "danger",
 };
