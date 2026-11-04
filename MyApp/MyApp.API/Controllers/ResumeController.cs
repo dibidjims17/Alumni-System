@@ -180,14 +180,17 @@ namespace MyApp.API.Controllers
         public async Task<IActionResult> DownloadResume(int resumeId)
         {
             var role = User.FindFirstValue(ClaimTypes.Role);
-            var isAdmin = role == "SuperAdmin" || role == "Staff";
 
             var resume = await _resumeService.GetResumeByIdAsync(resumeId);
             if (resume == null || !System.IO.File.Exists(resume.FilePath))
                 return NotFound(new { message = "Resume file not found." });
 
-            // Students can only download their own resume; admins can download any.
-            if (!isAdmin && resume.StudentId != GetStudentId())
+            // Resumes are registrar-only: students fetch their own, the
+            // SuperAdmin fetches anyone's, Staff have no access at all
+            // (their NameIdentifier is an ADMIN id, so never compare it
+            // against StudentId — the two id spaces collide).
+            var isOwnResume = role == "Student" && resume.StudentId == GetStudentId();
+            if (role != "SuperAdmin" && !isOwnResume)
                 return Forbid();
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(resume.FilePath);

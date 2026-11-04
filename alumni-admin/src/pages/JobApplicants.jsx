@@ -7,6 +7,7 @@ import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 import KebabMenu from "../components/KebabMenu";
+import { getSession } from "../services/api";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
@@ -19,6 +20,9 @@ const STATUS_TONES = {
 
 export default function JobApplicants() {
   const { id } = useParams();
+  // Resumes and exports are the registrar's (SuperAdmin) alone — Staff
+  // coordinate day-to-day but must never peek inside a resume.
+  const isSuperAdmin = getSession()?.role === "SuperAdmin";
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
@@ -173,35 +177,37 @@ export default function JobApplicants() {
         );
       })()}
 
-      <div style={{ ...card, height: "auto", marginBottom: 20 }}>
-        <div>
-          <p style={{ ...cardTitle, fontSize: 14 }}>Export Applicants</p>
-          <p style={{ ...cardMeta, marginTop: 4 }}>
-            Select which statuses to include (leave all unchecked to export everyone):
-          </p>
+      {isSuperAdmin && (
+        <div style={{ ...card, height: "auto", marginBottom: 20 }}>
+          <div>
+            <p style={{ ...cardTitle, fontSize: 14 }}>Export Applicants</p>
+            <p style={{ ...cardMeta, marginTop: 4 }}>
+              Select which statuses to include (leave all unchecked to export everyone):
+            </p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {STATUS_OPTIONS.map((status) => (
+              <label
+                key={status}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text)", cursor: "pointer" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={exportStatuses.includes(status)}
+                  onChange={() => toggleExportStatus(status)}
+                />
+                {status}
+              </label>
+            ))}
+          </div>
+          <div>
+            <button onClick={handleExport} disabled={exporting} style={btnPrimary}>
+              <Download size={15} />
+              {exporting ? "Preparing export..." : "Export to ZIP (CSV + Resumes)"}
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          {STATUS_OPTIONS.map((status) => (
-            <label
-              key={status}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text)", cursor: "pointer" }}
-            >
-              <input
-                type="checkbox"
-                checked={exportStatuses.includes(status)}
-                onChange={() => toggleExportStatus(status)}
-              />
-              {status}
-            </label>
-          ))}
-        </div>
-        <div>
-          <button onClick={handleExport} disabled={exporting} style={btnPrimary}>
-            <Download size={15} />
-            {exporting ? "Preparing export..." : "Export to ZIP (CSV + Resumes)"}
-          </button>
-        </div>
-      </div>
+      )}
 
       {loading ? (
         <GridSkeleton count={6} />
@@ -271,10 +277,20 @@ export default function JobApplicants() {
 
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {a.attachResume && a.resumeId ? (
-                      <button onClick={() => handleViewResume(a.resumeId)} style={btn}>
-                        <FileText size={15} />
-                        {a.resumeFileName || "View Resume"}
-                      </button>
+                      isSuperAdmin ? (
+                        <button onClick={() => handleViewResume(a.resumeId)} style={btn}>
+                          <FileText size={15} />
+                          {a.resumeFileName || "View Resume"}
+                        </button>
+                      ) : (
+                        <span
+                          style={{ ...cardMeta, margin: 0, display: "inline-flex", alignItems: "center", gap: 6 }}
+                          title="Resumes are visible to the SuperAdmin (registrar) only"
+                        >
+                          <FileText size={14} />
+                          {a.resumeFileName || "Resume attached"} — SuperAdmin only
+                        </span>
+                      )
                     ) : (
                       <span style={{ ...cardMeta, margin: 0 }}>No resume</span>
                     )}

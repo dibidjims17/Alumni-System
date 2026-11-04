@@ -23,7 +23,7 @@ namespace MyApp.API.Controllers
         private int GetUserId() =>
             int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -31,7 +31,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost("import")]
         public async Task<IActionResult> Import([FromBody] List<ImportStudentDto> students)
         {
@@ -39,7 +39,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPut("{id}/toggle-status")]
         public async Task<IActionResult> ToggleStatus(int id)
         {
@@ -48,6 +48,8 @@ namespace MyApp.API.Controllers
             return Ok(new { message = "Alumni status updated." });
         }
 
+        // Aggregates only (counts/percentages, no personal data) — the Staff
+        // dashboard renders these, so it stays SuperAdmin,Staff.
         [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
@@ -65,7 +67,7 @@ namespace MyApp.API.Controllers
 
         // Full alumni profile (contact, education, work, skills, picture, prefs)
         // for the admin record view. No secrets are returned.
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpGet("{id}/profile")]
         public async Task<IActionResult> GetStudentProfile(int id)
         {
@@ -75,7 +77,7 @@ namespace MyApp.API.Controllers
             return Ok(new { profile, jobPreferences });
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateStudent(int id, [FromBody] UpdateStudentRequest request)
         {
@@ -86,7 +88,7 @@ namespace MyApp.API.Controllers
 
         // Issues a one-time temporary password (shown to the admin once).
         // The student must change it on next login.
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost("{id}/reset-password")]
         public async Task<IActionResult> ResetStudentPassword(int id)
         {
@@ -96,7 +98,7 @@ namespace MyApp.API.Controllers
         }
 
         // Year-correction review queue.
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpGet("year-change-requests")]
         public async Task<IActionResult> GetYearChangeRequests([FromQuery] string? status = null)
         {
@@ -104,7 +106,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPut("year-change-requests/{id}/review")]
         public async Task<IActionResult> ReviewYearChangeRequest(int id, [FromBody] ReviewYearChangeRequest request)
         {
@@ -115,7 +117,7 @@ namespace MyApp.API.Controllers
 
         // Manual single-student creation (not just bulk CSV import).
         // Unique temporary password (7-day expiry), forced change on first login.
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost]
         public async Task<IActionResult> CreateStudent([FromBody] CreateStudentRequest request)
         {
@@ -126,7 +128,7 @@ namespace MyApp.API.Controllers
 
         // On-demand invite: fresh temporary password + promo email.
         // Graduates only — matches the automatic import behavior.
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost("{id}/send-invite")]
         public async Task<IActionResult> SendInvite(int id)
         {

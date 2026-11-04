@@ -48,6 +48,9 @@ const GROUPS = [
   },
   {
     label: "Directory",
+    // Sensitive alumni data — the registrar (SuperAdmin) only. Staff are
+    // outside help and must not browse student records.
+    superAdminOnly: true,
     items: [
       { path: "/students", label: "Alumni", Icon: Users },
       { path: "/careers", label: "Careers", Icon: BadgeCheck },
@@ -102,7 +105,9 @@ export default function Layout() {
   }
 
   const isSuperAdmin = session?.role === "SuperAdmin";
-  const groups = [...GROUPS, MODERATION_GROUP, ACCOUNT_GROUP];
+  const groups = GROUPS
+    .filter((group) => !group.superAdminOnly || isSuperAdmin)
+    .concat(MODERATION_GROUP, ACCOUNT_GROUP);
   if (isSuperAdmin) groups.push(SUPER_ADMIN_GROUP);
 
   // Responsive shell: under ~960px the sidebar becomes an overlay drawer

@@ -116,7 +116,7 @@ namespace MyApp.API.Controllers
         // Admin endpoints
         // ------------------------------------------------------------------
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpGet]
         public async Task<IActionResult> GetQueue([FromQuery] string? status = null, [FromQuery] string? search = null)
         {
@@ -124,6 +124,8 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        // Aggregate stats only — Staff see the numbers on their dashboard,
+        // but the review queue below stays registrar-only.
         [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
@@ -132,7 +134,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpGet("student/{studentId}")]
         public async Task<IActionResult> GetByStudent(int studentId)
         {
@@ -140,7 +142,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -149,7 +151,7 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPut("{id:int}/review")]
         public async Task<IActionResult> Review(int id, [FromBody] CareerReviewRequest request)
         {
@@ -160,7 +162,7 @@ namespace MyApp.API.Controllers
             return Ok(new { message });
         }
 
-        [Authorize(Roles = "SuperAdmin,Staff")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost("student/{studentId:int}/remind")]
         public async Task<IActionResult> SendReminder(int studentId)
         {

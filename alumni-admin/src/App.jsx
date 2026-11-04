@@ -59,10 +59,11 @@ export default function App() {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/students" element={<Students />} />
-          <Route path="/careers" element={<Careers />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/documents/:id" element={<StudentDocuments />} />
+          {/* Sensitive alumni data — registrar territory only. */}
+          <Route path="/students" element={<SuperAdminRoute><Students /></SuperAdminRoute>} />
+          <Route path="/careers" element={<SuperAdminRoute><Careers /></SuperAdminRoute>} />
+          <Route path="/documents" element={<SuperAdminRoute><Documents /></SuperAdminRoute>} />
+          <Route path="/documents/:id" element={<SuperAdminRoute><StudentDocuments /></SuperAdminRoute>} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/jobs" element={<Jobs />} />
