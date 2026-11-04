@@ -16,7 +16,7 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null, decimal? minSalary = null, decimal? maxSalary = null)
         {
-            var query = _context.Jobs.Where(j => j.IsActive && !j.IsDeleted);
+            var query = _context.Jobs.Where(j => j.IsActive && j.IsPublished && !j.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -36,7 +36,7 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<int> GetTotalCountAsync(string? search = null, decimal? minSalary = null, decimal? maxSalary = null)
         {
-            var query = _context.Jobs.Where(j => j.IsActive);
+            var query = _context.Jobs.Where(j => j.IsActive && j.IsPublished);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -47,6 +47,56 @@ namespace MyApp.Infrastructure.Repositories
             query = ApplySalaryFilter(query, minSalary, maxSalary);
 
             return await query.CountAsync();
+        }
+
+        public async Task<List<Job>> GetAdminListAsync(int page, int pageSize, string? search = null, decimal? minSalary = null, decimal? maxSalary = null, string? status = null)
+        {
+            var query = _context.Jobs.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(j => j.JobTitle.Contains(term) || j.Company.Contains(term));
+            }
+
+            query = ApplySalaryFilter(query, minSalary, maxSalary);
+            query = ApplyAdminStatusFilter(query, status);
+
+            return await query
+                .Include(j => j.Applications)
+                .OrderByDescending(j => j.PostedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetAdminTotalCountAsync(string? search = null, decimal? minSalary = null, decimal? maxSalary = null, string? status = null)
+        {
+            var query = _context.Jobs.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(j => j.JobTitle.Contains(term) || j.Company.Contains(term));
+            }
+
+            query = ApplySalaryFilter(query, minSalary, maxSalary);
+            query = ApplyAdminStatusFilter(query, status);
+            return await query.CountAsync();
+        }
+
+        private static IQueryable<Job> ApplyAdminStatusFilter(IQueryable<Job> query, string? status)
+        {
+            var now = DateTime.UtcNow;
+            return status?.Trim().ToLowerInvariant() switch
+            {
+                "draft" => query.Where(j => !j.IsPublished),
+                "active" => query.Where(j => j.IsPublished && j.IsActive &&
+                                             (j.Deadline == null || j.Deadline >= now)),
+                "closed" => query.Where(j => j.IsPublished &&
+                                             (!j.IsActive || (j.Deadline != null && j.Deadline < now))),
+                _ => query
+            };
         }
 
         // Overlap semantics: a bound only excludes jobs whose KNOWN range
@@ -171,7 +221,7 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<int> GetActiveCountAsync()
         {
-            return await _context.Jobs.CountAsync(j => j.IsActive);
+            return await _context.Jobs.CountAsync(j => j.IsActive && j.IsPublished);
         }
     }
 }

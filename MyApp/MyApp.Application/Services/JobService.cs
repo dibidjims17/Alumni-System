@@ -24,10 +24,16 @@ namespace MyApp.Application.Services
             _notificationService = notificationService;
         }
 
-        public async Task<(List<JobDto> Items, int TotalCount)> GetJobsAsync(int page, int studentId, string? search = null, decimal? minSalary = null, decimal? maxSalary = null)
+        public async Task<(List<JobDto> Items, int TotalCount)> GetJobsAsync(int page, int studentId, string? search = null, decimal? minSalary = null, decimal? maxSalary = null, bool includeUnpublished = false, string? status = null)
         {
-            var jobs = await _jobRepository.GetActiveAsync(page, PageSize, search, minSalary, maxSalary);
-            var total = await _jobRepository.GetTotalCountAsync(search, minSalary, maxSalary);
+            // Alumni see active, published jobs. Admins see drafts and closed
+            // jobs too, so both can be managed from the same list.
+            var jobs = includeUnpublished
+                ? await _jobRepository.GetAdminListAsync(page, PageSize, search, minSalary, maxSalary, status)
+                : await _jobRepository.GetActiveAsync(page, PageSize, search, minSalary, maxSalary);
+            var total = includeUnpublished
+                ? await _jobRepository.GetAdminTotalCountAsync(search, minSalary, maxSalary, status)
+                : await _jobRepository.GetTotalCountAsync(search, minSalary, maxSalary);
 
             var items = jobs.Select(j => new JobDto
             {
@@ -43,6 +49,7 @@ namespace MyApp.Application.Services
                 PostedAt = j.PostedAt,
                 Deadline = j.Deadline,
                 IsActive = j.IsActive,
+                IsPublished = j.IsPublished,
                 ApplicantCount = j.Applications.Count,
                 HasApplied = j.Applications.Any(a => a.StudentId == studentId)
             }).ToList();
@@ -50,10 +57,11 @@ namespace MyApp.Application.Services
             return (items, total);
         }
 
-        public async Task<JobDto?> GetJobByIdAsync(int jobId, int studentId)
+        public async Task<JobDto?> GetJobByIdAsync(int jobId, int studentId, bool includeUnpublished = false)
         {
             var job = await _jobRepository.GetByIdAsync(jobId);
             if (job == null) return null;
+            if (!includeUnpublished && !job.IsPublished) return null;
 
             return new JobDto
             {
@@ -69,6 +77,7 @@ namespace MyApp.Application.Services
                 PostedAt = job.PostedAt,
                 Deadline = job.Deadline,
                 IsActive = job.IsActive,
+                IsPublished = job.IsPublished,
                 ApplicantCount = job.Applications.Count,
                 HasApplied = job.Applications.Any(a => a.StudentId == studentId)
             };
@@ -88,13 +97,15 @@ namespace MyApp.Application.Services
                 Description = request.Description,
                 Deadline = request.Deadline,
                 IsActive = request.IsActive,
+                IsPublished = request.IsPublished,
                 PostedByAdminId = adminId,
                 PostedAt = DateTime.UtcNow
             };
 
             await _jobRepository.CreateAsync(job);
             await _activityLogRepository.LogAdminAsync(adminId, "CREATE_JOB", $"Posted job: {request.JobTitle}", "system");
-            await _notificationService.NotifyJobPostedAsync(job.JobTitle, job.Id);
+            if (job.IsPublished)
+                await _notificationService.NotifyJobPostedAsync(job.JobTitle, job.Id);
 
             return new JobDto
             {
@@ -109,7 +120,8 @@ namespace MyApp.Application.Services
                 Description = job.Description,
                 PostedAt = job.PostedAt,
                 Deadline = job.Deadline,
-                IsActive = job.IsActive
+                IsActive = job.IsActive,
+                IsPublished = job.IsPublished
             };
         }
 
@@ -117,6 +129,8 @@ namespace MyApp.Application.Services
         {
             var job = await _jobRepository.GetByIdAsync(jobId);
             if (job == null) return false;
+
+            var wasPublished = job.IsPublished;
 
             job.JobTitle = request.JobTitle;
             job.Company = request.Company;
@@ -128,9 +142,14 @@ namespace MyApp.Application.Services
             job.Description = request.Description;
             job.Deadline = request.Deadline;
             job.IsActive = request.IsActive;
+            job.IsPublished = request.IsPublished;
 
             await _jobRepository.UpdateAsync(job);
             await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_JOB", $"Updated job: {request.JobTitle}", "system");
+
+            if (!wasPublished && job.IsPublished)
+                await _notificationService.NotifyJobPostedAsync(job.JobTitle, job.Id);
+
             return true;
         }
 
@@ -191,14 +210,15 @@ namespace MyApp.Application.Services
                 Description = j.Description,
                 PostedAt = j.PostedAt,
                 Deadline = j.Deadline,
-                IsActive = j.IsActive
+                IsActive = j.IsActive,
+                IsPublished = j.IsPublished
             }).ToList();
         }
 
         public async Task<(bool Success, string Message)> ApplyToJobAsync(int jobId, int studentId, ApplyJobRequest request, string ipAddress)
         {
             var job = await _jobRepository.GetByIdAsync(jobId);
-            if (job == null || !job.IsActive)
+            if (job == null || !job.IsActive || !job.IsPublished)
                 return (false, "Job not found or no longer active.");
 
             var existing = await _jobRepository.GetApplicationAsync(jobId, studentId);

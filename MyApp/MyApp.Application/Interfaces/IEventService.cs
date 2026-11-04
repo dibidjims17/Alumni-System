@@ -5,10 +5,13 @@ namespace MyApp.Application.Interfaces
     public interface IEventService
     {
         Task<(List<EventDto> Items, int TotalCount)> GetUpcomingEventsAsync(int page, int pageSize, int studentId, string? search = null);
-        Task<(List<EventDto> Items, int TotalCount)> GetAllEventsAsync(int page, int pageSize, string? search = null);
+        Task<(List<EventDto> Items, int TotalCount)> GetAllEventsAsync(int page, int pageSize, string? search = null, string? status = null);
         Task<EventDto?> GetEventAsync(int eventId, int? studentId);
         Task<EventDto> CreateEventAsync(CreateEventRequest request, int adminId, string? imagePath);
         Task<bool> UpdateEventAsync(int eventId, CreateEventRequest request, int adminId, string? imagePath);
+        // Timer-driven promotion of scheduled events (see
+        // EventPublishHostedService).
+        Task PublishDueEventsAsync();
         Task<bool> SoftDeleteEventAsync(int eventId, int adminId);
         Task<bool> RestoreEventAsync(int eventId, int adminId);
         Task<bool> PermanentlyDeleteEventAsync(int eventId, int adminId);

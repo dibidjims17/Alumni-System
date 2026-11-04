@@ -31,19 +31,24 @@ export function eventImageUrl(path) {
 
 // Create/update now travel as multipart so the flyer rides along with the
 // event instead of needing a second request.
-function toFormData({ title, description, location, eventDate, imageFile, removeImage }) {
+function toFormData({ title, description, location, eventDate, isPublished, publishAt, imageFile, removeImage }) {
   const formData = new FormData();
   formData.append("Title", title);
   formData.append("Description", description);
   formData.append("Location", location);
   formData.append("EventDate", eventDate);
+  formData.append("IsPublished", String(isPublished));
+  if (publishAt) formData.append("PublishAt", publishAt);
   if (removeImage) formData.append("RemoveImage", "true");
   if (imageFile) formData.append("image", imageFile);
   return formData;
 }
 
-export async function getAllEvents(search = "") {
-  const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+export async function getAllEvents(search = "", status = "") {
+  const params = new URLSearchParams();
+  if (search.trim()) params.set("search", search.trim());
+  if (status) params.set("status", status);
+  const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(`${API_BASE_URL}/Events/all${query}`, {
     headers: authHeaders(),
   });

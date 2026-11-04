@@ -45,15 +45,15 @@ namespace MyApp.Application.Services
                 id => profiles.TryGetValue(id, out var p) ? p.ProfilePicturePath : null);
         }
 
-        public async Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null, bool includeUnpublished = false)
+        public async Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null, bool includeUnpublished = false, string? status = null)
         {
             // Students get the published feed only; admins get every post
             // (drafts and scheduled ones included) so the list can show them.
             var newsList = includeUnpublished
-                ? await _newsRepository.GetAdminListAsync(page, PageSize, search)
+                ? await _newsRepository.GetAdminListAsync(page, PageSize, search, status)
                 : await _newsRepository.GetPublishedAsync(page, PageSize, search);
             var total = includeUnpublished
-                ? await _newsRepository.GetAdminTotalCountAsync(search)
+                ? await _newsRepository.GetAdminTotalCountAsync(search, status)
                 : await _newsRepository.GetTotalCountAsync(search);
 
             var items = newsList.Select(n => new NewsDto

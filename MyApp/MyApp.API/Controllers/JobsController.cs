@@ -28,19 +28,22 @@ namespace MyApp.API.Controllers
         private bool IsGraduate() =>
             User.FindFirstValue("SchoolYear") == "Graduate";
 
+        private bool CanSeeUnpublished =>
+            User.IsInRole("SuperAdmin") || User.IsInRole("Staff");
+
         // ─── Alumni endpoints ───────────────────────────────
 
         [HttpGet]
-        public async Task<IActionResult> GetJobs([FromQuery] int page = 1, [FromQuery] string? search = null, [FromQuery] decimal? minSalary = null, [FromQuery] decimal? maxSalary = null)
+        public async Task<IActionResult> GetJobs([FromQuery] int page = 1, [FromQuery] string? search = null, [FromQuery] decimal? minSalary = null, [FromQuery] decimal? maxSalary = null, [FromQuery] string? status = null)
         {
-            var (items, total) = await _jobService.GetJobsAsync(page, GetUserId(), search, minSalary, maxSalary);
+            var (items, total) = await _jobService.GetJobsAsync(page, GetUserId(), search, minSalary, maxSalary, CanSeeUnpublished, status);
             return Ok(new { items, total, page, pageSize = 10 });
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetJobById(int id)
         {
-            var result = await _jobService.GetJobByIdAsync(id, GetUserId());
+            var result = await _jobService.GetJobByIdAsync(id, GetUserId(), CanSeeUnpublished);
             if (result == null) return NotFound();
             return Ok(result);
         }
@@ -143,7 +146,7 @@ namespace MyApp.API.Controllers
             var applicants = await _jobService.GetApplicantsForExportAsync(id, statusList);
             if (applicants == null) return NotFound();
 
-            var job = await _jobService.GetJobByIdAsync(id, GetUserId());
+            var job = await _jobService.GetJobByIdAsync(id, GetUserId(), includeUnpublished: true);
             var jobTitleSafe = job != null
                 ? string.Concat(job.JobTitle.Split(Path.GetInvalidFileNameChars()))
                 : $"Job{id}";

@@ -36,6 +36,30 @@ const emptyForm = {
   description: "",
   location: "",
   eventDate: "",
+  mode: "now",
+  publishAt: "",
+  imageFile: null,
+  removeImage: false,
+};
+
+const modeChip = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 7,
+  padding: "8px 13px",
+  borderRadius: 8,
+  border: "1px solid var(--border)",
+  background: "var(--surface-alt)",
+  color: "var(--text)",
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const modeChipOn = {
+  border: "1px solid var(--primary)",
+  background: "var(--success-tint)",
+  color: "var(--primary-strong)",
 };
 
 export default function Events() {
@@ -57,6 +81,7 @@ export default function Events() {
   const objectUrlRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const [attendeeEvent, setAttendeeEvent] = useState(null);
   const [attendees, setAttendees] = useState([]);
@@ -64,13 +89,14 @@ export default function Events() {
 
   const { withGuard, setDirty } = useDirtyGuard();
   const pristineRef = useRef("");
+  const modalFormRef = useRef(null);
 
   const isSuperAdmin = getSession()?.role === "SuperAdmin";
 
-  async function loadEvents(activeSearch = "") {
+  async function loadEvents(activeSearch = "", activeStatus = "") {
     setLoading(true);
     try {
-      const data = await getAllEvents(activeSearch);
+      const data = await getAllEvents(activeSearch, activeStatus);
       setEvents(data);
     } catch (err) {
       notifyError(err.message);
@@ -98,17 +124,24 @@ export default function Events() {
 
   function submitSearch(e) {
     e?.preventDefault?.();
-    loadEvents(searchTerm);
+    loadEvents(searchTerm, statusFilter);
   }
 
   function resetSearch() {
     setSearchTerm("");
-    loadEvents("");
+    loadEvents("", statusFilter);
+  }
+
+  function changeStatusFilter(e) {
+    const next = e.target.value;
+    setStatusFilter(next);
+    loadEvents(searchTerm, next);
   }
 
   function updateForm(patch) {
-    setForm((prev) => ({ ...prev, ...patch }));
-    setDirty(true);
+    const next = { ...form, ...patch };
+    setForm(next);
+    setDirty(JSON.stringify(next) !== pristineRef.current);
   }
 
   function openCreateModal() {
@@ -128,6 +161,12 @@ export default function Events() {
       description: event.description || "",
       location: event.location || "",
       eventDate: event.eventDate ? toLocalDateTimeInputValue(event.eventDate) : "",
+      // Like News, non-null PublishAt always means "still waiting" because
+      // due schedules are collapsed to null before they are announced.
+      mode: event.publishAt ? "schedule" : "now",
+      publishAt: event.publishAt ? toLocalDateTimeInputValue(event.publishAt) : "",
+      imageFile: null,
+      removeImage: false,
     };
     const stored = eventImageUrl(event.imagePath);
     setForm(nextForm);
@@ -138,7 +177,7 @@ export default function Events() {
     setShowModal(true);
   }
 
-  const closeModalGuarded = () => withGuard(closeModal);
+  const closeModalGuarded = () => withGuard(closeModal, { onSaveDraft: saveDraft });
 
   function closeModal() {
     if (objectUrlRef.current) {
@@ -179,15 +218,42 @@ export default function Events() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  function toIso(local) {
+    const parsed = new Date(local);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
+
+  // intent: publish immediately, schedule publication, or keep as draft.
+  async function save(intent) {
+    const eventDate = toIso(form.eventDate);
+    const publishAt = intent === "schedule" ? toIso(form.publishAt) : null;
+
+    if (!eventDate) {
+      notifyError("Pick the event date and time.");
+      return false;
+    }
+    if (intent === "schedule" && !publishAt) {
+      notifyError("Pick the date and time to publish this event.");
+      return false;
+    }
+    if (
+      intent === "schedule" &&
+      new Date(publishAt).getTime() > Date.now() &&
+      new Date(publishAt).getTime() >= new Date(eventDate).getTime()
+    ) {
+      notifyError("Publish time must be before the event date and time.");
+      return false;
+    }
+
     setSaving(true);
     try {
       const payload = {
         title: form.title,
         description: form.description,
         location: form.location,
-        eventDate: new Date(form.eventDate).toISOString(),
+        eventDate,
+        isPublished: intent !== "draft",
+        publishAt,
         imageFile: form.imageFile,
         removeImage: form.removeImage,
       };
@@ -199,12 +265,29 @@ export default function Events() {
       }
       setDirty(false);
       closeModal();
-      loadEvents(searchTerm);
+      loadEvents(searchTerm, statusFilter);
+      return true;
     } catch (err) {
       notifyError(err.message);
+      return false;
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    save(form.mode === "schedule" ? "schedule" : "publish");
+  }
+
+  function saveDraft() {
+    // type="button" does not invoke native required-field validation.
+    if (!modalFormRef.current?.reportValidity()) return false;
+    return save("draft");
+  }
+
+  function handleSaveDraft() {
+    saveDraft();
   }
 
   async function handleDelete(event) {
@@ -215,7 +298,7 @@ export default function Events() {
     if (!ok) return;
     try {
       await deleteEvent(event.id);
-      loadEvents(searchTerm);
+      loadEvents(searchTerm, statusFilter);
     } catch (err) {
       notifyError(err.message);
     }
@@ -281,6 +364,17 @@ export default function Events() {
           onSubmit={submitSearch}
           onReset={resetSearch}
         />
+        <select
+          aria-label="Filter events by status"
+          value={statusFilter}
+          onChange={changeStatusFilter}
+          style={{ ...textInput, width: "auto", minWidth: 160 }}
+        >
+          <option value="">All events</option>
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+          <option value="scheduled">Scheduled</option>
+        </select>
       </form>
 
       {loading ? (
@@ -294,7 +388,20 @@ export default function Events() {
       ) : (
         <div style={cardGrid}>
           {events.map((event) => {
+            // Existing baseline rule: this is display-only state evaluated
+            // when the list renders, not a value used to drive React state.
+            // eslint-disable-next-line react-hooks/purity
             const isPast = event.eventDate ? new Date(event.eventDate).getTime() < Date.now() : false;
+            const publicationLabel = event.isPublished === false
+              ? "Draft"
+              : event.publishAt
+                ? "Scheduled"
+                : "Published";
+            const publicationTone = event.isPublished === false
+              ? statusTone("warning")
+              : event.publishAt
+                ? statusTone("info")
+                : statusTone("success");
             return (
             <div key={event.id} style={card}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -311,8 +418,19 @@ export default function Events() {
                     <span style={{ ...pill, ...(isPast ? statusTone("danger") : statusTone("success")) }}>
                       {isPast ? "Past" : "Upcoming"}
                     </span>
+                    <span style={{ ...pill, ...publicationTone }}>{publicationLabel}</span>
                   </div>
                   <p style={{ ...cardMeta, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{event.eventDate ? new Date(event.eventDate).toLocaleString() : "—"}</p>
+                  {event.publishAt && (
+                    <p style={{ ...cardMeta, color: "var(--info)", fontWeight: 600 }}>
+                      Publishes {new Date(event.publishAt).toLocaleString()}
+                    </p>
+                  )}
+                  {event.isPublished === false && (
+                    <p style={{ ...cardMeta, color: "var(--warning)", fontWeight: 600 }}>
+                      Not visible to alumni
+                    </p>
+                  )}
                   <p style={{ ...cardMeta, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>Location: {event.location}</p>
                   <p style={{ ...cardMeta, display: "flex", alignItems: "center", gap: 5 }}>
                     <Users size={13} />
@@ -350,7 +468,7 @@ export default function Events() {
 
       {showModal && (
         <ModalShell title={editingId ? "Edit Event" : "Add New Event"} onClose={closeModalGuarded}>
-          <form onSubmit={handleSubmit}>
+          <form ref={modalFormRef} onSubmit={handleSubmit}>
             <Field label="Title">
               <input
                 type="text"
@@ -391,6 +509,47 @@ export default function Events() {
               />
             </Field>
 
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6, color: "var(--text)" }}>
+                Publishing
+              </span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <label style={{ ...modeChip, ...(form.mode === "now" ? modeChipOn : null) }}>
+                  <input
+                    type="radio"
+                    name="event-publish-mode"
+                    checked={form.mode === "now"}
+                    onChange={() => updateForm({ mode: "now" })}
+                  />
+                  Publish now
+                </label>
+                <label style={{ ...modeChip, ...(form.mode === "schedule" ? modeChipOn : null) }}>
+                  <input
+                    type="radio"
+                    name="event-publish-mode"
+                    checked={form.mode === "schedule"}
+                    onChange={() => updateForm({ mode: "schedule" })}
+                  />
+                  Schedule
+                </label>
+              </div>
+
+              {form.mode === "schedule" && (
+                <>
+                  <input
+                    type="datetime-local"
+                    value={form.publishAt}
+                    onChange={(e) => updateForm({ publishAt: e.target.value })}
+                    required
+                    style={{ ...textInput, marginTop: 8 }}
+                  />
+                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
+                    Alumni won&apos;t see this event until then. The publish time must be before the event starts.
+                  </div>
+                </>
+              )}
+            </div>
+
             <Field label={`Flyer ${editingId ? "(drop to replace)" : "(optional)"}`}>
               <ImageDropZone
                 previewUrl={previewUrl}
@@ -401,12 +560,21 @@ export default function Events() {
               />
             </Field>
 
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={closeModalGuarded} style={btn}>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+              <button type="button" onClick={closeModalGuarded} disabled={saving} style={btn}>
                 Cancel
               </button>
+              <button type="button" onClick={handleSaveDraft} disabled={saving} style={btn}>
+                Save Draft
+              </button>
               <button type="submit" disabled={saving} style={btnPrimary}>
-                {saving ? "Saving..." : editingId ? "Update Event" : "Add Event"}
+                {saving
+                  ? "Saving..."
+                  : form.mode === "schedule"
+                    ? "Schedule Event"
+                    : editingId
+                      ? "Update & Publish"
+                      : "Publish Event"}
               </button>
             </div>
           </form>

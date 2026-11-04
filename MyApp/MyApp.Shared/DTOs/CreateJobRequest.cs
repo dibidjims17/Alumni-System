@@ -24,5 +24,6 @@ namespace MyApp.Shared.DTOs
 
         public DateTime? Deadline { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool IsPublished { get; set; } = true;
     }
 }

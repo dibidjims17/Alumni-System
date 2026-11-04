@@ -14,6 +14,7 @@ namespace MyApp.Shared.DTOs
         public DateTime PostedAt { get; set; }
         public DateTime? Deadline { get; set; }
         public bool IsActive { get; set; }
+        public bool IsPublished { get; set; }
         public int ApplicantCount { get; set; }
         public bool HasApplied { get; set; }
     }

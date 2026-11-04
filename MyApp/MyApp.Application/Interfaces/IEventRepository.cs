@@ -6,11 +6,12 @@ namespace MyApp.Application.Interfaces
     {
         Task<List<Event>> GetUpcomingAsync(int page, int pageSize, string? search = null);
         Task<int> CountUpcomingAsync(string? search = null);
-        Task<List<Event>> GetAllAsync(int page, int pageSize, string? search = null);
-        Task<int> CountAllAsync(string? search = null);
+        Task<List<Event>> GetAllAsync(int page, int pageSize, string? search = null, string? status = null);
+        Task<int> CountAllAsync(string? search = null, string? status = null);
         Task<Event?> GetByIdAsync(int id);
         Task<Event?> GetByIdIncludingDeletedAsync(int id);
         Task<List<Event>> GetDeletedAsync();
+        Task<List<Event>> GetDueScheduledAsync();
         Task<EventRsvp?> GetRsvpAsync(int eventId, int studentId);
         Task AddRsvpAsync(EventRsvp rsvp);
         Task RemoveRsvpAsync(EventRsvp rsvp);

@@ -28,10 +28,10 @@ namespace MyApp.Application.Services
             return (items, total);
         }
 
-        public async Task<(List<EventDto> Items, int TotalCount)> GetAllEventsAsync(int page, int pageSize, string? search = null)
+        public async Task<(List<EventDto> Items, int TotalCount)> GetAllEventsAsync(int page, int pageSize, string? search = null, string? status = null)
         {
-            var events = await _eventRepository.GetAllAsync(page, pageSize, search);
-            var total = await _eventRepository.CountAllAsync(search);
+            var events = await _eventRepository.GetAllAsync(page, pageSize, search, status);
+            var total = await _eventRepository.CountAllAsync(search, status);
             var items = events.Select(e => Map(e, null)).ToList();
             return (items, total);
         }
@@ -40,11 +40,18 @@ namespace MyApp.Application.Services
         {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
             if (eventEntity == null) return null;
+
+            // A guessed id must not leak drafts or not-yet-due schedules to
+            // alumni. Admin lists use GetAllEventsAsync and still see both.
+            if (studentId.HasValue && !IsVisible(eventEntity)) return null;
+
             return Map(eventEntity, studentId);
         }
 
         public async Task<EventDto> CreateEventAsync(CreateEventRequest request, int adminId, string? imagePath)
         {
+            var publishAt = NormalizePublishAt(request.IsPublished, request.PublishAt);
+
             var eventEntity = new Event
             {
                 Title = request.Title,
@@ -52,6 +59,8 @@ namespace MyApp.Application.Services
                 Location = request.Location,
                 EventDate = request.EventDate!.Value,
                 ImagePath = imagePath,
+                IsPublished = request.IsPublished,
+                PublishAt = publishAt,
                 PostedByAdminId = adminId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -60,7 +69,11 @@ namespace MyApp.Application.Services
             await _eventRepository.CreateAsync(eventEntity);
             await _activityLogRepository.LogAdminAsync(adminId, "CREATE_EVENT",
                 $"Created event: {request.Title}", "system");
-            await _notificationService.NotifyEventPostedAsync(request.Title, eventEntity.Id);
+
+            // Drafts and future schedules stay quiet. The hosted publisher
+            // announces scheduled events when they actually go live.
+            if (IsVisible(eventEntity) && eventEntity.EventDate >= DateTime.UtcNow)
+                await _notificationService.NotifyEventPostedAsync(request.Title, eventEntity.Id);
 
             return Map(eventEntity, null);
         }
@@ -70,17 +83,51 @@ namespace MyApp.Application.Services
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
             if (eventEntity == null) return false;
 
+            var wasVisible = IsVisible(eventEntity);
+
             eventEntity.Title = request.Title;
             eventEntity.Description = request.Description;
             eventEntity.Location = request.Location;
             eventEntity.EventDate = request.EventDate!.Value;
+            eventEntity.IsPublished = request.IsPublished;
+            eventEntity.PublishAt = NormalizePublishAt(request.IsPublished, request.PublishAt);
             eventEntity.UpdatedAt = DateTime.UtcNow;
             if (request.RemoveImage) eventEntity.ImagePath = null;
             else if (imagePath != null) eventEntity.ImagePath = imagePath;
 
             await _eventRepository.UpdateAsync(eventEntity);
             await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_EVENT", $"Updated event: {request.Title}", "system");
+
+            // Draft -> published and scheduled -> publish-now transitions get
+            // the same announcement as a newly published event.
+            if (!wasVisible && IsVisible(eventEntity) && eventEntity.EventDate >= DateTime.UtcNow)
+                await _notificationService.NotifyEventPostedAsync(eventEntity.Title, eventEntity.Id);
+
             return true;
+        }
+
+        // Promotes and announces due schedules without waiting for somebody to
+        // open the app. EventPublishHostedService invokes this every 30s.
+        public async Task PublishDueEventsAsync()
+        {
+            var due = await _eventRepository.GetDueScheduledAsync();
+
+            foreach (var eventEntity in due)
+            {
+                // Clear BEFORE announcing so the row cannot match again after
+                // a crash; at worst one notification is lost, never repeated.
+                eventEntity.PublishAt = null;
+                eventEntity.UpdatedAt = DateTime.UtcNow;
+                await _eventRepository.UpdateAsync(eventEntity);
+
+                await _activityLogRepository.LogAdminAsync(eventEntity.PostedByAdminId, "PUBLISH_EVENT",
+                    $"Published scheduled event: {eventEntity.Title}", "system");
+
+                // If the process/tick was delayed until after the event, do
+                // not send alumni a stale "New Event" notification.
+                if (eventEntity.EventDate >= DateTime.UtcNow)
+                    await _notificationService.NotifyEventPostedAsync(eventEntity.Title, eventEntity.Id);
+            }
         }
 
         public async Task<bool> SoftDeleteEventAsync(int eventId, int adminId)
@@ -124,7 +171,7 @@ namespace MyApp.Application.Services
         public async Task<(bool Found, bool Rsvped)> ToggleRsvpAsync(int eventId, int studentId, string ipAddress)
         {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
-            if (eventEntity == null) return (false, false);
+            if (eventEntity == null || !IsVisible(eventEntity)) return (false, false);
 
             var existing = await _eventRepository.GetRsvpAsync(eventId, studentId);
             if (existing != null)
@@ -173,12 +220,28 @@ namespace MyApp.Application.Services
                 Location = eventEntity.Location,
                 EventDate = eventEntity.EventDate,
                 ImagePath = NormalizeImageUrl(eventEntity.ImagePath),
+                IsPublished = eventEntity.IsPublished,
+                PublishAt = eventEntity.PublishAt,
                 PostedByAdminName = eventEntity.PostedByAdmin?.FullName ?? string.Empty,
                 PostedByAdminPicture = eventEntity.PostedByAdmin?.ProfilePicturePath,
                 AttendeeCount = eventEntity.Rsvps?.Count ?? 0,
                 IsRsvped = studentId.HasValue && (eventEntity.Rsvps?.Any(r => r.StudentId == studentId.Value) ?? false),
                 CreatedAt = eventEntity.CreatedAt
             };
+        }
+
+        private static bool IsVisible(Event eventEntity) =>
+            !eventEntity.IsDeleted &&
+            eventEntity.IsPublished &&
+            (eventEntity.PublishAt == null || eventEntity.PublishAt <= DateTime.UtcNow);
+
+        // Due/past means "publish now". Keeping non-null PublishAt synonymous
+        // with "still waiting" prevents save and timer paths from both
+        // announcing the same event.
+        private static DateTime? NormalizePublishAt(bool isPublished, DateTime? publishAt)
+        {
+            if (!isPublished || publishAt == null) return null;
+            return publishAt > DateTime.UtcNow ? publishAt : null;
         }
 
         // Legacy rows stored absolute server paths; clients only ever want the

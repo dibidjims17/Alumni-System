@@ -71,14 +71,15 @@ export default function News() {
   const objectUrlRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const { setDirty, withGuard } = useDirtyGuard();
   const pristineRef = useRef("");
 
-  async function loadNews(activeSearch = "") {
+  async function loadNews(activeSearch = "", activeStatus = "") {
     setLoading(true);
     try {
-      const data = await getNews(activeSearch);
+      const data = await getNews(activeSearch, activeStatus);
       setNewsList(data);
     } catch (err) {
       notifyError(err.message);
@@ -93,12 +94,18 @@ export default function News() {
 
   function submitSearch(e) {
     e?.preventDefault?.();
-    loadNews(searchTerm);
+    loadNews(searchTerm, statusFilter);
   }
 
   function resetSearch() {
     setSearchTerm("");
-    loadNews("");
+    loadNews("", statusFilter);
+  }
+
+  function changeStatusFilter(e) {
+    const next = e.target.value;
+    setStatusFilter(next);
+    loadNews(searchTerm, next);
   }
 
   function updateField(patch) {
@@ -195,7 +202,7 @@ export default function News() {
       }
       setDirty(false);
       closeModal();
-      loadNews(searchTerm);
+      loadNews(searchTerm, statusFilter);
     } catch (err) {
       notifyError(err.message);
     } finally {
@@ -220,7 +227,7 @@ export default function News() {
     if (!ok) return;
     try {
       await deleteNews(item.id);
-      loadNews(searchTerm);
+      loadNews(searchTerm, statusFilter);
     } catch (err) {
       notifyError(err.message);
     }
@@ -243,6 +250,17 @@ export default function News() {
           onSubmit={submitSearch}
           onReset={resetSearch}
         />
+        <select
+          aria-label="Filter posts by status"
+          value={statusFilter}
+          onChange={changeStatusFilter}
+          style={{ ...textInput, width: "auto", minWidth: 160 }}
+        >
+          <option value="">All posts</option>
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+          <option value="scheduled">Scheduled</option>
+        </select>
       </form>
 
       {loading ? (

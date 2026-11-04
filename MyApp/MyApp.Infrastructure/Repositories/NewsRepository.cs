@@ -107,7 +107,7 @@ namespace MyApp.Infrastructure.Repositories
             return await query.CountAsync();
         }
 
-        public async Task<List<News>> GetAdminListAsync(int page, int pageSize, string? search = null)
+        public async Task<List<News>> GetAdminListAsync(int page, int pageSize, string? search = null, string? status = null)
         {
             var query = _context.News.Where(n => !n.IsDeleted);
 
@@ -116,6 +116,8 @@ namespace MyApp.Infrastructure.Repositories
                 var term = search.Trim();
                 query = query.Where(n => n.Title.Contains(term) || n.Content.Contains(term));
             }
+
+            query = ApplyAdminStatusFilter(query, status);
 
             return await query
                 .Include(n => n.PostedByAdmin)
@@ -128,7 +130,7 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetAdminTotalCountAsync(string? search = null)
+        public async Task<int> GetAdminTotalCountAsync(string? search = null, string? status = null)
         {
             var query = _context.News.Where(n => !n.IsDeleted);
 
@@ -138,7 +140,20 @@ namespace MyApp.Infrastructure.Repositories
                 query = query.Where(n => n.Title.Contains(term) || n.Content.Contains(term));
             }
 
+            query = ApplyAdminStatusFilter(query, status);
+
             return await query.CountAsync();
+        }
+
+        private static IQueryable<News> ApplyAdminStatusFilter(IQueryable<News> query, string? status)
+        {
+            return status?.Trim().ToLowerInvariant() switch
+            {
+                "draft" => query.Where(n => !n.IsPublished),
+                "scheduled" => query.Where(n => n.IsPublished && n.PublishAt != null),
+                "published" => query.Where(n => n.IsPublished && n.PublishAt == null),
+                _ => query
+            };
         }
 
         public async Task<List<News>> GetDueScheduledAsync()

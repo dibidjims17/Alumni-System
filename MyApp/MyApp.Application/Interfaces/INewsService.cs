@@ -4,7 +4,7 @@ namespace MyApp.Application.Interfaces
 {
     public interface INewsService
     {
-        Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null, bool includeUnpublished = false);
+        Task<(List<NewsDto> Items, int TotalCount)> GetNewsAsync(int page, int studentId, string? search = null, bool includeUnpublished = false, string? status = null);
         Task<NewsDetailDto?> GetNewsByIdAsync(int newsId, int studentId, bool includeUnpublished = false);
         Task<NewsDto> CreateNewsAsync(CreateNewsRequest request, int adminId, string? imagePath);
         Task<bool> UpdateNewsAsync(int newsId, CreateNewsRequest request, string? imagePath, int adminId);

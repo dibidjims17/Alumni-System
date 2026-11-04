@@ -6,6 +6,8 @@ namespace MyApp.Application.Interfaces
     {
         Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null, decimal? minSalary = null, decimal? maxSalary = null);
         Task<int> GetTotalCountAsync(string? search = null, decimal? minSalary = null, decimal? maxSalary = null);
+        Task<List<Job>> GetAdminListAsync(int page, int pageSize, string? search = null, decimal? minSalary = null, decimal? maxSalary = null, string? status = null);
+        Task<int> GetAdminTotalCountAsync(string? search = null, decimal? minSalary = null, decimal? maxSalary = null, string? status = null);
         Task<Job?> GetByIdAsync(int id);
         Task CreateAsync(Job job);
         Task UpdateAsync(Job job);

@@ -6,6 +6,6 @@ export function subscribeDiscard(cb) {
   return () => listeners.delete(cb);
 }
 
-export function requestDiscardConfirm(onDiscard) {
-  listeners.forEach((cb) => cb({ onDiscard }));
+export function requestDiscardConfirm(onDiscard, onSaveDraft = null) {
+  listeners.forEach((cb) => cb({ onDiscard, onSaveDraft }));
 }

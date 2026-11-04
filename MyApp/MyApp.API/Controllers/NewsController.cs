@@ -63,9 +63,9 @@ namespace MyApp.API.Controllers
         // ─── Alumni endpoints ───────────────────────────────────────
 
         [HttpGet]
-        public async Task<IActionResult> GetNews([FromQuery] int page = 1, [FromQuery] string? search = null)
+        public async Task<IActionResult> GetNews([FromQuery] int page = 1, [FromQuery] string? search = null, [FromQuery] string? status = null)
         {
-            var (items, total) = await _newsService.GetNewsAsync(page, GetUserId(), search, CanSeeUnpublished);
+            var (items, total) = await _newsService.GetNewsAsync(page, GetUserId(), search, CanSeeUnpublished, status);
             return Ok(new { items, total, page, pageSize = 10 });
         }
 

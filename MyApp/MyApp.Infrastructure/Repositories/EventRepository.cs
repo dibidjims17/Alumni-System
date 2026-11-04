@@ -16,7 +16,11 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<List<Event>> GetUpcomingAsync(int page, int pageSize, string? search = null)
         {
-            var query = _context.Events.Where(e => e.EventDate >= DateTime.UtcNow);
+            var now = DateTime.UtcNow;
+            var query = _context.Events.Where(e =>
+                e.EventDate >= now &&
+                e.IsPublished &&
+                (e.PublishAt == null || e.PublishAt <= now));
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -35,7 +39,11 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<int> CountUpcomingAsync(string? search = null)
         {
-            var query = _context.Events.Where(e => e.EventDate >= DateTime.UtcNow);
+            var now = DateTime.UtcNow;
+            var query = _context.Events.Where(e =>
+                e.EventDate >= now &&
+                e.IsPublished &&
+                (e.PublishAt == null || e.PublishAt <= now));
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -46,7 +54,7 @@ namespace MyApp.Infrastructure.Repositories
             return await query.CountAsync();
         }
 
-        public async Task<List<Event>> GetAllAsync(int page, int pageSize, string? search = null)
+        public async Task<List<Event>> GetAllAsync(int page, int pageSize, string? search = null, string? status = null)
         {
             var query = _context.Events.AsQueryable();
 
@@ -55,6 +63,8 @@ namespace MyApp.Infrastructure.Repositories
                 var term = search.Trim();
                 query = query.Where(e => e.Title.Contains(term) || e.Location.Contains(term));
             }
+
+            query = ApplyAdminStatusFilter(query, status);
 
             return await query
                 .Include(e => e.PostedByAdmin)
@@ -65,7 +75,7 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> CountAllAsync(string? search = null)
+        public async Task<int> CountAllAsync(string? search = null, string? status = null)
         {
             var query = _context.Events.AsQueryable();
 
@@ -75,7 +85,20 @@ namespace MyApp.Infrastructure.Repositories
                 query = query.Where(e => e.Title.Contains(term) || e.Location.Contains(term));
             }
 
+            query = ApplyAdminStatusFilter(query, status);
+
             return await query.CountAsync();
+        }
+
+        private static IQueryable<Event> ApplyAdminStatusFilter(IQueryable<Event> query, string? status)
+        {
+            return status?.Trim().ToLowerInvariant() switch
+            {
+                "draft" => query.Where(e => !e.IsPublished),
+                "scheduled" => query.Where(e => e.IsPublished && e.PublishAt != null),
+                "published" => query.Where(e => e.IsPublished && e.PublishAt == null),
+                _ => query
+            };
         }
 
         public async Task<Event?> GetByIdAsync(int id)
@@ -103,6 +126,16 @@ namespace MyApp.Infrastructure.Repositories
                 .Include(e => e.PostedByAdmin)
                 .Include(e => e.Rsvps)
                 .OrderByDescending(e => e.EventDate)
+                .ToListAsync();
+        }
+
+        public async Task<List<Event>> GetDueScheduledAsync()
+        {
+            var now = DateTime.UtcNow;
+            return await _context.Events
+                .Where(e => e.IsPublished &&
+                            e.PublishAt != null && e.PublishAt <= now)
+                .Include(e => e.PostedByAdmin)
                 .ToListAsync();
         }
 

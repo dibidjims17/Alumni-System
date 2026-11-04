@@ -19,6 +19,7 @@ const emptyForm = {
   description: "",
   deadline: "",
   isActive: true,
+  isPublished: true,
 };
 
 export default function Jobs() {
@@ -31,9 +32,11 @@ export default function Jobs() {
   const [editingId, setEditingId] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const { setDirty, withGuard } = useDirtyGuard();
   const pristineRef = useRef("");
+  const modalFormRef = useRef(null);
 
   const FORM_SALARY_CAP = 500000;
   const FORM_SALARY_STEP = 1000;
@@ -62,10 +65,10 @@ export default function Jobs() {
     setDirty(JSON.stringify(next) !== pristineRef.current);
   }
 
-  async function loadJobs(activeSearch = "") {
+  async function loadJobs(activeSearch = "", activeStatus = "") {
     setLoading(true);
     try {
-      const data = await getJobs(activeSearch);
+      const data = await getJobs(activeSearch, null, null, activeStatus);
       setJobs(data);
     } catch (err) {
       notifyError(err.message);
@@ -80,12 +83,18 @@ export default function Jobs() {
 
   function submitSearch(e) {
     e.preventDefault();
-    loadJobs(searchTerm);
+    loadJobs(searchTerm, statusFilter);
   }
 
   function resetSearch() {
     setSearchTerm("");
-    loadJobs("");
+    loadJobs("", statusFilter);
+  }
+
+  function changeStatusFilter(e) {
+    const next = e.target.value;
+    setStatusFilter(next);
+    loadJobs(searchTerm, next);
   }
 
   function openCreateModal() {
@@ -109,6 +118,7 @@ export default function Jobs() {
       description: job.description || "",
       deadline: job.deadline ? job.deadline.slice(0, 10) : "",
       isActive: job.isActive,
+      isPublished: job.isPublished !== false,
     };
     setForm(next);
     pristineRef.current = JSON.stringify(next);
@@ -123,15 +133,15 @@ export default function Jobs() {
   }
 
   function closeModalGuarded() {
-    withGuard(closeModal);
+    withGuard(closeModal, { onSaveDraft: saveDraft });
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function save(isPublished) {
     setSaving(true);
     try {
       const payload = {
         ...form,
+        isPublished,
         salaryMin: form.salaryMin === "" ? null : Number(form.salaryMin),
         salaryMax: form.salaryMax === "" ? null : Number(form.salaryMax),
         deadline: form.deadline ? new Date(form.deadline).toISOString() : null,
@@ -142,14 +152,30 @@ export default function Jobs() {
       } else {
         await createJob(payload);
       }
-      closeModal();
       setDirty(false);
-      loadJobs(searchTerm);
+      closeModal();
+      loadJobs(searchTerm, statusFilter);
+      return true;
     } catch (err) {
       notifyError(err.message);
+      return false;
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    save(true);
+  }
+
+  function saveDraft() {
+    if (!modalFormRef.current?.reportValidity()) return false;
+    return save(false);
+  }
+
+  function handleSaveDraft() {
+    saveDraft();
   }
 
   async function handleDelete(job) {
@@ -160,7 +186,7 @@ export default function Jobs() {
     if (!ok) return;
     try {
       await deleteJob(job.id);
-      loadJobs(searchTerm);
+      loadJobs(searchTerm, statusFilter);
     } catch (err) {
       notifyError(err.message);
     }
@@ -185,6 +211,17 @@ export default function Jobs() {
           onChange={setSearchTerm}
           onReset={resetSearch}
         />
+        <select
+          aria-label="Filter jobs by status"
+          value={statusFilter}
+          onChange={changeStatusFilter}
+          style={{ ...selectStyle, width: "auto", minWidth: 160 }}
+        >
+          <option value="">All jobs</option>
+          <option value="draft">Draft</option>
+          <option value="active">Active</option>
+          <option value="closed">Closed</option>
+        </select>
       </form>
 
       {loading ? (
@@ -202,14 +239,20 @@ export default function Jobs() {
             const deadlineDate = job.deadline ? new Date(job.deadline).toLocaleDateString() : "—";
             const isClosed = job.deadline ? new Date(job.deadline).getTime() < Date.now() : false;
             const isJobActive = job.isActive !== false && !isClosed;
+            const stateLabel = job.isPublished === false ? "Draft" : isJobActive ? "Active" : "Closed";
+            const stateTone = job.isPublished === false
+              ? statusTone("warning")
+              : isJobActive
+                ? statusTone("success")
+                : statusTone("danger");
             return (
               <div key={job.id} style={card}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <h3 style={cardTitle}>{job.jobTitle}</h3>
-                      <span style={{ ...pill, ...(isJobActive ? statusTone("success") : statusTone("danger")) }}>
-                        {isJobActive ? "Active" : "Closed"}
+                      <span style={{ ...pill, ...stateTone }}>
+                        {stateLabel}
                       </span>
                     </div>
                     <p style={{ ...cardMeta, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>{job.company || "—"} • {job.location || "—"}</p>
@@ -257,7 +300,7 @@ export default function Jobs() {
 
       {showModal && (
         <ModalShell title={editingId ? "Edit Job" : "Post New Job"} onClose={closeModalGuarded} width={560}>
-          <form onSubmit={handleSubmit}>
+          <form ref={modalFormRef} onSubmit={handleSubmit}>
             <Field label="Job Title">
               <input
                 type="text"
@@ -307,6 +350,7 @@ export default function Jobs() {
                   <select
                     value={form.employmentType}
                     onChange={(e) => updateField({ employmentType: e.target.value })}
+                    required
                     style={selectStyle}
                   >
                     <option value="">Select...</option>
@@ -384,6 +428,7 @@ export default function Jobs() {
                 value={form.description}
                 onChange={(e) => updateField({ description: e.target.value })}
                 rows={5}
+                required
                 style={{ ...textInput, resize: "vertical" }}
               />
             </Field>
@@ -399,12 +444,15 @@ export default function Jobs() {
               </label>
             </div>
 
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={closeModalGuarded} style={btn}>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+              <button type="button" onClick={closeModalGuarded} disabled={saving} style={btn}>
                 Cancel
               </button>
+              <button type="button" onClick={handleSaveDraft} disabled={saving} style={btn}>
+                Save Draft
+              </button>
               <button type="submit" disabled={saving} style={btnPrimary}>
-                {saving ? "Saving..." : editingId ? "Update Job" : "Post Job"}
+                {saving ? "Saving..." : editingId ? "Update & Publish" : "Post Job"}
               </button>
             </div>
           </form>

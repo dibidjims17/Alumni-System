@@ -15,6 +15,9 @@ namespace MyApp.Domain.Entities
         public DateTime PostedAt { get; set; } = DateTime.UtcNow;
         public DateTime? Deadline { get; set; }
         public bool IsActive { get; set; } = true;
+        // Publication is independent of active/closed status: a draft may be
+        // configured as active but remains invisible until an admin publishes.
+        public bool IsPublished { get; set; } = true;
         public bool IsDeleted { get; set; } = false;
 
         public Admin PostedByAdmin { get; set; } = null!;

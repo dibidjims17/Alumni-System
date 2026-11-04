@@ -211,13 +211,21 @@ export function useDirtyGuard() {
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-  // Runs `action` only after confirming if there are unsaved changes.
-  const withGuard = (action) => {
+  // Runs `action` only after confirming if there are unsaved changes. Pages
+  // that support drafts may provide an async onSaveDraft callback; the global
+  // prompt then offers it as a third choice.
+  const withGuard = (action, { onSaveDraft } = {}) => {
     if (dirtyRef.current) {
       requestDiscardConfirm(() => {
         setDirty(false);
         action();
-      });
+      }, onSaveDraft
+        ? async () => {
+            const saved = await onSaveDraft();
+            if (saved !== false) setDirty(false);
+            return saved;
+          }
+        : null);
       return;
     }
     setDirty(false);

@@ -58,8 +58,9 @@ builder.Services.AddHttpClient<MyApp.Infrastructure.Services.PushService>();
 builder.Services.AddScoped<IPushService>(sp =>
     sp.GetRequiredService<MyApp.Infrastructure.Services.PushService>());
 
-// Time-gated news: promotes scheduled posts (and announces them) on a timer.
+// Time-gated content: promote due News and Events (and announce them) on a timer.
 builder.Services.AddHostedService<MyApp.API.Services.NewsPublishHostedService>();
+builder.Services.AddHostedService<MyApp.API.Services.EventPublishHostedService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"];

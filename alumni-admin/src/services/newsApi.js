@@ -19,8 +19,11 @@ function authHeader() {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function getNews(search = "") {
-  const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+export async function getNews(search = "", status = "") {
+  const params = new URLSearchParams();
+  if (search.trim()) params.set("search", search.trim());
+  if (status) params.set("status", status);
+  const query = params.toString() ? `?${params.toString()}` : "";
   const response = await fetch(`${API_BASE_URL}/News${query}`, {
     headers: authHeader(),
   });

@@ -4,8 +4,8 @@ namespace MyApp.Application.Interfaces
 {
     public interface IJobService
     {
-        Task<(List<JobDto> Items, int TotalCount)> GetJobsAsync(int page, int studentId, string? search = null, decimal? minSalary = null, decimal? maxSalary = null);
-        Task<JobDto?> GetJobByIdAsync(int jobId, int studentId);
+        Task<(List<JobDto> Items, int TotalCount)> GetJobsAsync(int page, int studentId, string? search = null, decimal? minSalary = null, decimal? maxSalary = null, bool includeUnpublished = false, string? status = null);
+        Task<JobDto?> GetJobByIdAsync(int jobId, int studentId, bool includeUnpublished = false);
         Task<JobDto> CreateJobAsync(CreateJobRequest request, int adminId);
         Task<bool> UpdateJobAsync(int jobId, CreateJobRequest request, int adminId);
         Task<bool> DeleteJobAsync(int jobId);
