@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Users, Briefcase } from "lucide-react";
 import { getJobs, createJob, updateJob, deleteJob } from "../services/jobsApi";
-import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, pill, statusTone, iconButton, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
+import { SearchBox, useDirtyGuard, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
+import KebabMenu from "../components/KebabMenu";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -231,8 +232,6 @@ export default function Jobs() {
                     alignItems: "center",
                   }}
                 >
-                  {iconButton("Edit", Pencil)(() => openEditModal(job))}
-                  {iconButton("Delete", Trash2)(() => handleDelete(job), { color: "var(--danger)", borderColor: "var(--danger)" })}
                   <Link
                     to={`/jobs/${job.id}/applicants`}
                     style={{ ...btn, textDecoration: "none" }}
@@ -240,6 +239,15 @@ export default function Jobs() {
                     <Users size={15} />
                     Applicants
                   </Link>
+                  <div style={{ marginLeft: "auto" }}>
+                    <KebabMenu
+                      label={`More actions for ${job.jobTitle}`}
+                      items={[
+                        { key: "edit", label: "Edit job", icon: Pencil, onClick: () => openEditModal(job) },
+                        { key: "delete", label: "Delete job", icon: Trash2, danger: true, dividerBefore: true, onClick: () => handleDelete(job) },
+                      ]}
+                    />
+                  </div>
                 </div>
               </div>
             );

@@ -2,13 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Pencil, Trash2, Heart, MessageCircle, MessageSquare, Newspaper } from "lucide-react";
 import { getNews, createNews, updateNews, deleteNews } from "../services/newsApi";
-import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
+import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, SearchBox, useDirtyGuard, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
+import KebabMenu from "../components/KebabMenu";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
-
-const EditButton = iconButton("Edit", Pencil);
-const DeleteButton = iconButton("Delete", Trash2);
 
 const emptyForm = { title: "", content: "", isPublished: true, imageFile: null };
 
@@ -190,24 +188,10 @@ export default function News() {
                     alignItems: "center",
                   }}
                 >
-                  <EditButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEditModal(item);
-                    }}
-                  />
-                  <DeleteButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(item);
-                    }}
-                    style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
-                  />
                   <Link
                     to={`/news/${item.id}`}
                     onClick={(e) => e.stopPropagation()}
                     style={{
-                      marginLeft: "auto",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
@@ -220,6 +204,15 @@ export default function News() {
                     <MessageSquare size={13} />
                     {`View post${item.commentCount ? ` (${item.commentCount} comments)` : ""}`}
                   </Link>
+                  <div style={{ marginLeft: "auto" }}>
+                    <KebabMenu
+                      label={`More actions for ${item.title}`}
+                      items={[
+                        { key: "edit", label: "Edit post", icon: Pencil, onClick: () => openEditModal(item) },
+                        { key: "delete", label: "Delete post", icon: Trash2, danger: true, dividerBefore: true, onClick: () => handleDelete(item) },
+                      ]}
+                    />
+                  </div>
                 </div>
               </div>
             );

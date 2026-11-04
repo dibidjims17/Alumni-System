@@ -7,9 +7,10 @@ import { API_BASE_URL } from "../config";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import {
   ModalShell, Field, textInput, selectStyle,
-  cardGrid, card, cardTitle, cardMeta, actionsRow, iconButton,
+  cardGrid, card, cardTitle, cardMeta, actionsRow,
   btn, btnPrimary, PasswordInput, statusTone, EmptyState, pageWrap,
 } from "../components/kit";
+import KebabMenu from "../components/KebabMenu";
 import { GridSkeleton } from "../components/Skeleton";
 
 const emptyForm = { username: "", fullName: "", email: "", password: "", role: "Staff" };
@@ -274,12 +275,22 @@ export default function ManageAdmins() {
                 <option value="Staff">Staff</option>
                 <option value="SuperAdmin">SuperAdmin</option>
               </select>
-              {iconButton("Edit", Pencil)(() => openEditModal(a))}
-              {iconButton(
-                a.isActive ? "Deactivate" : "Activate",
-                a.isActive ? UserX : UserCheck
-              )(() => handleToggleStatus(a))}
-            </>
+              <div style={{ marginLeft: "auto" }}>
+                <KebabMenu
+                  label={`More actions for ${a.username || a.email}`}
+                  items={[
+                    { key: "edit", label: "Edit admin", icon: Pencil, onClick: () => openEditModal(a) },
+                    {
+                      key: "toggle",
+                      label: a.isActive ? "Deactivate" : "Activate",
+                      icon: a.isActive ? UserX : UserCheck,
+                      danger: a.isActive,
+                      dividerBefore: true,
+                      onClick: () => handleToggleStatus(a),
+                    },
+                  ]}
+                />
+              </div>            </>
           )}
         </div>
       </div>

@@ -6,6 +6,7 @@ import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, btn,
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
+import KebabMenu from "../components/KebabMenu";
 
 const STATUS_OPTIONS = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
 
@@ -243,12 +244,15 @@ export default function JobApplicants() {
                     ) : (
                       <span style={{ ...cardMeta, margin: 0 }}>No resume</span>
                     )}
-                    <button onClick={() => openHistory(a)} style={btn}>
-                      <History size={15} />
-                      History
-                    </button>
-                  </div>
-                </div>
+                    <div style={{ marginLeft: "auto" }}>
+                      <KebabMenu
+                        label={`More actions for ${a.fullName}`}
+                        items={[
+                          { key: "history", label: "Status history", icon: History, onClick: () => openHistory(a) },
+                        ]}
+                      />
+                    </div>
+                  </div>                </div>
               </div>
             );
           })}

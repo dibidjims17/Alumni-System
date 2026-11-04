@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
 import Papa from "papaparse";
-import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, MoreVertical, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert, BellRing, CheckCircle2 } from "lucide-react";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert, BellRing, CheckCircle2 } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite, getYearChangeRequests, reviewYearChangeRequest } from "../services/studentsApi";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, btnDanger, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
+import KebabMenu from "../components/KebabMenu";
 import { sendCareerReminder } from "../services/careersApi";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
@@ -58,7 +58,6 @@ export default function Students() {
   const [yearFilter, setYearFilter] = useState("");
   const [programFilter, setProgramFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // "", "active", "inactive", "unclaimed"
-  const [openActionsId, setOpenActionsId] = useState(null);
   const [sendingCareerReminderId, setSendingCareerReminderId] = useState(null);
   const [remindedCareerIds, setRemindedCareerIds] = useState([]);
 
@@ -147,25 +146,6 @@ export default function Students() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadYearRequests();
   }, []);
-
-  useEffect(() => {
-    if (openActionsId == null) return;
-
-    function closeOnOutsideClick(event) {
-      if (!event.target.closest("[data-alumni-actions]")) setOpenActionsId(null);
-    }
-
-    function closeOnEscape(event) {
-      if (event.key === "Escape") setOpenActionsId(null);
-    }
-
-    document.addEventListener("pointerdown", closeOnOutsideClick);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeOnOutsideClick);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [openActionsId]);
 
   function openImportModal() {
     setImportResult(null);
@@ -652,84 +632,16 @@ export default function Students() {
                     <Eye size={15} /> View profile
                   </button>
 
-                  <div data-alumni-actions style={{ position: "relative" }}>
-                    <button
-                      type="button"
-                      aria-label={`More actions for ${s.fullName}`}
-                      aria-haspopup="menu"
-                      aria-expanded={openActionsId === s.id}
-                      title="More actions"
-                      style={{ ...btn, width: 36, height: 34, padding: 0, justifyContent: "center" }}
-                      onClick={() => setOpenActionsId((current) => current === s.id ? null : s.id)}
-                    >
-                      <MoreVertical size={17} />
-                    </button>
-
-                    {openActionsId === s.id && (
-                      <div
-                        role="menu"
-                        aria-label={`Actions for ${s.fullName}`}
-                        style={{
-                          position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 20,
-                          width: 210, padding: 6, border: "1px solid var(--border)",
-                          borderRadius: "var(--radius-md)", background: "var(--surface)",
-                          boxShadow: "var(--shadow-md)", display: "flex", flexDirection: "column", gap: 2,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="alumni-menu-item"
-                          style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
-                          onClick={() => { setOpenActionsId(null); openEditModal(s); }}
-                        >
-                          <Pencil size={15} /> Edit alumni
-                        </button>
-                        {s.schoolYear === "Graduate" && (
-                          <>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              className="alumni-menu-item"
-                              style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
-                              onClick={() => { setOpenActionsId(null); confirmSendInvite(s); }}
-                            >
-                              <Send size={15} /> Send invite
-                            </button>
-                            <Link
-                              to={`/documents/${s.id}`}
-                              role="menuitem"
-                              className="alumni-menu-item"
-                              style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none", textDecoration: "none", boxSizing: "border-box" }}
-                              onClick={() => setOpenActionsId(null)}
-                            >
-                              <FileText size={15} /> Documents
-                            </Link>
-                          </>
-                        )}
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="alumni-menu-item"
-                          style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none" }}
-                          onClick={() => { setOpenActionsId(null); confirmResetPassword(s); }}
-                        >
-                          <KeyRound size={15} /> Reset password
-                        </button>
-                        <div style={{ height: 1, background: "var(--border)", margin: "4px 2px" }} />
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="alumni-menu-item"
-                          style={{ ...btn, width: "100%", justifyContent: "flex-start", border: "none", boxShadow: "none", color: s.isActive ? "var(--danger)" : "var(--success)" }}
-                          onClick={() => { setOpenActionsId(null); confirmToggleStatus(s); }}
-                        >
-                          {s.isActive ? <UserX size={15} /> : <UserCheck size={15} />}
-                          {s.isActive ? "Deactivate" : "Activate"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <KebabMenu
+                    label={`More actions for ${s.fullName}`}
+                    items={[
+                      { key: "edit", label: "Edit alumni", icon: Pencil, onClick: () => openEditModal(s) },
+                      { key: "invite", label: "Send invite", icon: Send, hidden: s.schoolYear !== "Graduate", onClick: () => confirmSendInvite(s) },
+                      { key: "docs", label: "Documents", icon: FileText, to: `/documents/${s.id}`, hidden: s.schoolYear !== "Graduate" },
+                      { key: "reset", label: "Reset password", icon: KeyRound, onClick: () => confirmResetPassword(s) },
+                      { key: "toggle", label: s.isActive ? "Deactivate" : "Activate", icon: s.isActive ? UserX : UserCheck, danger: s.isActive, dividerBefore: true, onClick: () => confirmToggleStatus(s) },
+                    ]}
+                  />
                 </div>
               </div>
             ))}
@@ -1064,10 +976,6 @@ export default function Students() {
         .alumni-card:focus-within {
           outline: 2px solid var(--primary);
           outline-offset: 2px;
-        }
-        .alumni-menu-item:hover,
-        .alumni-menu-item:focus-visible {
-          background: var(--surface-alt) !important;
         }
         .career-reminder-button:hover:not(:disabled) {
           filter: brightness(0.97);

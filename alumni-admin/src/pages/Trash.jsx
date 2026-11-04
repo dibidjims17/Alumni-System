@@ -8,6 +8,7 @@ import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 import { GridSkeleton } from "../components/Skeleton";
 import { getSession } from "../services/api";
+import KebabMenu from "../components/KebabMenu";
 
 export default function Trash() {
   const [deletedJobs, setDeletedJobs] = useState([]);
@@ -298,10 +299,14 @@ export default function Trash() {
                   }}
                 >
                   {iconButton("Restore", RotateCcw)(item.onRestore)}
-                  {iconButton("Delete Forever", Trash2)(item.onDeleteForever, {
-                    color: "var(--danger)",
-                    borderColor: "var(--danger)",
-                  })}
+                  <div style={{ marginLeft: "auto" }}>
+                    <KebabMenu
+                      label={`More actions for ${item.title}`}
+                      items={[
+                        { key: "delete", label: "Delete forever", icon: Trash2, danger: true, onClick: item.onDeleteForever },
+                      ]}
+                    />
+                  </div>
                 </div>
               )}
             </div>

@@ -99,6 +99,13 @@ a { color: var(--primary); }
   .admin-skeleton { animation: none; opacity: 0.6; }
 }
 
+/* Overflow-menu items (KebabMenu.jsx) — shared hover/focus feedback so
+   every ⋮ menu across the admin feels the same. */
+.kebab-menu-item:hover,
+.kebab-menu-item:focus-visible {
+  background: var(--surface-alt);
+}
+
 /* Themed scrollbars so long lists look intentional in both modes */
 * {
   scrollbar-width: thin;

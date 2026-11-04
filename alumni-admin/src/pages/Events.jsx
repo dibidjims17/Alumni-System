@@ -6,9 +6,8 @@ import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, SearchBox, useDi
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
+import KebabMenu from "../components/KebabMenu";
 
-const EditButton = iconButton("Edit", Pencil);
-const DeleteButton = iconButton("Delete", Trash2);
 const AttendeesButton = iconButton("Attendees", Users);
 
 // Themed attendees-table cells (the old raw border=1 table rendered
@@ -281,9 +280,16 @@ export default function Events() {
                   alignItems: "center",
                 }}
               >
-                <EditButton onClick={() => openEditModal(event)} />
                 <AttendeesButton onClick={() => openAttendees(event)} />
-                {isSuperAdmin && <DeleteButton onClick={() => handleDelete(event)} style={{ color: "var(--danger)", borderColor: "var(--danger)" }} />}
+                <div style={{ marginLeft: "auto" }}>
+                  <KebabMenu
+                    label={`More actions for ${event.title}`}
+                    items={[
+                      { key: "edit", label: "Edit event", icon: Pencil, onClick: () => openEditModal(event) },
+                      { key: "delete", label: "Delete event", icon: Trash2, danger: true, dividerBefore: true, hidden: !isSuperAdmin, onClick: () => handleDelete(event) },
+                    ]}
+                  />
+                </div>
               </div>
             </div>
             );
