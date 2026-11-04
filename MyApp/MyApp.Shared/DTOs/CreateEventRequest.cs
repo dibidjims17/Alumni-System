@@ -15,5 +15,8 @@ namespace MyApp.Shared.DTOs
 
         [Required]
         public DateTime? EventDate { get; set; }
+
+        // Clears any stored flyer (the admin drop zone's Remove action).
+        public bool RemoveImage { get; set; }
     }
 }

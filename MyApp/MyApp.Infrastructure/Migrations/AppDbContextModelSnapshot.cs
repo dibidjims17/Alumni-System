@@ -333,6 +333,9 @@ namespace MyApp.Infrastructure.Migrations
                     b.Property<DateTime>("EventDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 

@@ -43,7 +43,7 @@ namespace MyApp.Application.Services
             return Map(eventEntity, studentId);
         }
 
-        public async Task<EventDto> CreateEventAsync(CreateEventRequest request, int adminId)
+        public async Task<EventDto> CreateEventAsync(CreateEventRequest request, int adminId, string? imagePath)
         {
             var eventEntity = new Event
             {
@@ -51,6 +51,7 @@ namespace MyApp.Application.Services
                 Description = request.Description,
                 Location = request.Location,
                 EventDate = request.EventDate!.Value,
+                ImagePath = imagePath,
                 PostedByAdminId = adminId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -64,7 +65,7 @@ namespace MyApp.Application.Services
             return Map(eventEntity, null);
         }
 
-        public async Task<bool> UpdateEventAsync(int eventId, CreateEventRequest request, int adminId)
+        public async Task<bool> UpdateEventAsync(int eventId, CreateEventRequest request, int adminId, string? imagePath)
         {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
             if (eventEntity == null) return false;
@@ -74,6 +75,8 @@ namespace MyApp.Application.Services
             eventEntity.Location = request.Location;
             eventEntity.EventDate = request.EventDate!.Value;
             eventEntity.UpdatedAt = DateTime.UtcNow;
+            if (request.RemoveImage) eventEntity.ImagePath = null;
+            else if (imagePath != null) eventEntity.ImagePath = imagePath;
 
             await _eventRepository.UpdateAsync(eventEntity);
             await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_EVENT", $"Updated event: {request.Title}", "system");
@@ -169,12 +172,25 @@ namespace MyApp.Application.Services
                 Description = eventEntity.Description,
                 Location = eventEntity.Location,
                 EventDate = eventEntity.EventDate,
+                ImagePath = NormalizeImageUrl(eventEntity.ImagePath),
                 PostedByAdminName = eventEntity.PostedByAdmin?.FullName ?? string.Empty,
                 PostedByAdminPicture = eventEntity.PostedByAdmin?.ProfilePicturePath,
                 AttendeeCount = eventEntity.Rsvps?.Count ?? 0,
                 IsRsvped = studentId.HasValue && (eventEntity.Rsvps?.Any(r => r.StudentId == studentId.Value) ?? false),
                 CreatedAt = eventEntity.CreatedAt
             };
+        }
+
+        // Legacy rows stored absolute server paths; clients only ever want the
+        // relative "Uploads/..." form so they can prefix their own file root.
+        private static string? NormalizeImageUrl(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return null;
+
+            var normalized = path.Replace('\\', '/').TrimStart('/');
+            var marker = "Uploads/";
+            var index = normalized.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            return index >= 0 ? normalized.Substring(index) : normalized;
         }
     }
 }

@@ -17,6 +17,7 @@ import { assetUrl } from '../utils/media';
 import { alert as appAlert } from '../components/AppAlert';
 import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
+import ImageViewer from '../components/ImageViewer';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -29,12 +30,25 @@ export default function EventDetailScreen({ route, navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [viewerImage, setViewerImage] = useState(null);
+  const [imgRatio, setImgRatio] = useState(16 / 10);
 
   async function fetchEvent() {
     try {
       setNotFound(false);
       const res = await apiClient.get(`/Events/${eventId}`);
       setEvent(res.data);
+      // Size the flyer to its real aspect ratio so a portrait poster is not
+      // cropped down to a landscape strip.
+      const url = assetUrl(res.data?.imagePath);
+      if (url) {
+        setImgRatio(16 / 10);
+        Image.getSize(
+          url,
+          (w, h) => { if (w > 0 && h > 0) setImgRatio(w / h); },
+          () => {}
+        );
+      }
     } catch (err) {
       if (err.response?.status === 404) {
         setNotFound(true);
@@ -169,6 +183,19 @@ export default function EventDetailScreen({ route, navigation }) {
             <Text style={[styles.detail, { color: c.textMuted }]}>Posted by {event.postedByAdminName}</Text>
           </View>
         ) : null}
+        {assetUrl(event.imagePath) && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => setViewerImage(assetUrl(event.imagePath))}
+            accessibilityLabel="View flyer fullscreen"
+          >
+            <Image
+              source={{ uri: assetUrl(event.imagePath) }}
+              style={[styles.flyer, { backgroundColor: c.surfaceAlt, aspectRatio: imgRatio }]}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
@@ -198,6 +225,7 @@ export default function EventDetailScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    <ImageViewer imageUrl={viewerImage} onClose={() => setViewerImage(null)} />
     </SafeAreaView>
   );
 }
@@ -247,6 +275,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
   description: { fontSize: 14, lineHeight: 21 },
+  flyer: {
+    width: '100%',
+    marginTop: 10,
+    borderRadius: 8,
+  },
   count: { fontSize: 13, marginBottom: 12 },
   rsvpButton: {
     padding: 12,

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, Users, Download, CalendarDays } from "lucide-react";
-import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees } from "../services/eventsApi";
+import { getAllEvents, createEvent, updateEvent, deleteEvent, getEventAttendees, eventImageUrl } from "../services/eventsApi";
 import { getSession } from "../services/api";
 import { cardGrid, card, cardTitle, cardMeta, pill, statusTone, SearchBox, useDirtyGuard, iconButton, ModalShell, Field, textInput, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
+import ImageDropZone from "../components/ImageDropZone";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
@@ -45,6 +46,15 @@ export default function Events() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
+
+  // The preview URL and the stored flyer live outside `form`: an object URL
+  // is an unstable string that would defeat the dirty-guard's pristine
+  // comparison, and we must revoke the blob ourselves when the modal
+  // closes. The chosen `File` itself rides in `form` so picking one marks
+  // the form dirty.
+  const [existingImage, setExistingImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const objectUrlRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -104,6 +114,8 @@ export default function Events() {
   function openCreateModal() {
     setEditingId(null);
     setForm(emptyForm);
+    setExistingImage(null);
+    setPreviewUrl(null);
     pristineRef.current = JSON.stringify(emptyForm);
     setDirty(false);
     setShowModal(true);
@@ -117,7 +129,10 @@ export default function Events() {
       location: event.location || "",
       eventDate: event.eventDate ? toLocalDateTimeInputValue(event.eventDate) : "",
     };
+    const stored = eventImageUrl(event.imagePath);
     setForm(nextForm);
+    setExistingImage(stored);
+    setPreviewUrl(stored);
     pristineRef.current = JSON.stringify(nextForm);
     setDirty(false);
     setShowModal(true);
@@ -126,9 +141,36 @@ export default function Events() {
   const closeModalGuarded = () => withGuard(closeModal);
 
   function closeModal() {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    setPreviewUrl(null);
+    setExistingImage(null);
     setShowModal(false);
     setEditingId(null);
     setForm(emptyForm);
+  }
+
+  function pickImage(file) {
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    const url = URL.createObjectURL(file);
+    objectUrlRef.current = url;
+    setPreviewUrl(url);
+    updateForm({ imageFile: file, removeImage: false });
+  }
+
+  function clearImage() {
+    if (objectUrlRef.current) {
+      // Dropping a freshly picked file falls back to the stored flyer.
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+      setPreviewUrl(existingImage);
+      updateForm({ imageFile: null });
+      return;
+    }
+    setPreviewUrl(null);
+    updateForm({ imageFile: null, removeImage: true });
   }
 
   function toLocalDateTimeInputValue(iso) {
@@ -146,6 +188,8 @@ export default function Events() {
         description: form.description,
         location: form.location,
         eventDate: new Date(form.eventDate).toISOString(),
+        imageFile: form.imageFile,
+        removeImage: form.removeImage,
       };
 
       if (editingId) {
@@ -254,6 +298,13 @@ export default function Events() {
             return (
             <div key={event.id} style={card}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                {eventImageUrl(event.imagePath) && (
+                  <img
+                    src={eventImageUrl(event.imagePath)}
+                    alt=""
+                    style={{ width: 58, height: 58, borderRadius: 8, objectFit: "cover", flexShrink: 0 }}
+                  />
+                )}
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <h3 style={cardTitle}>{event.title}</h3>
@@ -337,6 +388,16 @@ export default function Events() {
                 rows={6}
                 required
                 style={{ ...textInput, minHeight: 130, resize: "vertical" }}
+              />
+            </Field>
+
+            <Field label={`Flyer ${editingId ? "(drop to replace)" : "(optional)"}`}>
+              <ImageDropZone
+                previewUrl={previewUrl}
+                fileName={form.imageFile ? form.imageFile.name : null}
+                onPick={pickImage}
+                onRemove={previewUrl ? clearImage : null}
+                hint="JPG, PNG, GIF, WebP or BMP · up to 5 MB"
               />
             </Field>
 

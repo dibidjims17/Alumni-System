@@ -1,9 +1,10 @@
 // src/screens/EventsListScreen.js
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
+import { assetUrl } from '../utils/media';
 import { useAuth } from '../context/AuthContext';
 import { alert as appAlert } from '../components/AppAlert';
 import SearchBar from '../components/SearchBar';
@@ -110,12 +111,20 @@ export default function EventsListScreen({ navigation }) {
     const dateText = item.eventDate
       ? new Date(item.eventDate).toLocaleString()
       : '';
+    const flyerUrl = assetUrl(item.imagePath);
     return (
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
         >
+          {flyerUrl && (
+            <Image
+              source={{ uri: flyerUrl }}
+              style={[styles.flyer, { backgroundColor: c.surfaceAlt }]}
+              resizeMode="cover"
+            />
+          )}
           <Text style={[styles.title, { color: c.text }]}>{item.title}</Text>
           <Text style={[styles.detail, { color: c.textMuted }]}>{dateText}</Text>
           <Text style={[styles.detail, { color: c.textMuted }]}>Location: {item.location}</Text>
@@ -234,6 +243,12 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   title: { fontSize: 16, fontWeight: '700' },
+  flyer: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
   detail: { fontSize: 12, marginTop: 4 },
   description: { fontSize: 13, marginTop: 8 },
   footer: {

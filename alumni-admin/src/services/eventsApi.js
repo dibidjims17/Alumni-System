@@ -1,11 +1,45 @@
 import { API_BASE_URL } from "../config";
 
+const FILE_ROOT = API_BASE_URL.replace("/api", "");
+
 function authHeaders() {
   const token = localStorage.getItem("adminToken");
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
+}
+
+// For FormData bodies: the browser must set Content-Type itself so it can
+// include the multipart boundary.
+function authHeader() {
+  const token = localStorage.getItem("adminToken");
+  return { Authorization: `Bearer ${token}` };
+}
+
+// Turns a stored image path (relative "Uploads/Events/x" or a legacy
+// absolute server path) into a browser-loadable URL.
+export function eventImageUrl(path) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalized = String(path).replace(/\\/g, "/");
+  const marker = "Uploads/";
+  const index = normalized.indexOf(marker);
+  const relative = index >= 0 ? normalized.slice(index) : normalized.replace(/^\//, "");
+  return `${FILE_ROOT}/${relative}`;
+}
+
+// Create/update now travel as multipart so the flyer rides along with the
+// event instead of needing a second request.
+function toFormData({ title, description, location, eventDate, imageFile, removeImage }) {
+  const formData = new FormData();
+  formData.append("Title", title);
+  formData.append("Description", description);
+  formData.append("Location", location);
+  formData.append("EventDate", eventDate);
+  if (removeImage) formData.append("RemoveImage", "true");
+  if (imageFile) formData.append("image", imageFile);
+  return formData;
 }
 
 export async function getAllEvents(search = "") {
@@ -21,8 +55,8 @@ export async function getAllEvents(search = "") {
 export async function createEvent(event) {
   const response = await fetch(`${API_BASE_URL}/Events`, {
     method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(event),
+    headers: authHeader(),
+    body: toFormData(event),
   });
   if (!response.ok) {
     const errText = await response.text();
@@ -34,8 +68,8 @@ export async function createEvent(event) {
 export async function updateEvent(id, event) {
   const response = await fetch(`${API_BASE_URL}/Events/${id}`, {
     method: "PUT",
-    headers: authHeaders(),
-    body: JSON.stringify(event),
+    headers: authHeader(),
+    body: toFormData(event),
   });
   if (!response.ok) {
     const errText = await response.text();

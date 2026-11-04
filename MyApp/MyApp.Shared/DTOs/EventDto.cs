@@ -7,6 +7,7 @@ namespace MyApp.Shared.DTOs
         public string Description { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
         public DateTime EventDate { get; set; }
+        public string? ImagePath { get; set; }
         public string PostedByAdminName { get; set; } = string.Empty;
         public string? PostedByAdminPicture { get; set; }
         public int AttendeeCount { get; set; }

@@ -21,6 +21,41 @@ namespace MyApp.API.Controllers
         private int GetStudentId() =>
             int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        // Validates and saves an event flyer. Mirrors NewsController.
+        // SaveNewsImageAsync: (true, path, null) on success,
+        // (false, null, errorMessage) when the image fails validation.
+        private async Task<(bool Success, string? ImagePath, string? Error)> SaveEventImageAsync(IFormFile? image)
+        {
+            if (image == null || image.Length == 0)
+                return (true, null, null);
+
+            // Max 5MB
+            if (image.Length > 5 * 1024 * 1024)
+                return (false, null, "Image size must not exceed 5MB.");
+
+            // Only allow image extensions
+            var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
+            if (!allowedExtensions.Contains(ext))
+                return (false, null, "Only JPG, PNG, GIF, WEBP and BMP images are allowed.");
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Events");
+            Directory.CreateDirectory(uploadsFolder);
+
+            // Server-side name is generated (never trust the client filename for the path)
+            var storedFileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsFolder, storedFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            // Store a relative path so clients can build a URL from it (Uploads/Events/<file>).
+            var relativePath = $"Uploads/Events/{storedFileName}";
+            return (true, relativePath, null);
+        }
+
         // ─── Alumni endpoints ─────────────────────────────────────
 
         [Authorize(Roles = "Student")]
@@ -62,19 +97,27 @@ namespace MyApp.API.Controllers
 
         [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPost]
-        public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest request)
+        public async Task<IActionResult> CreateEvent([FromForm] CreateEventRequest request, IFormFile? image)
         {
             var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var result = await _eventService.CreateEventAsync(request, adminId);
+
+            var (ok, imagePath, error) = await SaveEventImageAsync(image);
+            if (!ok) return BadRequest(new { message = error });
+
+            var result = await _eventService.CreateEventAsync(request, adminId, imagePath);
             return Ok(result);
         }
 
         [Authorize(Roles = "SuperAdmin,Staff")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEvent(int id, [FromBody] CreateEventRequest request)
+        public async Task<IActionResult> UpdateEvent(int id, [FromForm] CreateEventRequest request, IFormFile? image)
         {
             var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var success = await _eventService.UpdateEventAsync(id, request, adminId);
+
+            var (ok, imagePath, error) = await SaveEventImageAsync(image);
+            if (!ok) return BadRequest(new { message = error });
+
+            var success = await _eventService.UpdateEventAsync(id, request, adminId, imagePath);
             if (!success) return NotFound();
             return Ok(new { message = "Event updated successfully." });
         }
