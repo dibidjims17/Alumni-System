@@ -44,7 +44,10 @@ export default function JobApplicants() {
   async function loadJob() {
     try {
       const data = await getJobById(id);
-      setJob(data);
+      // Precompute deadline state at load time — Date.now() is banned during
+      // render (react-hooks/purity), and the Jobs list derives it the same way.
+      const closed = data.deadline ? new Date(data.deadline).getTime() < Date.now() : false;
+      setJob({ ...data, isClosed: closed });
     } catch (err) {
       notifyError(err.message);
     }
@@ -127,41 +130,72 @@ export default function JobApplicants() {
     <div style={pageWrap}>
       <Link to="/jobs">← Back to Jobs</Link>
 
-      {job && (
-        <div style={{ border: "1px solid var(--border)", borderRadius: 8, padding: 16, marginBottom: 20 }}>
-          <h3 style={{ marginTop: 0 }}>{job.jobTitle} — {job.company}</h3>
-          <p>
-            <strong>Location:</strong> {job.location || "—"} |{" "}
-            <strong>Industry:</strong> {job.industry || "—"} |{" "}
-            <strong>Type:</strong> {job.employmentType || "—"}
-          </p>
-          <p>
-            <strong>Salary:</strong> {job.salaryMin ? `₱${job.salaryMin}` : "—"} – {job.salaryMax ? `₱${job.salaryMax}` : "—"}
-          </p>
-          <p>
-            <strong>Deadline:</strong> {job.deadline ? new Date(job.deadline).toLocaleDateString() : "—"} |{" "}
-            <strong>Status:</strong> {job.isActive ? "Active" : "Inactive"}
-          </p>
-          <p>{job.description}</p>
-        </div>
-      )}
+      {job && (() => {
+        // Same presentation rules as the Jobs list card so the job looks
+        // identical in both places: closed-by-deadline counts as Closed,
+        // empty salary/deadline fields are omitted instead of "— — —".
+        const hasMin = job.salaryMin != null;
+        const hasMax = job.salaryMax != null;
+        const salaryLine = hasMin || hasMax
+          ? `${hasMin ? `₱${Number(job.salaryMin).toLocaleString()}` : "—"} – ${hasMax ? `₱${Number(job.salaryMax).toLocaleString()}` : "—"}`
+          : "";
+        const isClosed = !!job.isClosed;
+        const isJobActive = job.isActive !== false && !isClosed;
+        return (
+          <div style={{ ...card, height: "auto", marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h3 style={cardTitle}>{job.jobTitle}</h3>
+              <span style={{ ...pill, ...(isJobActive ? statusTone("success") : statusTone("danger")) }}>
+                {isJobActive ? "Active" : "Closed"}
+              </span>
+            </div>
 
-      <div style={{ marginBottom: 20, padding: 12, border: "1px solid var(--border)", borderRadius: 8 }}>
-        <p style={{ marginTop: 0 }}><strong>Export Applicants</strong></p>
-        <p style={{ fontSize: 13, color: "var(--muted)" }}>
-          Select which statuses to include (leave all unchecked to export everyone):
-        </p>
-        {STATUS_OPTIONS.map((status) => (
-          <label key={status} style={{ marginRight: 12 }}>
-            <input
-              type="checkbox"
-              checked={exportStatuses.includes(status)}
-              onChange={() => toggleExportStatus(status)}
-            />{" "}
-            {status}
-          </label>
-        ))}
-        <div style={{ marginTop: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <p style={{ ...cardMeta, fontWeight: 700, color: "var(--text)", fontSize: 13.5 }}>
+                {job.company || "—"} • {job.location || "—"}
+              </p>
+              <p style={cardMeta}>
+                {job.employmentType || "—"} • {job.industry || "—"}
+              </p>
+              {salaryLine && <p style={cardMeta}>Salary: {salaryLine}</p>}
+              <p style={cardMeta}>
+                Deadline: {job.deadline ? new Date(job.deadline).toLocaleDateString() : "—"}
+                {isClosed ? " (Closed)" : ""}
+              </p>
+            </div>
+
+            {job.description && (
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+                <p style={{ ...cardMeta, whiteSpace: "pre-line", lineHeight: 1.55 }}>{job.description}</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      <div style={{ ...card, height: "auto", marginBottom: 20 }}>
+        <div>
+          <p style={{ ...cardTitle, fontSize: 14 }}>Export Applicants</p>
+          <p style={{ ...cardMeta, marginTop: 4 }}>
+            Select which statuses to include (leave all unchecked to export everyone):
+          </p>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          {STATUS_OPTIONS.map((status) => (
+            <label
+              key={status}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text)", cursor: "pointer" }}
+            >
+              <input
+                type="checkbox"
+                checked={exportStatuses.includes(status)}
+                onChange={() => toggleExportStatus(status)}
+              />
+              {status}
+            </label>
+          ))}
+        </div>
+        <div>
           <button onClick={handleExport} disabled={exporting} style={btnPrimary}>
             <Download size={15} />
             {exporting ? "Preparing export..." : "Export to ZIP (CSV + Resumes)"}
