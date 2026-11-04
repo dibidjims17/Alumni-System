@@ -5,13 +5,14 @@ import {
   Text,
   TextInput,
   Switch,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Trash2 } from 'lucide-react-native';
 import { alert as appAlert } from '../components/AppAlert';
+import KebabMenu from '../components/KebabMenu';
 import apiClient from '../api/client';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import DiscardDialog from '../components/DiscardDialog';
@@ -172,21 +173,22 @@ export default function EditEducationScreen({ route, navigation }) {
           </>
         )}
 
-        <PrimaryButton
-          title={isEditing ? 'Save Changes' : 'Add'}
-          onPress={handleSave}
-          loading={isSubmitting}
-          style={{ marginTop: 24 }}
-        />
-
-        {isEditing && (
-          <TouchableOpacity
-            style={[styles.deleteButton, { borderColor: c.border }]}
-            onPress={handleDelete}
-          >
-            <Text style={[styles.deleteButtonText, { color: c.danger }]}>Delete</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.saveRow}>
+          <PrimaryButton
+            title={isEditing ? 'Save Changes' : 'Add'}
+            onPress={handleSave}
+            loading={isSubmitting}
+            style={{ flex: 1 }}
+          />
+          {isEditing && (
+            <KebabMenu
+              label="Entry options"
+              items={[
+                { key: 'delete', label: 'Delete', icon: Trash2, danger: true, onPress: handleDelete },
+              ]}
+            />
+          )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -207,12 +209,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  deleteButton: {
-    marginTop: 12,
-    padding: 12,
+  saveRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
+    gap: 10,
+    marginTop: 24,
   },
-  deleteButtonText: { fontSize: 14, fontWeight: '600' },
 });

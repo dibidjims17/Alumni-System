@@ -17,7 +17,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Heart, Send, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Heart, Send, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { assetUrl } from '../utils/media';
@@ -27,6 +27,7 @@ import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import { useTheme } from '../theme/ThemeContext';
 import { alert as appAlert } from '../components/AppAlert';
+import KebabMenu from '../components/KebabMenu';
 
 function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, currentStudentId }) {
   const { theme } = useTheme();
@@ -64,14 +65,13 @@ function CommentRow({ comment, level, onReply, onLike, onEdit, onDelete, current
           <Text style={[styles.actionText, { color: c.textMuted }]}>Reply</Text>
         </TouchableOpacity>
         {comment.studentId === currentStudentId && (
-          <>
-            <TouchableOpacity onPress={() => onEdit(comment)}>
-              <Text style={[styles.actionText, { color: c.textMuted }]}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => onDelete(comment.id)}>
-              <Text style={[styles.actionText, { color: c.textMuted }]}>Delete</Text>
-            </TouchableOpacity>
-          </>
+          <KebabMenu
+            label={`More actions for ${comment.studentName || 'your comment'}`}
+            items={[
+              { key: 'edit', label: 'Edit comment', icon: Pencil, onPress: () => onEdit(comment) },
+              { key: 'delete', label: 'Delete comment', icon: Trash2, danger: true, onPress: () => onDelete(comment.id) },
+            ]}
+          />
         )}
       </View>
     </View>

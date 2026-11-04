@@ -25,6 +25,7 @@ import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import { API_BASE_URL } from '../config';
 import { alert as appAlert } from '../components/AppAlert';
+import KebabMenu from '../components/KebabMenu';
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB, matches backend rule
 
@@ -301,14 +302,12 @@ export default function ResumeScreen({ navigation }) {
                 </>
               )}
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.removeButton, { borderColor: c.danger }]}
-              onPress={confirmRemoveResume}
-              activeOpacity={0.85}
-            >
-              <Trash2 size={17} color={c.danger} />
-              <Text style={[styles.actionButtonText, { color: c.danger }]}>Remove</Text>
-            </TouchableOpacity>
+            <KebabMenu
+              label="Résumé options"
+              items={[
+                { key: 'remove', label: 'Remove résumé', icon: Trash2, danger: true, onPress: confirmRemoveResume },
+              ]}
+            />
           </View>
         </>
       ) : (
@@ -364,6 +363,7 @@ const styles = StyleSheet.create({
   pdf: { flex: 1 },
   actionRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     marginBottom: 4,
   },
@@ -377,10 +377,6 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   downloadButton: {},
-  removeButton: {
-    borderWidth: 1.5,
-    backgroundColor: 'transparent',
-  },
   actionButtonText: { fontSize: 14, fontWeight: '700' },
   hintText: { fontSize: 11, marginTop: 8, textAlign: 'center' },
   infoText: { fontSize: 13, textAlign: 'center' },
