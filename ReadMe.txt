@@ -1,16 +1,9 @@
-ALUMNI
+LOGINS
 
-{
-  "studentNumber": "23-01644",
-  "password": "NewPass@123"
-}
-
-ADMIN
-
-{
-  "username": "admin",
-  "password": "Admin@1234"
-}
+This repository is PUBLIC, so login credentials are no longer kept here.
+Current test accounts are listed in credentials.local.txt on the dev
+machine (gitignored, never committed). Rotate any password that was ever
+committed to this file.
 
 https://expo.dev/artifacts/eas/HRqRoRJWJhPaM1MTsH16xUqYdX9XhJRNj7pPyr8GMR4.apk
 

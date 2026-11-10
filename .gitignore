@@ -27,3 +27,7 @@ MyApp/MyApp.API/Uploads/
 # Supporting materials (not part of the running system)
 Flowchart/
 docs/
+
+# Student data (PII) — the repo is public, never commit these
+/*.csv
+credentials.local.txt
