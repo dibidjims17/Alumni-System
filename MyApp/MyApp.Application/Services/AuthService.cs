@@ -14,6 +14,7 @@ namespace MyApp.Application.Services
     {
         private readonly IStudentRepository _studentRepository;
         private readonly IActivityLogRepository _activityLogRepository;
+        private readonly ITracerRepository _tracerRepository;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly INotificationService _notificationService;
@@ -22,6 +23,7 @@ namespace MyApp.Application.Services
         public AuthService(
             IStudentRepository studentRepository,
             IActivityLogRepository activityLogRepository,
+            ITracerRepository tracerRepository,
             IConfiguration configuration,
             IEmailService emailService,
             INotificationService notificationService,
@@ -29,6 +31,7 @@ namespace MyApp.Application.Services
         {
             _studentRepository = studentRepository;
             _activityLogRepository = activityLogRepository;
+            _tracerRepository = tracerRepository;
             _configuration = configuration;
             _emailService = emailService;
             _notificationService = notificationService;
@@ -97,7 +100,8 @@ namespace MyApp.Application.Services
                 StudentNumber = student.StudentNumber,
                 Program = student.Program,
                 SchoolYear = student.SchoolYear,
-                MustChangePassword = student.MustChangePassword
+                MustChangePassword = student.MustChangePassword,
+                TracerCompleted = await IsTracerDoneAsync(student)
             };
         }
 
@@ -155,8 +159,19 @@ namespace MyApp.Application.Services
                 StudentNumber = student.StudentNumber,
                 Program = student.Program,
                 SchoolYear = student.SchoolYear,
-                MustChangePassword = student.MustChangePassword
+                MustChangePassword = student.MustChangePassword,
+                TracerCompleted = await IsTracerDoneAsync(student)
             });
+        }
+
+        // Tracer Study pre-screening gate: only graduates are respondents,
+        // so current students always pass; graduates pass once their
+        // questionnaire is submitted.
+        private async Task<bool> IsTracerDoneAsync(Student student)
+        {
+            bool isGraduate = student.SchoolYear.Trim()
+                .Equals("Graduate", StringComparison.OrdinalIgnoreCase);
+            return !isGraduate || await _tracerRepository.IsSubmittedAsync(student.Id);
         }
 
         private string GenerateToken(MyApp.Domain.Entities.Student student)

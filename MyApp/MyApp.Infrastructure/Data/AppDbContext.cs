@@ -32,6 +32,7 @@ namespace MyApp.Infrastructure.Data
         public DbSet<PushToken> PushTokens { get; set; }
         public DbSet<YearLevelChangeRequest> YearLevelChangeRequests { get; set; }
         public DbSet<CareerRecord> CareerRecords { get; set; }
+        public DbSet<TracerResponse> TracerResponses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,6 +52,12 @@ namespace MyApp.Infrastructure.Data
             // One row per device push token.
             modelBuilder.Entity<PushToken>()
                 .HasIndex(p => p.Token)
+                .IsUnique();
+
+            // One tracer questionnaire per student — the pre-screening gate
+            // is a single draft that flips to Submitted, never a history.
+            modelBuilder.Entity<TracerResponse>()
+                .HasIndex(r => r.StudentId)
                 .IsUnique();
         }
     }

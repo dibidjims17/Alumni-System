@@ -35,6 +35,7 @@ builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IPushTokenRepository, PushTokenRepository>();
 builder.Services.AddScoped<IYearLevelChangeRepository, YearLevelChangeRepository>();
 builder.Services.AddScoped<ICareerRepository, CareerRepository>();
+builder.Services.AddScoped<ITracerRepository, TracerRepository>();
 
 // Services
 builder.Services.AddHttpClient<MyApp.Application.Services.GoogleTokenValidator>();
@@ -54,6 +55,7 @@ builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IDirectoryService, DirectoryService>();
 builder.Services.AddScoped<ISuggestionsService, SuggestionsService>();
 builder.Services.AddScoped<ICareerService, CareerService>();
+builder.Services.AddScoped<ITracerService, TracerService>();
 builder.Services.AddHttpClient<MyApp.Infrastructure.Services.PushService>();
 builder.Services.AddScoped<IPushService>(sp =>
     sp.GetRequiredService<MyApp.Infrastructure.Services.PushService>());
