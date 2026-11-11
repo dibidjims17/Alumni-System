@@ -28,6 +28,7 @@ import EditEducationScreen from '../screens/EditEducationScreen';
 import ResumeScreen from '../screens/ResumeScreen';
 import DocumentsScreen from '../screens/DocumentsScreen';
 import CareerProofScreen from '../screens/CareerProofScreen';
+import TracerStudyScreen from '../screens/TracerStudyScreen';
 
 import CareerHomeScreen from '../screens/CareerHomeScreen';
 import JobsListScreen from '../screens/JobsListScreen';
@@ -140,6 +141,11 @@ function ProfileStack() {
       <ProfileStackNav.Screen name="EditEducation" component={EditEducationScreen} options={{ title: 'Education' }} />
       <ProfileStackNav.Screen name="Resume" component={ResumeScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen name="Documents" component={DocumentsScreen} options={{ title: 'My Documents' }} />
+      <ProfileStackNav.Screen
+        name="TracerStudy"
+        component={TracerStudyScreen}
+        options={{ title: 'Graduate Tracer Study (BETA)' }}
+      />
       <ProfileStackNav.Screen name="YearCorrection" component={YearCorrectionScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen
         name="ChangePassword"
@@ -220,6 +226,17 @@ export default function AppNavigator() {
   const { theme } = useTheme();
   const c = theme.colors;
 
+  // Tracer pre-screening gate (beta): graduates who haven't answered see the
+  // questionnaire instead of the tabs. Skip/finish dismisses it for this
+  // session only — the real submission flag lives on the server, so a fresh
+  // login shows it again until the response is recorded.
+  const [tracerDismissed, setTracerDismissed] = React.useState(false);
+  const showTracerGate =
+    !tracerDismissed &&
+    !student?.mustChangePassword &&
+    !student?.tracerCompleted &&
+    student?.schoolYear === 'Graduate';
+
   if (isLoading) {
     return (
       <View
@@ -252,6 +269,12 @@ export default function AppNavigator() {
         ) : student.mustChangePassword ? (
           <HomeStackNav.Navigator screenOptions={authOptions}>
             <HomeStackNav.Screen name="ChangePassword" component={ChangePasswordScreen} />
+          </HomeStackNav.Navigator>
+        ) : showTracerGate ? (
+          <HomeStackNav.Navigator screenOptions={authOptions}>
+            <HomeStackNav.Screen name="TracerStudy" options={{ headerShown: false }}>
+              {(props) => <TracerStudyScreen {...props} onExit={() => setTracerDismissed(true)} />}
+            </HomeStackNav.Screen>
           </HomeStackNav.Navigator>
         ) : (
           <AppTabs />

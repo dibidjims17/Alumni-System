@@ -500,6 +500,12 @@ export default function ProfileScreen({ navigation }) {
           >
             <Text style={[styles.accountRowText, { color: c.text }]}>Change Password</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.accountRow}
+            onPress={() => navigation.navigate('TracerStudy')}
+          >
+            <Text style={[styles.accountRowText, { color: c.text }]}>Graduate Tracer Study (BETA)</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.signOutRow} onPress={confirmSignOut}>
             <LogOut size={15} color={c.danger} />
             <Text style={[styles.signOutText, { color: c.danger }]}>Sign Out</Text>
