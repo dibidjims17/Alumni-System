@@ -65,6 +65,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
 
   const [step, setStep] = useState(0);
   const [noticeAccepted, setNoticeAccepted] = useState(!SHOW_PARTICIPATION_NOTICE);
+  const [showAll, setShowAll] = useState(false);
 
   // Section A — Graduate Profile (prefilled from the account)
   const [fullName, setFullName] = useState(student?.fullName || '');
@@ -100,6 +101,9 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   const [wouldRecommend, setWouldRecommend] = useState('');
 
   const employed = EMPLOYED_OPTIONS.has(employmentStatus);
+  // Job Details is only truly skipped once a status has been chosen —
+  // before that the section is undecided, not skipped.
+  const jobDetailsSkipped = employmentStatus !== '' && !employed;
 
   // Exit = Skip (beta) or goBack when opened from the Profile menu.
   function exitFlow() {
@@ -180,6 +184,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   }
 
   function jumpTo(index) {
+    setShowAll(false);
     setStep(index);
   }
 
@@ -300,7 +305,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
           <PrimaryButton
             title="I Understand — Begin"
             onPress={() => setNoticeAccepted(true)}
-            style={styles.nextButton}
+            style={[styles.nextButton, styles.noticeBeginButton]}
           />
         </View>
       </KeyboardAvoidingView>
@@ -314,36 +319,47 @@ export default function TracerStudyScreen({ navigation, onExit }) {
     >
       <AppBackground />
 
-      {/* Progress header — Step N of 6, section dots, beta Skip */}
+      {/* Progress header — Step N of 6, section dots, beta Skip / View all */}
       <View style={styles.progressWrap}>
         <View style={styles.progressTop}>
           <Text style={[styles.stepCount, { color: c.textMuted }]}>
-            Step {step + 1} of {SECTIONS.length} · {SECTIONS[step]}
+            {showAll
+              ? 'All questions · Sections A–E'
+              : `Step ${step + 1} of ${SECTIONS.length} · ${SECTIONS[step]}`}
           </Text>
-          {TRACER_BETA && (
-            <TouchableOpacity onPress={exitFlow} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Text style={[styles.skipButtonText, { color: c.primary }]}>Skip →</Text>
-            </TouchableOpacity>
-          )}
+          <View style={styles.headerActions}>
+            {TRACER_BETA && !showAll && (
+              <TouchableOpacity onPress={() => setShowAll(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={[styles.skipButtonText, { color: c.primary }]}>View all</Text>
+              </TouchableOpacity>
+            )}
+            {TRACER_BETA && (
+              <TouchableOpacity onPress={exitFlow} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={[styles.skipButtonText, { color: c.primary }]}>Skip →</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-        <View style={styles.dots}>
-          {SECTIONS.map((s, i) => {
-            const skipped = i === 2 && !employed && step !== 2;
-            return (
-              <View
-                key={s}
-                style={[
-                  styles.dot,
-                  {
-                    backgroundColor: i <= step && !skipped ? c.primary : c.surface,
-                    borderColor: skipped ? c.border : i <= step ? c.primary : c.border,
-                    borderStyle: skipped ? 'dashed' : 'solid',
-                  },
-                ]}
-              />
-            );
-          })}
-        </View>
+        {!showAll && (
+          <View style={styles.dots}>
+            {SECTIONS.map((s, i) => {
+              const skipped = i === 2 && jobDetailsSkipped && step !== 2;
+              return (
+                <View
+                  key={s}
+                  style={[
+                    styles.dot,
+                    {
+                      backgroundColor: i <= step && !skipped ? c.primary : c.surface,
+                      borderColor: skipped ? c.border : i <= step ? c.primary : c.border,
+                      borderStyle: skipped ? 'dashed' : 'solid',
+                    },
+                  ]}
+                />
+              );
+            })}
+          </View>
+        )}
         {TRACER_BETA && (
           <Text style={[styles.betaNote, { color: c.warning || c.textMuted }]}>
             BETA PREVIEW — answers are not saved
@@ -353,9 +369,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* ── Step 1 · Section A ─────────────────────────── */}
-        {step === 0 && (
+        {(showAll || step === 0) && (
           <View>
-            <Text style={[styles.stepTitle, { color: c.text }]}>Graduate Profile</Text>
+            <Text style={[styles.stepTitle, { color: c.text }]}>
+              {showAll ? 'A · Graduate Profile' : 'Graduate Profile'}
+            </Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
               Please answer honestly. All information will be kept confidential and used for
               school improvement only.
@@ -433,9 +451,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         )}
 
         {/* ── Step 2 · Section B ─────────────────────────── */}
-        {step === 1 && (
-          <View>
-            <Text style={[styles.stepTitle, { color: c.text }]}>Employment Status</Text>
+        {(showAll || step === 1) && (
+          <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
+            <Text style={[styles.stepTitle, { color: c.text }]}>
+              {showAll ? 'B · Employment Status' : 'Employment Status'}
+            </Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
               Check one — this decides which sections follow.
             </Text>
@@ -462,9 +482,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         )}
 
         {/* ── Step 3 · Section C (conditional) ───────────── */}
-        {step === 2 && (
-          <View>
-            <Text style={[styles.stepTitle, { color: c.text }]}>Current Employment Details</Text>
+        {(showAll || step === 2) && (
+          <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
+            <Text style={[styles.stepTitle, { color: c.text }]}>
+              {showAll ? 'C · Current Employment Details' : 'Current Employment Details'}
+            </Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
               About the job you have now.
             </Text>
@@ -554,9 +576,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         )}
 
         {/* ── Step 4 · Section D ─────────────────────────── */}
-        {step === 3 && (
-          <View>
-            <Text style={[styles.stepTitle, { color: c.text }]}>Alignment to Course</Text>
+        {(showAll || step === 3) && (
+          <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
+            <Text style={[styles.stepTitle, { color: c.text }]}>
+              {showAll ? 'D · Alignment to Course' : 'Alignment to Course'}
+            </Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
               The section your Alma Mater cares about most.
             </Text>
@@ -638,9 +662,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         )}
 
         {/* ── Step 5 · Section E ─────────────────────────── */}
-        {step === 4 && (
-          <View>
-            <Text style={[styles.stepTitle, { color: c.text }]}>Feedback</Text>
+        {(showAll || step === 4) && (
+          <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
+            <Text style={[styles.stepTitle, { color: c.text }]}>
+              {showAll ? 'E · Feedback' : 'Feedback'}
+            </Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
               Last questions — then you can review everything.
             </Text>
@@ -688,7 +714,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         )}
 
         {/* ── Step 6 · Review & Submit ───────────────────── */}
-        {step === 5 && (
+        {step === 5 && !showAll && (
           <View>
             <Text style={[styles.stepTitle, { color: c.text }]}>Review your answers</Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
@@ -721,7 +747,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               title="C · Current Employment Details"
               editTo={employed ? 2 : 1}
               onEdit={jumpTo}
-              skipped={!employed}
+              skipped={jobDetailsSkipped}
               rows={[
                 ['Company', companyName],
                 ['Position', position],
@@ -759,14 +785,22 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         )}
       </ScrollView>
 
-      {/* Footer nav — mirrors the profile wizard */}
+      {/* Footer nav — mirrors the profile wizard; in "View all" it offers step/exit */}
       <View style={[styles.footer, { borderTopColor: c.border, backgroundColor: c.background }]}>
-        <TouchableOpacity style={styles.backButton} onPress={back}>
-          <Text style={[styles.backText, { color: c.textMuted }]}>
-            {step === 0 ? 'Cancel' : '← Back'}
-          </Text>
-        </TouchableOpacity>
-        {step < SECTIONS.length - 1 ? (
+        {showAll ? (
+          <TouchableOpacity style={styles.backButton} onPress={() => setShowAll(false)}>
+            <Text style={[styles.backText, { color: c.textMuted }]}>← Step-by-step</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.backButton} onPress={back}>
+            <Text style={[styles.backText, { color: c.textMuted }]}>
+              {step === 0 ? 'Cancel' : '← Back'}
+            </Text>
+          </TouchableOpacity>
+        )}
+        {showAll ? (
+          <PrimaryButton title="Exit preview" onPress={exitFlow} style={styles.nextButton} />
+        ) : step < SECTIONS.length - 1 ? (
           <PrimaryButton title="Next" onPress={next} style={styles.nextButton} />
         ) : (
           <PrimaryButton title={TRACER_BETA ? 'Submit (preview)' : 'Submit'} onPress={submit} style={styles.nextButton} />
@@ -851,6 +885,9 @@ function inputColors(c) {
 const styles = StyleSheet.create({
   progressWrap: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 },
   progressTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  noticeBeginButton: { flex: 1, marginLeft: 12, paddingHorizontal: 24 },
+  allSection: { marginTop: 24, paddingTop: 18, borderTopWidth: StyleSheet.hairlineWidth },
   stepCount: { fontSize: 12, fontWeight: '600' },
   skipButtonText: { fontSize: 13, fontWeight: '700' },
   dots: { flexDirection: 'row', gap: 6, marginTop: 8 },
