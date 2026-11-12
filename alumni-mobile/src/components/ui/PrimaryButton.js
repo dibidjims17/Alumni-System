@@ -11,14 +11,16 @@ export default function PrimaryButton({
   style,
 }) {
   const { theme } = useTheme();
+  const c = theme.colors;
   const isDisabled = disabled || loading;
 
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        { backgroundColor: theme.colors.primary },
-        isDisabled && { backgroundColor: theme.colors.primaryTint, opacity: 0.7 },
+        { backgroundColor: c.primary },
+        // Disabled: muted surface instead of white-on-tint (unreadable).
+        isDisabled && { backgroundColor: c.surfaceAlt },
         style,
       ]}
       onPress={onPress}
@@ -26,9 +28,11 @@ export default function PrimaryButton({
       activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={theme.colors.onPrimary} />
+        <ActivityIndicator color={isDisabled ? c.textMuted : c.onPrimary} />
       ) : (
-        <Text style={[styles.text, { color: theme.colors.onPrimary }]}>{title}</Text>
+        <Text style={[styles.text, { color: isDisabled ? c.textMuted : c.onPrimary }]}>
+          {title}
+        </Text>
       )}
     </TouchableOpacity>
   );
@@ -37,12 +41,12 @@ export default function PrimaryButton({
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 10, // portal button radius
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

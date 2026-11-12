@@ -19,6 +19,7 @@ import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import { alert as appAlert } from '../components/AppAlert';
 import AppBackground from '../components/AppBackground';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ─── BETA SWITCH ────────────────────────────────────────────────────────────
 //   true  = PREVIEW ONLY. A Skip button is shown in the header and NOTHING
@@ -62,6 +63,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   const { theme } = useTheme();
   const { student } = useAuth();
   const c = theme.colors;
+  const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState(0);
   const [noticeAccepted, setNoticeAccepted] = useState(!SHOW_PARTICIPATION_NOTICE);
@@ -265,6 +267,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <AppBackground />
+        {/* Green brand band — keeps the status bar on-theme (portal hero). */}
+        <View style={[styles.noticeTop, { backgroundColor: c.brandDeep, paddingTop: insets.top + 10 }]}>
+          <Text style={styles.noticeTopText}>GRADUATE TRACER STUDY</Text>
+        </View>
+        <View style={[styles.noticeTopAccent, { backgroundColor: c.gold }]} />
         <ScrollView contentContainerStyle={styles.noticeContent}>
           <View style={[styles.noticeCard, { backgroundColor: c.surface, borderColor: c.border }]}>
             <Text style={[styles.noticeBadge, { color: c.warning || c.primary }]}>
@@ -319,10 +326,16 @@ export default function TracerStudyScreen({ navigation, onExit }) {
     >
       <AppBackground />
 
-      {/* Progress header — Step N of 6, section dots, beta Skip / View all */}
-      <View style={styles.progressWrap}>
+      {/* Progress header — Step N of 6, section dots, beta Skip / View all.
+          Green portal header: fills the status-bar inset, gold strip below. */}
+      <View
+        style={[
+          styles.progressWrap,
+          { backgroundColor: c.brandDeep, paddingTop: insets.top + 14 },
+        ]}
+      >
         <View style={styles.progressTop}>
-          <Text style={[styles.stepCount, { color: c.textMuted }]}>
+          <Text style={[styles.stepCount, { color: 'rgba(255,255,255,0.75)' }]}>
             {showAll
               ? 'All questions · Sections A–E'
               : `Step ${step + 1} of ${SECTIONS.length} · ${SECTIONS[step]}`}
@@ -330,12 +343,12 @@ export default function TracerStudyScreen({ navigation, onExit }) {
           <View style={styles.headerActions}>
             {TRACER_BETA && !showAll && (
               <TouchableOpacity onPress={() => setShowAll(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={[styles.skipButtonText, { color: c.primary }]}>View all</Text>
+                <Text style={[styles.skipButtonText, { color: c.gold }]}>View all</Text>
               </TouchableOpacity>
             )}
             {TRACER_BETA && (
               <TouchableOpacity onPress={exitFlow} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={[styles.skipButtonText, { color: c.primary }]}>Skip →</Text>
+                <Text style={[styles.skipButtonText, { color: c.gold }]}>Skip →</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -344,14 +357,19 @@ export default function TracerStudyScreen({ navigation, onExit }) {
           <View style={styles.dots}>
             {SECTIONS.map((s, i) => {
               const skipped = i === 2 && jobDetailsSkipped && step !== 2;
+              const done = i <= step && !skipped;
               return (
                 <View
                   key={s}
                   style={[
                     styles.dot,
                     {
-                      backgroundColor: i <= step && !skipped ? c.primary : c.surface,
-                      borderColor: skipped ? c.border : i <= step ? c.primary : c.border,
+                      backgroundColor: done ? c.gold : 'rgba(255,255,255,0.16)',
+                      borderColor: skipped
+                        ? 'rgba(255,255,255,0.45)'
+                        : done
+                          ? c.gold
+                          : 'rgba(255,255,255,0.35)',
                       borderStyle: skipped ? 'dashed' : 'solid',
                     },
                   ]}
@@ -361,11 +379,12 @@ export default function TracerStudyScreen({ navigation, onExit }) {
           </View>
         )}
         {TRACER_BETA && (
-          <Text style={[styles.betaNote, { color: c.warning || c.textMuted }]}>
+          <Text style={[styles.betaNote, { color: c.goldSoft }]}>
             BETA PREVIEW — answers are not saved
           </Text>
         )}
       </View>
+      <View style={[styles.progressAccent, { backgroundColor: c.gold }]} />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* ── Step 1 · Section A ─────────────────────────── */}
@@ -894,6 +913,10 @@ const styles = StyleSheet.create({
   dot: { flex: 1, height: 6, borderRadius: 3, borderWidth: 1 },
   betaNote: { fontSize: 10, fontWeight: '700', marginTop: 8, letterSpacing: 0.4 },
   content: { padding: 20, paddingBottom: 24 },
+  noticeTop: { paddingHorizontal: 20, paddingBottom: 10 },
+  noticeTopText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
+  noticeTopAccent: { height: 3 },
+  progressAccent: { height: 3 },
   noticeContent: { padding: 20, paddingBottom: 24, flexGrow: 1, justifyContent: 'center' },
   noticeCard: { borderRadius: 16, borderWidth: 1, padding: 20 },
   noticeBadge: { fontSize: 12, fontWeight: '800', letterSpacing: 0.6 },

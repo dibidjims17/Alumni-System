@@ -34,6 +34,10 @@ export default function SectionTabs({ items, active, navigation }) {
               >
                 {item.label}
               </Text>
+              {/* Portal active-tab signature: gold underline. */}
+              {isActive ? (
+                <View style={[styles.underline, { backgroundColor: c.gold }]} />
+              ) : null}
             </TouchableOpacity>
           );
         })}
@@ -64,5 +68,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  underline: {
+    height: 2.5,
+    borderRadius: 2,
+    marginTop: 4,
+    alignSelf: 'stretch',
   },
 });

@@ -8,14 +8,17 @@ import {
 } from 'react-native';
 import { Moon, Sun, Bell, ChevronLeft } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
 
-// Shared themed header bar: optional back chevron, title, dark-mode toggle
-// + notifications. Used by tab roots (no back) and pushed detail screens.
+// Shared themed header bar: CDM portal style — deep-green bar that fills the
+// status-bar inset, white title/icons, signature gold strip beneath.
+// Used by tab roots (no back) and pushed detail screens.
 export default function AppHeader({ title, navigation, showBack }) {
   const { theme, isDark, toggleDarkMode } = useTheme();
   const c = theme.colors;
+  const insets = useSafeAreaInsets();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useFocusEffect(
@@ -33,18 +36,30 @@ export default function AppHeader({ title, navigation, showBack }) {
   }
 
   return (
-    <>
-      <View style={[styles.bar, { borderBottomColor: c.border, backgroundColor: c.surface }]}>
+    <View
+      style={[
+        styles.topFill,
+        {
+          backgroundColor: c.brandDeep,
+          // Extend the green up into the safe-area inset: the parent already
+          // pads by insets.top, so the negative margin + matching padding
+          // cancel out for content while the green covers the status bar.
+          paddingTop: insets.top,
+          marginTop: -insets.top,
+        },
+      ]}
+    >
+      <View style={styles.bar}>
         {showBack && navigation?.canGoBack?.() ? (
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
             accessibilityLabel="Go back"
           >
-            <ChevronLeft size={24} color={c.text} />
+            <ChevronLeft size={24} color="#FFFFFF" />
           </TouchableOpacity>
         ) : null}
-        <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
+        <Text style={[styles.title, { color: '#FFFFFF' }]} numberOfLines={1}>
           {title}
         </Text>
         <View style={styles.actions}>
@@ -53,14 +68,14 @@ export default function AppHeader({ title, navigation, showBack }) {
             onPress={toggleDarkMode}
             accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {isDark ? <Sun size={22} color={c.primary} /> : <Moon size={22} color={c.primary} />}
+            {isDark ? <Sun size={22} color="#FFFFFF" /> : <Moon size={22} color="#FFFFFF" />}
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={goToNotifications}
             accessibilityLabel="Notifications"
           >
-            <Bell size={22} color={c.primary} />
+            <Bell size={22} color={c.gold} />
             {unreadCount > 0 && (
               <View style={[styles.badge, { backgroundColor: c.tintDanger }]}>
                 <Text style={[styles.badgeText, { color: c.danger }]}>
@@ -71,19 +86,20 @@ export default function AppHeader({ title, navigation, showBack }) {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={[styles.accent, { backgroundColor: c.primary }]} />
-    </>
+      {/* Signature gold strip under the header (portal pattern). */}
+      <View style={[styles.accent, { backgroundColor: c.gold }]} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  topFill: {},
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   title: { flex: 1, fontSize: 19, fontWeight: '800', letterSpacing: 0.3 },
   backButton: { padding: 4, marginLeft: -4, marginRight: 2 },
@@ -108,5 +124,5 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
-  accent: { height: 2, opacity: 0.9 },
+  accent: { height: 3 },
 });
