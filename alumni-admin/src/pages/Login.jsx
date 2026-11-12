@@ -146,16 +146,29 @@ export default function Login() {
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: 14,
-          padding: "28px 26px",
+          overflow: "hidden",
+          boxShadow: "var(--shadow-md)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-          <School size={30} color="var(--primary)" />
+        {/* Brand band — fixed green + gold strip, same in light & dark */}
+        <div
+          style={{
+            background: "var(--brand-deep)",
+            borderBottom: "3px solid var(--gold)",
+            padding: "20px 26px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <School size={30} color="var(--gold)" />
           <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: "var(--text)" }}>Reunio</div>
-            <div style={{ fontSize: 12, color: "var(--muted)" }}>Admin Console</div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: "#FFFFFF" }}>Reunio</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.72)" }}>Admin Console</div>
           </div>
         </div>
+
+        <div style={{ padding: "24px 26px 28px" }}>
 
         {mode === "login" && (
           <form onSubmit={handleSubmit}>
@@ -340,6 +353,7 @@ export default function Login() {
             </button>
           </form>
         )}
+        </div>
       </div>
     </div>
   );

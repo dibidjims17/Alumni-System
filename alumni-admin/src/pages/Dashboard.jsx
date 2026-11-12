@@ -56,7 +56,8 @@ function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
         overflow: "hidden",
       }}
     >
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: accent }} />
+      {/* Signature gold left edge (portal stat-tile pattern) */}
+      <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: "var(--gold)" }} />
       <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
         <div
           style={{
@@ -229,6 +230,8 @@ export default function Dashboard() {
           flexShrink: 0,
         }}
       >
+        {/* Signature gold left edge — frames the brand hero in both modes */}
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, background: "var(--gold)" }} />
         <div
           style={{
             position: "absolute",
@@ -254,7 +257,7 @@ export default function Dashboard() {
           }}
         />
         <div style={{ minWidth: 0, position: "relative" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: "var(--hero-muted)" }}>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", color: "var(--gold)" }}>
             {today}
           </div>
           <h2 style={{ margin: "4px 0 0", fontSize: 24, letterSpacing: -0.3, color: "var(--hero-text)" }}>

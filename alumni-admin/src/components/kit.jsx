@@ -272,7 +272,7 @@ export const cardGrid = {
 
 export const card = {
   border: "1px solid var(--border)",
-  borderRadius: "var(--radius-md)",
+  borderRadius: "var(--radius-lg)", // portal card radius (13–14)
   padding: "16px 18px",
   background: "var(--surface)",
   display: "flex",
@@ -396,10 +396,15 @@ export function EmptyState({ icon: Icon, title, hint, action }) {
 }
 
 // Section heading inside cards and page bodies — one rhythm everywhere.
+// Portal kicker: signature gold left bar + caps label (same as mobile).
 export function SectionTitle({ children, action }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--text)" }}>
+      <h3 style={{
+        margin: 0, fontSize: 12.5, fontWeight: 800, textTransform: "uppercase",
+        letterSpacing: 0.9, color: "var(--text)",
+        paddingLeft: 9, borderLeft: "3px solid var(--gold)",
+      }}>
         {children}
       </h3>
       {action}

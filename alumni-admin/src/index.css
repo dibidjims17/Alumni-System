@@ -1,14 +1,14 @@
 /* Alumni Admin base — theme variables are also set at runtime by theme.jsx.
    These defaults prevent a flash before the provider applies the saved mode. */
 :root {
-  --primary: #1B5E20;
-  --primary-strong: #123F16;
+  --primary: #104B38;
+  --primary-strong: #0C3A2B;
   --on-primary: #FFFFFF;
-  --bg: #E8EEE7;
+  --bg: #F4F8F5;
   --surface: #FFFFFF;
-  --surface-alt: #E4ECE1;
-  --border: #C9D6C4;
-  --text: #17211A;
+  --surface-alt: #F0F5E9;
+  --border: #CBDCC5;
+  --text: #173428;
   --muted: #57685B;
   --placeholder: #93A198;
   --danger: #B3261E;
@@ -21,25 +21,30 @@
   --danger-tint: rgba(194,57,43,0.10);
   --violet: #6A1B9A;
   --violet-tint: rgba(106,27,154,0.12);
+  /* CDM portal design system — signature gold + fixed brand surfaces. */
+  --gold: #D4BD40;
+  --gold-strong: #C5A63F;
+  --gold-soft: #FFF2A3;
+  --brand-deep: #203C31;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 14px;
   --radius-pill: 999px;
-  --shadow-sm: 0 1px 2px rgba(16,24,20,0.06), 0 4px 14px rgba(16,24,20,0.06);
-  --shadow-md: 0 1px 2px rgba(27,94,32,0.08), 0 10px 26px rgba(27,94,32,0.10);
+  --shadow-sm: 0 1px 2px rgba(25,61,46,0.05), 0 4px 18px rgba(25,61,46,0.035);
+  --shadow-md: 0 4px 18px rgba(25,61,46,0.07), 0 12px 32px rgba(25,61,46,0.10);
   --font: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
-  --sidebar: #0C2013;
-  --sidebar-item: #14301C;
-  --sidebar-border: #1E4327;
+  --sidebar: #173428;
+  --sidebar-item: rgba(255,255,255,0.08);
+  --sidebar-border: #244B36;
   --sidebar-text: #E4EFE7;
-  --sidebar-muted: #8FA996;
-  --sidebar-active: #66BB6A;
-  --hero-from: #0F3513;
-  --hero-to: #2E7D32;
+  --sidebar-muted: #B4CBBD;
+  --sidebar-active: #D4BD40;
+  --hero-from: #203C31;
+  --hero-to: #104B38;
   --hero-text: #FFFFFF;
   --hero-muted: rgba(255,255,255,0.76);
-  --stat-shadow: 0 1px 2px rgba(27,94,32,0.08), 0 10px 26px rgba(27,94,32,0.10);
-  --tile-bg: #E7F0E4;
+  --stat-shadow: 0 4px 18px rgba(25,61,46,0.07), 0 12px 32px rgba(25,61,46,0.10);
+  --tile-bg: #EDF5E7;
   --hero-ring: rgba(255,255,255,0.09);
   --hero-ring-soft: rgba(255,255,255,0.06);
   --hero-chip: rgba(255,255,255,0.14);
@@ -178,6 +183,18 @@ a { color: var(--primary); }
 .kebab-menu-item:hover,
 .kebab-menu-item:focus-visible {
   background: var(--surface-alt);
+}
+
+/* Sidebar nav hover (Layout.jsx) — the item styles are inline, and inline
+   always outranks the stylesheet, so the state needs !important. The gold
+   wash echoes the active pill without overpowering it. */
+.admin-nav-link:hover,
+.admin-nav-link:focus-visible {
+  background: rgba(212, 189, 64, 0.16) !important;
+}
+.admin-nav-link:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
 }
 
 /* Themed scrollbars so long lists look intentional in both modes */
