@@ -146,6 +146,8 @@ export default function Layout() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [navOpen]);
 
+  // Active nav = gold-soft pill with deep-green text (portal drawer
+  // pattern); hover states live in index.css (.admin-nav-link).
   const navItemStyle = (isActive) => ({
     display: "flex",
     alignItems: "center",
@@ -154,9 +156,9 @@ export default function Layout() {
     borderRadius: 8,
     textDecoration: "none",
     fontSize: 13.5,
-    fontWeight: isActive ? 600 : 500,
-    color: isActive ? "var(--sidebar-active)" : "var(--sidebar-text)",
-    background: isActive ? "var(--sidebar-item)" : "transparent",
+    fontWeight: isActive ? 700 : 500,
+    color: isActive ? "var(--brand-deep)" : "var(--sidebar-text)",
+    background: isActive ? "var(--gold-soft)" : "transparent",
   });
 
   return (
@@ -215,6 +217,7 @@ export default function Layout() {
                     key={path}
                     to={path}
                     end={path === "/dashboard"}
+                    className="admin-nav-link"
                     style={({ isActive }) => navItemStyle(isActive || location.pathname.startsWith(path))}
                   >
                     <Icon size={17} />
@@ -244,13 +247,15 @@ export default function Layout() {
 
       {/* Main area */}
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        {/* CDM portal chrome: deep-green bar + signature gold strip.
+            Brand surface — fixed colors, correct in light AND dark. */}
         <header
           style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             gap: 12,
             padding: tiny ? "10px 12px" : compact ? "12px 16px" : "14px 28px",
-            background: "var(--surface)",
-            borderBottom: "1px solid var(--border)",
+            background: "var(--brand-deep)",
+            borderBottom: "3px solid var(--gold)",
             position: "sticky", top: 0, zIndex: 10,
           }}
         >
@@ -263,9 +268,10 @@ export default function Layout() {
                 aria-expanded={navOpen}
                 style={{
                   width: 36, height: 36, borderRadius: 8, cursor: "pointer", flexShrink: 0,
-                  border: "1px solid var(--border)", background: "var(--surface-alt)",
+                  border: "1px solid rgba(255,255,255,0.24)",
+                  background: "rgba(255,255,255,0.14)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "var(--text)",
+                  color: "#FFFFFF",
                 }}
               >
                 <Menu size={18} />
@@ -273,7 +279,7 @@ export default function Layout() {
             )}
             <h1 style={{
               margin: 0, fontWeight: 800, letterSpacing: -0.3,
-              fontSize: tiny ? 19 : 24,
+              fontSize: tiny ? 19 : 24, color: "#FFFFFF",
               whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             }}>
               {titleFor(location.pathname)}
@@ -295,7 +301,7 @@ export default function Layout() {
               ) : (
                 <div style={{
                   width: 32, height: 32, borderRadius: "50%",
-                  background: "var(--primary)", color: "var(--on-primary)",
+                  background: "var(--gold-soft)", color: "var(--brand-deep)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontWeight: 700, fontSize: 14,
                 }}>
@@ -304,8 +310,12 @@ export default function Layout() {
               )}
               {!tiny && (
                 <div style={{ lineHeight: 1.2 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{session?.fullName}</div>
-                  <div style={{ fontSize: 11, color: "var(--muted)" }}>{session?.role}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#FFFFFF" }}>
+                    {session?.fullName}
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.72)" }}>
+                    {session?.role}
+                  </div>
                 </div>
               )}
             </Link>
@@ -316,9 +326,10 @@ export default function Layout() {
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               style={{
                 width: 36, height: 36, borderRadius: 8, cursor: "pointer",
-                border: "1px solid var(--border)", background: "var(--surface-alt)",
+                border: "1px solid rgba(255,255,255,0.24)",
+                background: "rgba(255,255,255,0.14)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "var(--text)",
+                color: "#FFFFFF",
               }}
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
