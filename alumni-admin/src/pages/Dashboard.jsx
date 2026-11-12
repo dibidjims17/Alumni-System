@@ -74,6 +74,7 @@ function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
           <Icon size={18} color={accent} />
         </div>
         <div
+          title={label}
           style={{
             fontSize: 11.5,
             fontWeight: 750,
@@ -92,6 +93,7 @@ function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
         <div style={{ fontSize: 30, fontWeight: 780, lineHeight: 1, letterSpacing: -0.5 }}>{value}</div>
       )}
       <div
+        title={typeof sub === "string" ? sub : undefined}
         style={{
           fontSize: 12.5,
           color: "var(--muted)",
