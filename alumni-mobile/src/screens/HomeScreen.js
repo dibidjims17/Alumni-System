@@ -18,7 +18,7 @@ import {
   Target,
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import apiClient from '../api/client';
@@ -39,10 +39,28 @@ function greeting() {
   return 'Good evening';
 }
 
+// "Thursday, November 12, 2026" — CDM portal's page date line.
+function todayLine() {
+  try {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } catch (e) {
+    const d = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+}
+
 export default function HomeScreen({ navigation }) {
   const { student, logout } = useAuth();
   const { theme, isDark, toggleDarkMode } = useTheme();
   const c = theme.colors;
+  const insets = useSafeAreaInsets();
 
   function confirmSignOut() {
     appAlert('Sign out', 'Are you sure you want to sign out?', [
@@ -99,84 +117,116 @@ export default function HomeScreen({ navigation }) {
       edges={['top', 'left', 'right']}
     >
       <AppBackground />
-      <View style={styles.header}>
-        {photoUrl ? (
-          <Image source={{ uri: photoUrl }} style={styles.avatarPhoto} />
-        ) : (
-          <View style={[styles.avatar, { backgroundColor: c.primary }]}>
-            <Text style={[styles.avatarText, { color: c.onPrimary }]}>{initial}</Text>
+      <View
+        style={[
+          styles.headerFill,
+          { backgroundColor: c.brandDeep, paddingTop: insets.top, marginTop: -insets.top },
+        ]}
+      >
+        <View style={styles.header}>
+          {photoUrl ? (
+            <Image source={{ uri: photoUrl }} style={styles.avatarPhoto} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: c.goldSoft }]}>
+              <Text style={[styles.avatarText, { color: c.brandDeep }]}>{initial}</Text>
+            </View>
+          )}
+          <View style={styles.headerText}>
+            <Text style={[styles.greet, { color: 'rgba(255,255,255,0.72)' }]}>
+              {greeting()},
+            </Text>
+            <Text style={[styles.title, { color: '#FFFFFF' }]} numberOfLines={1}>
+              {firstName}
+            </Text>
+            <Text style={[styles.detail, { color: 'rgba(255,255,255,0.72)' }]} numberOfLines={1}>
+              {todayLine()}
+            </Text>
           </View>
-        )}
-        <View style={styles.headerText}>
-          <Text style={[styles.greet, { color: c.textMuted }]}>
-            {greeting()},
-          </Text>
-          <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
-            {firstName}
-          </Text>
-          <Text style={[styles.detail, { color: c.textMuted }]} numberOfLines={1}>
-            {student?.studentNumber} • {student?.program} • {student?.schoolYear || '—'}
-          </Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.iconButton, styles.iconButtonGlass]}
+              onPress={toggleDarkMode}
+              accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <Sun size={22} color="#FFFFFF" /> : <Moon size={22} color="#FFFFFF" />}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.iconButton, styles.iconButtonGlass]}
+              onPress={() => navigation.navigate('HomeTab', { screen: 'Notifications' })}
+              accessibilityLabel="Notifications"
+            >
+              <Bell size={22} color={c.gold} />
+              {unreadCount > 0 && (
+                <View style={[styles.badge, { backgroundColor: c.tintDanger }]}>
+                  <Text style={[styles.badgeText, { color: c.danger }]}>
+                    {unreadCount > 99 ? '99+' : String(unreadCount)}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={[styles.iconButton, { backgroundColor: c.surface, borderColor: c.border }]}
-            onPress={toggleDarkMode}
-            accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? <Sun size={22} color={c.primary} /> : <Moon size={22} color={c.primary} />}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.iconButton, { backgroundColor: c.surface, borderColor: c.border }]}
-            onPress={() => navigation.navigate('HomeTab', { screen: 'Notifications' })}
-            accessibilityLabel="Notifications"
-          >
-            <Bell size={22} color={c.primary} />
-            {unreadCount > 0 && (
-              <View style={[styles.badge, { backgroundColor: c.tintDanger }]}>
-                <Text style={[styles.badgeText, { color: c.danger }]}>
-                  {unreadCount > 99 ? '99+' : String(unreadCount)}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Signature gold strip under the header (portal pattern). */}
+        <View style={[styles.headerAccent, { backgroundColor: c.gold }]} />
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.hero, { backgroundColor: c.primaryStrong }]}>
-          <View style={[styles.heroGlow, { backgroundColor: c.primaryTint }]} />
+        <View style={[styles.hero, { backgroundColor: c.brandDeep }]}>
+          <View style={[styles.heroSun, { backgroundColor: c.gold }]} />
           <View style={[styles.heroGlowSmall, { backgroundColor: c.primaryTint }]} />
-          <Text style={[styles.heroKicker, { color: c.onPrimary }]}>REUNIO · ALUMNI CONNECT</Text>
+          <Text style={[styles.heroKicker, { color: c.gold, opacity: 1 }]}>
+            A new day. Another step forward.
+          </Text>
           {unreadLoaded ? (
             <>
-              <Text style={[styles.heroTitle, { color: c.onPrimary }]}>
+              {/* Fixed white — hero bg is brandDeep in BOTH modes
+                  (theme onPrimary is near-black in dark mode). */}
+              <Text style={[styles.heroTitle, { color: '#FFFFFF' }]}>
                 {unreadCount > 0
                   ? `${unreadCount} new notification${unreadCount === 1 ? '' : 's'}`
                   : "You're all caught up"}
               </Text>
-              <Text style={[styles.heroSub, { color: c.onPrimary }]}>
+              <Text style={[styles.heroSub, { color: '#FFFFFF' }]}>
                 {unreadCount > 0
                   ? 'Application updates, jobs, and news waiting for you.'
                   : 'No new alerts. Your career and community updates are organized below.'}
               </Text>
               <TouchableOpacity
-                style={[styles.heroButton, { backgroundColor: c.surface }]}
+                style={[styles.heroButton, { backgroundColor: '#FFFFFF' }]}
                 activeOpacity={0.85}
                 onPress={() => navigation.navigate('Notifications')}
               >
                 {unreadCount > 0 ? (
-                  <Bell size={15} color={c.primary} />
+                  <Bell size={15} color="#104B38" />
                 ) : (
-                  <CheckCheck size={15} color={c.primary} />
+                  <CheckCheck size={15} color="#104B38" />
                 )}
-                <Text style={[styles.heroButtonText, { color: c.primary }]}>
+                <Text style={[styles.heroButtonText, { color: '#104B38' }]}>
                   {unreadCount > 0 ? 'View notifications' : 'Review anyway'}
                 </Text>
               </TouchableOpacity>
+              {/* Glass chips — CDM dashboard hero (student no. · program · school year) */}
+              <View style={styles.heroChips}>
+                <View style={styles.chip}>
+                  <Text style={[styles.chipText, { color: '#FFFFFF' }]} numberOfLines={1}>
+                    {student?.studentNumber || '—'}
+                  </Text>
+                </View>
+                <View style={styles.chip}>
+                  <Text style={[styles.chipText, { color: '#FFFFFF' }]} numberOfLines={1}>
+                    {student?.program || '—'}
+                  </Text>
+                </View>
+                <View style={styles.chip}>
+                  <Clock3 size={12} color={c.gold} />
+                  <Text style={[styles.chipText, { color: c.gold }]} numberOfLines={1}>
+                    {student?.schoolYear || '—'}
+                  </Text>
+                </View>
+              </View>
             </>
           ) : (
             <>
@@ -184,6 +234,38 @@ export default function HomeScreen({ navigation }) {
               <Skeleton width="90%" height={14} style={styles.heroSkeleton} />
             </>
           )}
+        </View>
+
+        {/* Gold-edge stat tiles — CDM dashboard pattern */}
+        <View style={styles.statRow}>
+          <View
+            style={[
+              styles.statTile,
+              { backgroundColor: c.surface, borderColor: c.border, borderLeftColor: c.gold },
+            ]}
+          >
+            <Text style={[styles.statLabel, { color: c.textMuted }]}>UNREAD ALERTS</Text>
+            <Text style={[styles.statValue, { color: c.text }]}>
+              {unreadLoaded ? (unreadCount > 99 ? '99+' : String(unreadCount)) : '—'}
+            </Text>
+            <Text style={[styles.statFoot, { color: c.textMuted }]} numberOfLines={1}>
+              {unreadCount > 0 ? 'Waiting for you' : 'All caught up'}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.statTile,
+              { backgroundColor: c.surface, borderColor: c.border, borderLeftColor: c.gold },
+            ]}
+          >
+            <Text style={[styles.statLabel, { color: c.textMuted }]}>CAREER FILE</Text>
+            <Text style={[styles.statValue, { color: c.text }]} numberOfLines={2}>
+              {isGraduate ? (careerLoaded ? careerStatusLabel : '—') : student?.schoolYear || '—'}
+            </Text>
+            <Text style={[styles.statFoot, { color: c.textMuted }]} numberOfLines={1}>
+              {isGraduate ? student?.schoolYear || '—' : 'Enrolled'}
+            </Text>
+          </View>
         </View>
 
         {isGraduate ? (
@@ -295,12 +377,20 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    // No padding here — the green header must run full-bleed; horizontal
+    // gutters live on the header bar and the scroll content instead.
+  },
+  headerFill: {
+    marginBottom: 18,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 18,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  headerAccent: {
+    height: 3,
   },
   avatar: {
     width: 46,
@@ -350,6 +440,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconButtonGlass: {
+    // Translucent pill on the green header (portal header buttons).
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+  },
   badge: {
     position: 'absolute',
     top: -2,
@@ -367,7 +462,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
   },
   hero: {
     borderRadius: 18,
@@ -375,14 +471,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     overflow: 'hidden',
   },
-  heroGlow: {
+  heroSun: {
+    // Gold sun-corner anchored at the top-right corner (CDM dashboard hero).
+    // Center sits just outside the corner so text never lands on the gold.
     position: 'absolute',
-    right: -60,
-    top: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    opacity: 0.15,
+    right: -70,
+    top: -74,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    opacity: 0.9,
   },
   heroGlowSmall: {
     position: 'absolute',
@@ -428,6 +526,63 @@ const styles = StyleSheet.create({
   heroButtonText: {
     fontSize: 13,
     fontWeight: '700',
+  },
+  heroChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 16,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+    maxWidth: '100%',
+  },
+  chipText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    flexShrink: 1,
+  },
+  statRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  statTile: {
+    flex: 1,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: 3,
+    borderRadius: 14,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    // Soft portal shadow — matches cards across the CDM inner pages.
+    shadowColor: 'rgb(25, 61, 46)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 9,
+    elevation: 2,
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.9,
+    marginBottom: 5,
+  },
+  statValue: {
+    fontSize: 19,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  statFoot: {
+    fontSize: 11,
+    marginTop: 3,
   },
   sectionLabel: {
     fontSize: 11.5,

@@ -562,6 +562,9 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     alignSelf: 'center',
     marginBottom: 6,
+    // Gold ring — portal avatar-chip accent (same in light & dark).
+    borderWidth: 3,
+    borderColor: '#D4BD40',
   },
   removePhotoText: { fontSize: 12, textAlign: 'center', marginBottom: 10 },
   name: { fontSize: 21, fontWeight: '700', textAlign: 'center' },
@@ -575,7 +578,16 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   wizardButtonText: { fontWeight: '700', fontSize: 14 },
-  sectionHeader: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
+  // Portal kicker: gold left bar + caps label.
+  sectionHeader: {
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+    paddingLeft: 9,
+    borderLeftWidth: 3,
+    borderLeftColor: '#D4BD40',
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

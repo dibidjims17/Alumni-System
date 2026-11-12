@@ -2,17 +2,17 @@
 
 const light = {
   mode: 'light',
-  // Comforting dark-green palette
+  // CDM portal palette (design branch) — green + gold school identity.
   colors: {
-    primary: '#1B5E20',
-    primaryStrong: '#14471A',
+    primary: '#104B38',        // portal header green
+    primaryStrong: '#0C3A2B',  // pressed / deep accents
     onPrimary: '#FFFFFF',
-    primaryTint: '#DCE8D8',
-    background: '#E9EFE7',
+    primaryTint: '#EDF5E7',    // portal active tint (tabs, icon tiles)
+    background: '#F4F8F5',     // portal page background
     surface: '#FFFFFF',
-    surfaceAlt: '#E2EBDE',
-    border: '#C7D4C1',
-    text: '#17211A',
+    surfaceAlt: '#F0F5E9',     // portal table-head tint
+    border: '#CBDCC5',         // portal card hairline
+    text: '#173428',           // portal heading green-black
     textMuted: '#57685B',
     placeholder: '#93A198',
     danger: '#B3261E',
@@ -31,7 +31,14 @@ const light = {
     tintInfo: '#DCE9F5',
     tintDanger: '#F6DCD7',
     // Card depth (iOS shadow + Android elevation baseline).
-    shadow: '#1B5E20',
+    shadow: '#193D2E', // portal shadow rgb(25,61,46)
+    // ── CDM portal design system (design branch) ────────────────────
+    // Signature school accent — active underlines, stat-tile edges,
+    // sun-corner shapes, key highlights. Works on light surfaces.
+    gold: '#D4BD40',
+    goldStrong: '#C5A63F', // borders / notice edges (slightly deeper)
+    goldSoft: '#FFF2A3',   // avatar chips & highlight pills — dark text on top only
+    brandDeep: '#203C31',  // hero cards & banners (fixed, both modes)
   },
   radii: {
     sm: 8,
@@ -88,6 +95,11 @@ const dark = {
     tintDanger: '#3E2422',
     // Card depth (iOS shadow + Android elevation baseline).
     shadow: '#000000',
+    // ── CDM portal design system (design branch) ────────────────────
+    gold: '#D4BD40',       // pops against dark surfaces too
+    goldStrong: '#C5A63F',
+    goldSoft: '#FFF2A3',   // chip bg — always pair with dark text
+    brandDeep: '#203C31',  // hero cards (same fixed green in both modes)
   },
   radii: {
     sm: 8,

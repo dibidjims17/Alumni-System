@@ -56,13 +56,28 @@ const TAB_ICONS = {
   YearTab: GraduationCap,
 };
 
-function headerOptions(c) {
+// CDM portal header: deep-green bar + 3px gold strip, white title.
+// statusBarStyle 'light' fits every screen whose top is green; auth screens
+// with a light top (Login/Forgot/Reset) override it per-screen below.
+function headerOptions(c, statusBarStyle = 'light') {
   return {
-    headerStyle: { backgroundColor: c.surface },
-    headerTintColor: c.text,
+    headerStyle: { backgroundColor: c.brandDeep },
+    headerTintColor: '#FFFFFF',
     headerShadowVisible: false,
+    headerTitleStyle: { fontWeight: '700', color: '#FFFFFF' },
     contentStyle: { backgroundColor: c.background },
-    headerTitleStyle: { fontWeight: '600' },
+    statusBarStyle,
+    statusBarBackgroundColor: statusBarStyle === 'light' ? c.brandDeep : c.background,
+    headerBackground: () => (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: c.brandDeep,
+          borderBottomWidth: 3,
+          borderBottomColor: c.gold,
+        }}
+      />
+    ),
   };
 }
 
@@ -195,11 +210,13 @@ function AppTabs() {
         unmountOnBlur: true,
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c.textMuted,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         tabBarItemStyle: { justifyContent: 'center', alignItems: 'center' },
         tabBarStyle: {
           backgroundColor: c.surface,
-          borderTopColor: c.border,
+          // Signature gold edge frames the content, echoing the header strip.
+          borderTopWidth: 2,
+          borderTopColor: c.gold,
         },
         tabBarIcon: ({ color, size }) => {
           const Icon = TAB_ICONS[route.name];
@@ -240,13 +257,23 @@ export default function AppNavigator() {
   if (isLoading) {
     return (
       <View
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.background }}
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.brandDeep }}
       >
-        <ActivityIndicator size="large" color={c.primary} />
+        <StatusBar barStyle="light-content" backgroundColor={c.brandDeep} />
+        <ActivityIndicator size="large" color={c.gold} />
       </View>
     );
   }
 
+  // Screens with a light top (their background shows behind the status bar)
+  // need dark icons in light mode; dark mode's top is dark → light icons.
+  const lightTopOptions = {
+    ...headerOptions(c, theme.mode === 'dark' ? 'light' : 'dark'),
+    headerShown: false,
+    contentStyle: { backgroundColor: c.background },
+    // Their tops show the themed background, not green — match it exactly.
+    statusBarBackgroundColor: c.background,
+  };
   const authOptions = {
     ...headerOptions(c),
     headerShown: false,
@@ -254,19 +281,22 @@ export default function AppNavigator() {
   };
 
   return (
-    <>
-      <StatusBar
-        barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'}
-        backgroundColor={c.background}
-      />
-      <NavigationContainer>
-        {!student ? (
-          <HomeStackNav.Navigator screenOptions={authOptions}>
-            <HomeStackNav.Screen name="Login" component={LoginScreen} />
-            <HomeStackNav.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            <HomeStackNav.Screen name="ResetPassword" component={ResetPasswordScreen} />
-          </HomeStackNav.Navigator>
-        ) : student.mustChangePassword ? (
+    <NavigationContainer>
+      {!student ? (
+        <HomeStackNav.Navigator screenOptions={authOptions}>
+          <HomeStackNav.Screen name="Login" component={LoginScreen} options={lightTopOptions} />
+          <HomeStackNav.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+            options={lightTopOptions}
+          />
+          <HomeStackNav.Screen
+            name="ResetPassword"
+            component={ResetPasswordScreen}
+            options={lightTopOptions}
+          />
+        </HomeStackNav.Navigator>
+      ) : student.mustChangePassword ? (
           <HomeStackNav.Navigator screenOptions={authOptions}>
             <HomeStackNav.Screen name="ChangePassword" component={ChangePasswordScreen} />
           </HomeStackNav.Navigator>
@@ -279,7 +309,6 @@ export default function AppNavigator() {
         ) : (
           <AppTabs />
         )}
-      </NavigationContainer>
-    </>
+    </NavigationContainer>
   );
 }

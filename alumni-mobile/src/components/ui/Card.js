@@ -25,15 +25,15 @@ export default function Card({ children, style, padded = true }) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
+    borderRadius: 14, // portal card radius (13–14)
     borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 12,
-    // Subtle depth so light-mode cards lift off the deepened background.
+    // Soft portal depth: wide, low-alpha green shadow.
     ...Platform.select({
       ios: {
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 4 },
       },
       android: {
         elevation: 2,
