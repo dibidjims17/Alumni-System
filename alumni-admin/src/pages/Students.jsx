@@ -623,7 +623,9 @@ export default function Students() {
                   </div>
                 </div>
 
-                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 11, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                {/* Footer — marginTop:auto pins it to the card's bottom edge
+                    so header/body lengths never push it out of place. */}
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 11, marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <button
                     type="button"
                     style={{ ...btnPrimary }}

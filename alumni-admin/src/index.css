@@ -197,6 +197,16 @@ a { color: var(--primary); }
   outline-offset: 1px;
 }
 
+/* ToneSelect trigger (kit.jsx) — it opts out of the neutral --btn-variant
+   wash because it carries its own status tint; give it its own feedback. */
+.tone-select-trigger:hover {
+  filter: brightness(1.12);
+}
+.tone-select-trigger:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 /* Themed scrollbars so long lists look intentional in both modes */
 * {
   scrollbar-width: thin;

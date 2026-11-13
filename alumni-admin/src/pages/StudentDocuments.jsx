@@ -9,7 +9,7 @@ import {
   deleteDocument,
 } from "../services/documentsApi";
 import {
-  pageWrap, pageHeader, cardGrid, card, cardFlush, cardHead, cardBody, cardFooter, cardTitle, cardMeta, pill, statusTone, iconTile, fieldLabel, Field, textInput, selectStyle, btnPrimary, btnDanger, btn, ModalShell, EmptyState,
+  pageWrap, pageHeader, cardGrid, card, cardFlush, cardHead, cardBody, cardFooter, cardTitle, cardMeta, iconTile, fieldLabel, Field, textInput, btnPrimary, btnDanger, btn, ModalShell, EmptyState, ToneSelect,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
@@ -177,36 +177,28 @@ export default function StudentDocuments() {
                       Updated {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : "never"}
                     </p>
                   </div>
-                  <span style={{ ...pill, ...statusTone(currentStatus === "Released" ? "success" : "warning") }}>
-                    {currentStatus}
-                  </span>
+                  {/* Status control lives in the header (replaces the static
+                      pill) so the Notes field can use the full card width.
+                      ToneSelect is themed — native selects can't style their
+                      popup and break dark mode. */}
+                  <ToneSelect
+                    label={`Status for ${doc.customLabel || doc.documentType}`}
+                    value={currentStatus}
+                    options={STATUS_OPTIONS}
+                    tone={currentStatus === "Released" ? "success" : "warning"}
+                    onChange={(next) => stage(doc.id, "status", next)}
+                  />
                 </div>
 
                 <div style={cardBody}>
-                  <div style={{ display: "grid", gridTemplateColumns: "132px minmax(0, 1fr)", gap: 12, alignItems: "start", width: "100%" }}>
-                    <div style={{ minWidth: 0 }}>
-                      <label style={fieldLabel}>Status</label>
-                      <select
-                        value={currentStatus}
-                        onChange={(e) => stage(doc.id, "status", e.target.value)}
-                        style={{ ...selectStyle, width: "100%", margin: 0 }}
-                      >
-                        {STATUS_OPTIONS.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <label style={fieldLabel}>Notes</label>
-                      <textarea
-                        value={valueOf(doc, "notes") || ""}
-                        onChange={(e) => stage(doc.id, "notes", e.target.value)}
-                        rows={3}
-                        placeholder="Add a note…"
-                        style={{ ...textInput, margin: 0, minHeight: 76, resize: "vertical" }}
-                      />
-                    </div>
-                  </div>
+                  <label style={fieldLabel}>Notes</label>
+                  <textarea
+                    value={valueOf(doc, "notes") || ""}
+                    onChange={(e) => stage(doc.id, "notes", e.target.value)}
+                    rows={3}
+                    placeholder="Add a note…"
+                    style={{ ...textInput, margin: 0, width: "100%", minHeight: 76, resize: "vertical" }}
+                  />
                 </div>
 
                 <div style={cardFooter}>

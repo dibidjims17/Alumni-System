@@ -143,7 +143,15 @@ export default function Dashboard() {
         getCareerStats(),
       ]);
       setStats(studentStats);
-      setActiveJobsCount(jobs.filter((j) => j.isActive).length);
+      // "Open roles": active + published + not past deadline — the same
+      // availability rule as the job board (admin list also contains drafts
+      // and closed jobs). Computed here because Date.now() is banned in render.
+      const now = Date.now();
+      setActiveJobsCount(
+        jobs.filter(
+          (j) => j.isActive && j.isPublished && (!j.deadline || new Date(j.deadline).getTime() >= now)
+        ).length
+      );
       setCareerStats(careers);
       setSyncedAt(new Date());
       setLoadError(null);

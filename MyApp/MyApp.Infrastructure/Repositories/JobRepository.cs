@@ -16,7 +16,12 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<List<Job>> GetActiveAsync(int page, int pageSize, string? search = null, decimal? minSalary = null, decimal? maxSalary = null)
         {
-            var query = _context.Jobs.Where(j => j.IsActive && j.IsPublished && !j.IsDeleted);
+            // Public board hides jobs past their deadline — same "closed"
+            // rule as ApplyAdminStatusFilter. Jobs without a deadline stay
+            // listed indefinitely.
+            var now = DateTime.UtcNow;
+            var query = _context.Jobs.Where(j => j.IsActive && j.IsPublished && !j.IsDeleted &&
+                                                  (j.Deadline == null || j.Deadline >= now));
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -36,7 +41,11 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<int> GetTotalCountAsync(string? search = null, decimal? minSalary = null, decimal? maxSalary = null)
         {
-            var query = _context.Jobs.Where(j => j.IsActive && j.IsPublished);
+            // Must mirror GetActiveAsync's filters exactly or pagination
+            // (total pages vs. items per page) drifts.
+            var now = DateTime.UtcNow;
+            var query = _context.Jobs.Where(j => j.IsActive && j.IsPublished &&
+                                                  (j.Deadline == null || j.Deadline >= now));
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -221,7 +230,11 @@ namespace MyApp.Infrastructure.Repositories
 
         public async Task<int> GetActiveCountAsync()
         {
-            return await _context.Jobs.CountAsync(j => j.IsActive && j.IsPublished);
+            // Same availability rule as the public board: deadline-passed
+            // jobs are no longer "active".
+            var now = DateTime.UtcNow;
+            return await _context.Jobs.CountAsync(j => j.IsActive && j.IsPublished &&
+                                                        (j.Deadline == null || j.Deadline >= now));
         }
     }
 }

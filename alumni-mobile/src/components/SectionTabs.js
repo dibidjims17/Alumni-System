@@ -49,18 +49,18 @@ export default function SectionTabs({ items, active, navigation }) {
 const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 6, // compact — was 12
   },
   group: {
     flexDirection: 'row',
     borderRadius: 999,
     borderWidth: 1,
-    padding: 4,
-    gap: 4,
+    padding: 3, // was 4
+    gap: 3, // was 4
   },
   segment: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 6, // was 8
+    paddingHorizontal: 14, // was 16
     borderRadius: 999,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   underline: {
     height: 2.5,
     borderRadius: 2,
-    marginTop: 4,
+    marginTop: 3, // was 4
     alignSelf: 'stretch',
   },
 });
