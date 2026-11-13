@@ -31,3 +31,6 @@ docs/
 # Student data (PII) — the repo is public, never commit these
 /*.csv
 credentials.local.txt
+
+# Database dumps (contain student PII)
+backups/

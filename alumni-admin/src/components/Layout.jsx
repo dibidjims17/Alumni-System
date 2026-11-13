@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import ErrorBoundary from "./ErrorBoundary";
 import {
   LayoutDashboard, Users, FileText, Newspaper, Briefcase, CalendarDays,
   UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu, User, BadgeCheck,
@@ -338,7 +339,12 @@ export default function Layout() {
         </header>
 
         <main style={{ flex: 1, padding: tiny ? 12 : compact ? 16 : 28, overflow: "auto", minWidth: 0 }}>
-          <Outlet />
+          {/* Page-level crash guard: a broken page shows the fallback while
+              the sidebar/header stay usable. Keying on pathname clears the
+              error as soon as the user navigates elsewhere. */}
+          <ErrorBoundary key={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>
