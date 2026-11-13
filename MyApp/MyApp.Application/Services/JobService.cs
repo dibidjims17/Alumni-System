@@ -220,6 +220,8 @@ namespace MyApp.Application.Services
             var job = await _jobRepository.GetByIdAsync(jobId);
             if (job == null || !job.IsActive || !job.IsPublished)
                 return (false, "Job not found or no longer active.");
+            if (job.Deadline != null && job.Deadline < DateTime.UtcNow)
+                return (false, "The application deadline for this job has passed.");
 
             var existing = await _jobRepository.GetApplicationAsync(jobId, studentId);
             if (existing != null)

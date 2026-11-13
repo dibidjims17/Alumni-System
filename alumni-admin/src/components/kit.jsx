@@ -2,7 +2,7 @@
 // All colors read CSS variables set by the theme provider so both light and
 // dark modes work without touching every call site.
 import { useEffect, useState, useRef } from "react";
-import { Search, X, Eye, EyeOff, Check } from "lucide-react";
+import { Search, X, Eye, EyeOff, Check, ChevronDown } from "lucide-react";
 import { requestDiscardConfirm } from "./discardBus";
 
 // Icon search input with a clear (X) button.
@@ -376,6 +376,135 @@ export const statusTones = {
 
 export function statusTone(tone) {
   return statusTones[tone] || statusTones.muted;
+}
+
+// Themed status dropdown. A native <select> can't be styled — the OS paints
+// its popup, which breaks dark mode (system highlight + our text colors).
+// Same pattern as KebabMenu: button trigger + themed menu, outside-click and
+// Escape close it, real menu/menuitem ARIA roles.
+const TONE_BORDER = {
+  success: "var(--success)",
+  warning: "var(--warning)",
+  danger: "var(--danger)",
+  info: "var(--info)",
+  violet: "var(--violet)",
+  muted: "var(--border)",
+};
+
+export function ToneSelect({ value, options, onChange, tone = "muted", label, align = "right", minWidth = 118 }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function closeOnOutsideClick(event) {
+      if (rootRef.current && !rootRef.current.contains(event.target)) setOpen(false);
+    }
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  const toneStyles = statusTone(tone);
+  // `border` must be the whole shorthand (see btnPrimary note): React drops
+  // a longhand borderColor whenever a conflicting `border` shorthand exists.
+  const triggerToneBorder = `1px solid ${TONE_BORDER[tone] || "var(--border)"}`;
+
+  return (
+    <div ref={rootRef} style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={label}
+        title={label}
+        className="tone-select-trigger"
+        onClick={() => setOpen((current) => !current)}
+        style={{
+          ...btn,
+          ...toneStyles,
+          border: triggerToneBorder,
+          fontWeight: 650,
+          minWidth,
+          justifyContent: "space-between",
+          gap: 8,
+          // Opt out of the neutral hover wash — this trigger is tone-tinted.
+          "--btn-variant": undefined,
+        }}
+      >
+        {value}
+        <ChevronDown
+          size={14}
+          style={{
+            flexShrink: 0,
+            transform: open ? "rotate(180deg)" : "none",
+            transition: "transform 120ms ease",
+          }}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label={label}
+          style={{
+            position: "absolute",
+            [align]: 0,
+            top: "calc(100% + 6px)",
+            zIndex: 40,
+            minWidth: "100%",
+            width: "max-content",
+            padding: 6,
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+            background: "var(--surface)",
+            boxShadow: "var(--shadow-md)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          {options.map((option) => {
+            const selected = option === value;
+            return (
+              <button
+                key={option}
+                type="button"
+                role="menuitemradio"
+                aria-checked={selected}
+                className="kebab-menu-item"
+                style={{
+                  ...btn,
+                  width: "100%",
+                  justifyContent: "flex-start",
+                  border: "none",
+                  boxShadow: "none",
+                  gap: 6,
+                  ...(selected ? toneStyles : null),
+                }}
+                onClick={() => {
+                  setOpen(false);
+                  if (option !== value) onChange(option);
+                }}
+              >
+                <Check
+                  size={14}
+                  style={{ visibility: selected ? "visible" : "hidden", flexShrink: 0 }}
+                />
+                {option}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Friendly empty state for lists, table bodies, and search no-hits.
