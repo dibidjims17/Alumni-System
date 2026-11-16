@@ -17,6 +17,14 @@ namespace MyApp.Application.Interfaces
         // status can never skew the numbers.
         Task<List<CareerRecord>> GetHistoryAsync();
 
+        // Records submitted within [from, to), newest first, with the
+        // student join — backs the month-scoped report and its CSV.
+        Task<List<CareerRecord>> GetSubmittedBetweenAsync(DateTime from, DateTime to);
+
+        // Reviews completed within [from, to) regardless of submission date
+        // — the registrar's processing workload for the month.
+        Task<int> CountReviewedBetweenAsync(DateTime from, DateTime to);
+
         Task CreateAsync(CareerRecord record);
         Task UpdateAsync(CareerRecord record);
     }

@@ -232,14 +232,14 @@ export default function Careers() {
             <StatTile icon={BadgeCheck} label="Further Studies" value={stats.furtherStudies} tone="info" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 14, marginTop: 14 }}>
-            <StatTile icon={Target} label="Course-Related" value={`${stats.alignmentRate}%`} tone="success" />
+            <StatTile icon={Target} label="Program-Related" value={`${stats.alignmentRate}%`} tone="success" />
             <StatTile icon={BadgeCheck} label="Aligned" value={stats.aligned} tone="success" />
             <StatTile icon={Target} label="Related" value={stats.related} tone="info" />
             <StatTile icon={XCircle} label="Not Aligned" value={stats.notAligned} tone="danger" />
             <StatTile icon={Clock3} label="Unassessed" value={stats.unassessed} tone="warning" />
           </div>
           <p style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0 0" }}>
-            Employment and alignment figures count approved records only. Course-related includes Aligned and Related records among assessed paths.
+            Employment and alignment figures count approved records only. Program-related includes Aligned and Related records among assessed paths.
           </p>
         </>
       )}
@@ -314,7 +314,7 @@ export default function Careers() {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 8, flexWrap: "wrap" }}>
                     <span style={{ ...cardMeta, margin: 0 }}>
-                      {r.courseAlignment ? "Course alignment" : "Suggested"}
+                      {r.courseAlignment ? "Program alignment" : "Suggested"}
                     </span>
                     <span style={{ ...pill, ...alignmentToneFor(r.courseAlignment || r.suggestedCourseAlignment) }}>
                       {r.courseAlignment || r.suggestedCourseAlignment}
@@ -389,7 +389,7 @@ export default function Careers() {
 
             <div style={{ border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", marginBottom: 12, background: "var(--surface-alt)" }}>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--muted)", marginBottom: 8 }}>
-                Course-to-career alignment
+                Program-to-career alignment
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 13, color: "var(--muted)" }}>System suggestion</span>

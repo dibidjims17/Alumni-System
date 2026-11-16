@@ -292,7 +292,7 @@ export default function CareerProofScreen({ navigation }) {
                 <View style={[styles.alignmentBox, { backgroundColor: c.tintInfo }]}>
                   <Target size={15} color={c.info} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.alignmentLabel, { color: c.info }]}>Course alignment</Text>
+                    <Text style={[styles.alignmentLabel, { color: c.info }]}>Program alignment</Text>
                     <Text style={[styles.alignmentValue, { color: c.text }]}>
                       {record.courseAlignment || 'Not assessed yet'}
                     </Text>

@@ -22,5 +22,19 @@ namespace MyApp.Application.Interfaces
 
         // The submitted answers (or null) — Profile view / GET me.
         Task<TracerAnswersDto?> GetMyAnswersAsync(int studentId);
+
+        // ---- Admin reporting (SuperAdmin + Staff read-only) ----
+
+        // Paged, filtered response rows for the admin table.
+        Task<(List<TracerResponseRowDto> Items, int Total)> GetAdminResponsesAsync(
+            int page, string? search, string? status, string? employment,
+            string? relatedness, string? program);
+
+        // Participation + outcome stats for the Tracer Study screen.
+        Task<TracerAdminStatsDto> GetAdminStatsAsync();
+
+        // Flat CSV of every response (the school deliverable). Writes an
+        // EXPORT_TRACER activity-log entry like other admin exports.
+        Task<(string Csv, int RowCount)> BuildExportCsvAsync(int adminId);
     }
 }

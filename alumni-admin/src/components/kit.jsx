@@ -4,6 +4,10 @@
 import { useEffect, useState, useRef } from "react";
 import { Search, X, Eye, EyeOff, Check, ChevronDown } from "lucide-react";
 import { requestDiscardConfirm } from "./discardBus";
+// StatCard renders skeleton blocks while loading. Circular with this file
+// (Skeleton imports card/cardGrid) but both sides only touch the imports
+// inside function bodies, so evaluation order is safe.
+import { Skeleton } from "./Skeleton";
 
 // Icon search input with a clear (X) button.
 export function SearchBox({ placeholder, value, onChange, onSubmit, onReset }) {
@@ -763,3 +767,95 @@ export const btnDanger = {
   fontWeight: 600,
   "--btn-variant": "danger",
 };
+
+// ------------------------------------------------------------------
+// Dashboard-style stat tile (extracted from Dashboard.jsx for reuse on
+// the Tracer Study screen). Signature gold left edge = portal pattern.
+// ------------------------------------------------------------------
+export function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
+  return (
+    <div
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: 14,
+        padding: "18px",
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: 10,
+        boxShadow: "var(--stat-shadow)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Signature gold left edge (portal stat-tile pattern) */}
+      <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: "var(--gold)" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            background: tint,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {Icon && <Icon size={18} color={accent} />}
+        </div>
+        <div
+          title={label}
+          style={{
+            fontSize: 11.5,
+            fontWeight: 750,
+            letterSpacing: 0.5,
+            textTransform: "uppercase",
+            color: "var(--muted)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {label}
+        </div>
+      </div>
+      {loading ? <Skeleton width={72} height={30} /> : (
+        <div style={{ fontSize: 30, fontWeight: 780, lineHeight: 1, letterSpacing: -0.5 }}>{value}</div>
+      )}
+      <div
+        title={typeof sub === "string" ? sub : undefined}
+        style={{
+          fontSize: 12.5,
+          color: "var(--muted)",
+          lineHeight: 1.4,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {loading ? <Skeleton width="70%" height={12} /> : sub}
+      </div>
+    </div>
+  );
+}
+
+// Thin progress bar for distribution rows (also extracted from Dashboard).
+export function Bar({ pct, color }) {
+  return (
+    <div style={{ height: 7, borderRadius: 999, background: "var(--surface-alt)", overflow: "hidden", width: "100%" }}>
+      <div
+        style={{
+          width: `${Math.max(0, Math.min(100, pct))}%`,
+          height: "100%",
+          borderRadius: 999,
+          background: color,
+          transition: "width 400ms ease",
+        }}
+      />
+    </div>
+  );
+}

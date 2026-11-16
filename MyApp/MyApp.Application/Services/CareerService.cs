@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using MyApp.Application.Interfaces;
 using MyApp.Domain.Entities;
 using MyApp.Shared.DTOs;
@@ -245,6 +247,133 @@ namespace MyApp.Application.Services
                     : (int)Math.Round((aligned + related) * 100.0 / assessed)
             };
         }
+
+        // ------------------------------------------------------------------
+        // Month-scoped report (registrar deliverable) — submissions received
+        // in the month, review workload for the month, distributions over
+        // those submissions, and the rows behind the numbers.
+        // ------------------------------------------------------------------
+
+        public async Task<CareerReportDto?> GetReportAsync(int year, int month)
+        {
+            if (!TryGetMonthRange(year, month, out var from, out var to))
+                return null;
+
+            var rows = await _careerRepository.GetSubmittedBetweenAsync(from, to);
+            var reviewedThisMonth = await _careerRepository.CountReviewedBetweenAsync(from, to);
+
+            var approved = rows.Where(r => r.Status == "Approved").ToList();
+
+            return new CareerReportDto
+            {
+                Month = $"{year}-{month:00}",
+                MonthLabel = new DateTime(year, month, 1)
+                    .ToString("MMMM yyyy", CultureInfo.InvariantCulture),
+                Submitted = rows.Count,
+                Approved = approved.Count,
+                Pending = rows.Count(r => r.Status == "Pending"),
+                Rejected = rows.Count(r => r.Status == "Rejected"),
+                ReviewedThisMonth = reviewedThisMonth,
+                ByEmployment = CountBy(rows, r => r.EmploymentStatus),
+                ByAlignment = CountBy(
+                    rows,
+                    r => string.IsNullOrWhiteSpace(r.CourseAlignment)
+                        ? "Unassessed"
+                        : r.CourseAlignment!),
+                ByProgram = CountBy(rows, r => r.Student?.Program ?? "—"),
+                Rows = rows.Select(Map).ToList()
+            };
+        }
+
+        // UTF-8 BOM so Excel opens Filipino names correctly; every field
+        // quoted so free-text notes with commas/newlines stay intact —
+        // identical conventions to the tracer export.
+        public async Task<(string Csv, int RowCount)> BuildExportCsvAsync(
+            int year, int month, int adminId)
+        {
+            if (!TryGetMonthRange(year, month, out var from, out var to))
+                return (string.Empty, 0);
+
+            var rows = await _careerRepository.GetSubmittedBetweenAsync(from, to);
+            var monthLabel = new DateTime(year, month, 1)
+                .ToString("MMMM yyyy", CultureInfo.InvariantCulture);
+
+            var sb = new StringBuilder();
+            sb.Append('\uFEFF');
+            sb.AppendLine(string.Join(",", CsvHeaders));
+
+            foreach (var r in rows)
+            {
+                var cells = new[]
+                {
+                    r.Student?.StudentNumber,
+                    r.Student?.FullName,
+                    r.Student?.Program,
+                    r.Student?.Email,
+                    r.EmploymentStatus,
+                    r.JobTitle,
+                    r.Company,
+                    r.Industry,
+                    r.DateStarted?.ToString("yyyy-MM-dd"),
+                    r.CourseAlignment,
+                    r.Status,
+                    r.ReviewNote,
+                    r.ReviewedByAdmin?.Username,
+                    r.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                    r.ReviewedAt?.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+                sb.AppendLine(string.Join(",", cells.Select(Q)));
+            }
+
+            await _activityLogRepository.LogAdminAsync(
+                adminId, "EXPORT_CAREER",
+                $"Exported {rows.Count} career records for {monthLabel}", "system");
+
+            return (sb.ToString(), rows.Count);
+        }
+
+        // Month window in UTC (CreatedAt/ReviewedAt are stored as UTC).
+        // Anything outside a sane range is rejected so a bad query string
+        // can never produce an unbounded scan.
+        private static bool TryGetMonthRange(
+            int year, int month, out DateTime from, out DateTime to)
+        {
+            from = default;
+            to = default;
+
+            if (month < 1 || month > 12) return false;
+            if (year < 2000 || year > 2100) return false;
+
+            from = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+            to = from.AddMonths(1);
+            return true;
+        }
+
+        // Ordered {label,count} rows — fixed option sets keep their order,
+        // zero-count options omitted; unknown values sort after, by count.
+        private static List<TracerCountItemDto> CountBy(
+            List<CareerRecord> rows, Func<CareerRecord, string> keySelector)
+        {
+            return rows
+                .GroupBy(keySelector)
+                .Select(g => new TracerCountItemDto { Label = g.Key, Count = g.Count() })
+                .OrderByDescending(i => i.Count)
+                .ThenBy(i => i.Label, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        // Quote-all CSV cell (doubles embedded quotes).
+        private static string Q(string? value) =>
+            "\"" + (value ?? "").Replace("\"", "\"\"") + "\"";
+
+        // 15 columns — student join, occupation, alignment and review trail.
+        private static readonly string[] CsvHeaders =
+        {
+            "StudentNumber", "FullName", "Program", "Email",
+            "EmploymentStatus", "JobTitle", "Company", "Industry",
+            "DateStarted", "ProgramAlignment", "Status", "ReviewNote",
+            "ReviewedBy", "SubmittedAt", "ReviewedAt"
+        };
 
         public async Task<(bool Success, string Message)> SendReminderAsync(
             int studentId,

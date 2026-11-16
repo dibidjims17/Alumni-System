@@ -4,6 +4,7 @@ import ErrorBoundary from "./ErrorBoundary";
 import {
   LayoutDashboard, Users, FileText, Newspaper, Briefcase, CalendarDays,
   UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu, User, BadgeCheck,
+  ClipboardList, FileSpreadsheet,
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
 import { API_BASE_URL } from "../config";
@@ -25,10 +26,12 @@ const SEGMENT_TITLES = {
   dashboard: "Dashboard",
   students: "Alumni",
   careers: "Careers",
+  "career-report": "Career Report",
   documents: "Documents",
   news: "News",
   jobs: "Jobs",
   events: "Events",
+  tracer: "Tracer Study",
   "activity-log": "Activity Log",
   "manage-admins": "Manage Admins",
   trash: "Trash",
@@ -55,6 +58,7 @@ const GROUPS = [
     items: [
       { path: "/students", label: "Alumni", Icon: Users },
       { path: "/careers", label: "Careers", Icon: BadgeCheck },
+      { path: "/career-report", label: "Career Report", Icon: FileSpreadsheet },
       { path: "/documents", label: "Documents", Icon: FileText },
     ],
   },
@@ -65,6 +69,12 @@ const GROUPS = [
       { path: "/jobs", label: "Jobs", Icon: Briefcase },
       { path: "/events", label: "Events", Icon: CalendarDays },
     ],
+  },
+  {
+    // School requirement reporting — both roles are read-only here
+    // (mirrors the Moderation group's shared access).
+    label: "Reporting",
+    items: [{ path: "/tracer", label: "Tracer Study", Icon: ClipboardList }],
   },
 ];
 

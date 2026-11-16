@@ -15,7 +15,7 @@ import { getStudentStats } from "../services/studentsApi";
 import { getJobs } from "../services/jobsApi";
 import { getCareerStats } from "../services/careersApi";
 import { notifyError } from "../components/toastBus";
-import { pageWrap, card, EmptyState, btnPrimary } from "../components/kit";
+import { pageWrap, card, EmptyState, btnPrimary, StatCard, Bar } from "../components/kit";
 import { Skeleton } from "../components/Skeleton";
 
 // Fill-viewport dashboard: hero + stat row + bottom row share the available
@@ -37,93 +37,6 @@ const bottomGrid = {
   minHeight: 0,
   alignItems: "stretch",
 };
-
-function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
-  return (
-    <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 14,
-        padding: "18px",
-        minWidth: 0,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        gap: 10,
-        boxShadow: "var(--stat-shadow)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Signature gold left edge (portal stat-tile pattern) */}
-      <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 4, background: "var(--gold)" }} />
-      <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 10,
-            background: tint,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <Icon size={18} color={accent} />
-        </div>
-        <div
-          title={label}
-          style={{
-            fontSize: 11.5,
-            fontWeight: 750,
-            letterSpacing: 0.5,
-            textTransform: "uppercase",
-            color: "var(--muted)",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {label}
-        </div>
-      </div>
-      {loading ? <Skeleton width={72} height={30} /> : (
-        <div style={{ fontSize: 30, fontWeight: 780, lineHeight: 1, letterSpacing: -0.5 }}>{value}</div>
-      )}
-      <div
-        title={typeof sub === "string" ? sub : undefined}
-        style={{
-          fontSize: 12.5,
-          color: "var(--muted)",
-          lineHeight: 1.4,
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {loading ? <Skeleton width="70%" height={12} /> : sub}
-      </div>
-    </div>
-  );
-}
-
-function Bar({ pct, color }) {
-  return (
-    <div style={{ height: 7, borderRadius: 999, background: "var(--surface-alt)", overflow: "hidden", width: "100%" }}>
-      <div
-        style={{
-          width: `${Math.max(0, Math.min(100, pct))}%`,
-          height: "100%",
-          borderRadius: 999,
-          background: color,
-          transition: "width 400ms ease",
-        }}
-      />
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -342,7 +255,7 @@ export default function Dashboard() {
         <StatCard label="Graduates" value={derived.grads} sub={`${derived.gradPct}% of total`} Icon={GraduationCap} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
         <StatCard label="Verified Careers" value={derived.verified} sub={`${derived.verifiedPct}% of graduates`} Icon={BadgeCheck} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
         <StatCard label="Awaiting Review" value={derived.pending} sub="Career submissions" Icon={Clock3} accent="var(--warning)" tint="var(--warning-tint)" loading={loading} />
-        <StatCard label="Course-Related" value={`${derived.alignmentRate}%`} sub={`${derived.courseRelated} aligned or related`} Icon={Target} accent="var(--info)" tint="var(--info-tint)" loading={loading} />
+        <StatCard label="Program-Related" value={`${derived.alignmentRate}%`} sub={`${derived.courseRelated} aligned or related`} Icon={Target} accent="var(--info)" tint="var(--info-tint)" loading={loading} />
         <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="var(--warning)" tint="var(--warning-tint)" loading={loading} />
       </div>
 
@@ -394,7 +307,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
-                <span style={{ fontWeight: 650 }}>Course-related</span>
+                <span style={{ fontWeight: 650 }}>Program-related</span>
                 {loading ? <Skeleton width={90} height={12} /> : (
                   <span style={{ color: "var(--muted)" }}>{`${derived.courseRelated} (${derived.alignmentRate}%)`}</span>
                 )}
