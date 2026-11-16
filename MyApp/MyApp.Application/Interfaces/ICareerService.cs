@@ -22,5 +22,13 @@ namespace MyApp.Application.Interfaces
             int studentId, int adminId, string ipAddress);
 
         Task<CareerStatsDto> GetStatsAsync();
+
+        // Month-scoped report (registrar deliverable): submissions received
+        // in the month, review workload, distributions and the rows.
+        Task<CareerReportDto?> GetReportAsync(int year, int month);
+
+        // UTF-8 BOM CSV of the same rows; logs EXPORT_CAREER.
+        Task<(string Csv, int RowCount)> BuildExportCsvAsync(
+            int year, int month, int adminId);
     }
 }

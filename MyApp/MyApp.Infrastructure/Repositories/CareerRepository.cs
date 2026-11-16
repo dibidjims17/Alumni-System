@@ -79,6 +79,23 @@ namespace MyApp.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<CareerRecord>> GetSubmittedBetweenAsync(DateTime from, DateTime to)
+        {
+            return await _context.CareerRecords
+                .Include(r => r.Student)
+                .Include(r => r.ReviewedByAdmin)
+                .Where(r => r.CreatedAt >= from && r.CreatedAt < to)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountReviewedBetweenAsync(DateTime from, DateTime to)
+        {
+            return await _context.CareerRecords
+                .CountAsync(r => r.ReviewedAt != null &&
+                    r.ReviewedAt >= from && r.ReviewedAt < to);
+        }
+
         public async Task CreateAsync(CareerRecord record)
         {
             await _context.CareerRecords.AddAsync(record);

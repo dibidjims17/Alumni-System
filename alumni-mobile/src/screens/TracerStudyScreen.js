@@ -39,7 +39,7 @@ const SHOW_PARTICIPATION_NOTICE = TRACER_BETA;
 
 // Option sets — kept identical to TracerService's validation lists so the
 // client and server can never disagree on what a valid answer is.
-const SECTIONS = ['Profile', 'Employment', 'Job Details', 'Course Alignment', 'Feedback', 'Review'];
+const SECTIONS = ['Profile', 'Employment', 'Job Details', 'Program Alignment', 'Feedback', 'Review'];
 
 const EMPLOYMENT_OPTIONS = [
   'Employed (Full-time)',
@@ -90,7 +90,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   const [monthsToJob, setMonthsToJob] = useState('');
   const [jobSource, setJobSource] = useState('');
 
-  // Section D — Alignment to Course
+  // Section D — Alignment to Program
   const [courseRelatedness, setCourseRelatedness] = useState('');
   const [relatednessComment, setRelatednessComment] = useState('');
   const [skillsUsed, setSkillsUsed] = useState([]);
@@ -135,9 +135,9 @@ export default function TracerStudyScreen({ navigation, onExit }) {
     }
     if (index === 3 && employed) {
       if (!RELATEDNESS.includes(courseRelatedness))
-        return 'Step 4: please rate how related your job is to your course.';
+        return 'Step 4: please rate how related your job is to your program.';
       if (!relatednessComment.trim())
-        return 'Step 4: please explain how your job uses what you learned in your course.';
+        return 'Step 4: please explain how your job uses what you learned in your program.';
       if (skillsUsed.length === 0)
         return 'Step 4: please pick the skills you use most at work.';
       if (skillsUsed.includes('Others') && !skillsUsedOther.trim())
@@ -149,7 +149,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
       if (satisfied === 'No' && !satisfiedReason.trim())
         return 'Step 5: please tell us why you are not satisfied.';
       if (!YES_NO.includes(wouldRecommend))
-        return 'Step 5: please say whether you would recommend your course.';
+        return 'Step 5: please say whether you would recommend your program.';
     }
     return null;
   }
@@ -418,7 +418,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
                 />
               ))}
             </View>
-            <Field label="Course Graduated" c={c} hint="from your account">
+            <Field label="Program Graduated" c={c} hint="from your account">
               <TextInput
                 style={[styles.input, inputColors(c)]}
                 value={course}
@@ -494,7 +494,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               {employmentStatus
                 ? employed
                   ? 'Employed → next you will describe your current job.'
-                  : 'Not employed → you will skip straight to Course Alignment.'
+                  : 'Not employed → you will skip straight to Program Alignment.'
                 : ''}
             </Text>
           </View>
@@ -598,13 +598,13 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         {(showAll || step === 3) && (
           <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
             <Text style={[styles.stepTitle, { color: c.text }]}>
-              {showAll ? 'D · Alignment to Course' : 'Alignment to Course'}
+              {showAll ? 'D · Alignment to Program' : 'Alignment to Program'}
             </Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
               The section your Alma Mater cares about most.
             </Text>
             <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              Is your current job RELATED to your course?
+              Is your current job RELATED to your program?
               {employed ? ' *' : ' (optional — no current job)'}
             </Text>
             <View style={styles.radioRowWrap}>
@@ -715,7 +715,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               />
             </Field>
             <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              Would you recommend your course to others? *
+              Would you recommend your program to others? *
             </Text>
             <View style={styles.radioRowWrap}>
               {YES_NO.map((opt) => (
@@ -747,7 +747,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               rows={[
                 ['Full Name', fullName],
                 ['Sex', sex],
-                ['Course Graduated', course],
+                ['Program Graduated', course],
                 ['Year Graduated', yearGraduated],
                 ['Contact No.', contactNo],
                 ['Email / FB', emailOrFb],
@@ -778,11 +778,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               c={c}
             />
             <Summary
-              title="D · Alignment to Course"
+              title="D · Alignment to Program"
               editTo={3}
               onEdit={jumpTo}
               rows={[
-                ['Job related to course', courseRelatedness || (employed ? '' : '— (not employed)')],
+                ['Job related to program', courseRelatedness || (employed ? '' : '— (not employed)')],
                 ['Explanation', relatednessComment],
                 ['Skills used most', skillsUsed.join(', ') + (skillsUsedOther ? ` — ${skillsUsedOther}` : '')],
                 ['Skills you wanted more of', skillsWanted],
@@ -796,7 +796,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               rows={[
                 ['Satisfied with training', satisfied],
                 ['Why', satisfiedReason],
-                ['Would recommend course', wouldRecommend],
+                ['Would recommend program', wouldRecommend],
               ]}
               c={c}
             />

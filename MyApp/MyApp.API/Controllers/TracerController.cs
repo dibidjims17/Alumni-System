@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.Application.Interfaces;
@@ -88,6 +89,61 @@ namespace MyApp.API.Controllers
         {
             var answers = await _tracerService.GetMyAnswersAsync(GetStudentId());
             return Ok(answers);
+        }
+
+        // ------------------------------------------------------------------
+        // Admin reporting (P3) — SuperAdmin + Staff read-only.
+        // The gate keeps students out; admins never touch student sessions,
+        // so these use the admin claim instead of GetStudentId().
+        // ------------------------------------------------------------------
+
+        private int GetAdminId() =>
+            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        // Paged, filtered responses for the admin table.
+        // GET /api/Tracer/responses?page=1&search=&status=&employment=&relatedness=&program=
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpGet("responses")]
+        public async Task<IActionResult> GetResponses(
+            [FromQuery] int page = 1,
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? employment = null,
+            [FromQuery] string? relatedness = null,
+            [FromQuery] string? program = null)
+        {
+            var (items, total) = await _tracerService.GetAdminResponsesAsync(
+                page, search, status, employment, relatedness, program);
+
+            return Ok(new
+            {
+                items,
+                total,
+                page = Math.Max(1, page),
+                pageSize = 10
+            });
+        }
+
+        // Stats cards + distributions for the Tracer Study screen.
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetStats()
+        {
+            var stats = await _tracerService.GetAdminStatsAsync();
+            return Ok(stats);
+        }
+
+        // The school deliverable: flat CSV of every response (UTF-8 BOM so
+        // Excel renders names correctly). Logs EXPORT_TRACER like other
+        // admin exports.
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpGet("export")]
+        public async Task<IActionResult> Export()
+        {
+            var (csv, _) = await _tracerService.BuildExportCsvAsync(GetAdminId());
+            var bytes = Encoding.UTF8.GetBytes(csv);
+            return File(bytes, "text/csv; charset=utf-8",
+                $"tracer_responses_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
     }
 }

@@ -16,6 +16,8 @@ import ActivityLog from "./pages/ActivityLog";
 import ManageAdmins from "./pages/ManageAdmins";
 import Trash from "./pages/Trash";
 import Profile from "./pages/Profile";
+import Tracer from "./pages/Tracer";
+import CareerReport from "./pages/CareerReport";
 
 function ProtectedRoute({ children }) {
   const session = getSession();
@@ -62,6 +64,9 @@ export default function App() {
           {/* Sensitive alumni data — registrar territory only. */}
           <Route path="/students" element={<SuperAdminRoute><Students /></SuperAdminRoute>} />
           <Route path="/careers" element={<SuperAdminRoute><Careers /></SuperAdminRoute>} />
+          {/* Month-scoped career report — registrar deliverable, same
+              SuperAdmin boundary as the queue it draws rows from. */}
+          <Route path="/career-report" element={<SuperAdminRoute><CareerReport /></SuperAdminRoute>} />
           <Route path="/documents" element={<SuperAdminRoute><Documents /></SuperAdminRoute>} />
           <Route path="/documents/:id" element={<SuperAdminRoute><StudentDocuments /></SuperAdminRoute>} />
           <Route path="/news" element={<News />} />
@@ -69,6 +74,8 @@ export default function App() {
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id/applicants" element={<JobApplicants />} />
           <Route path="/events" element={<Events />} />
+          {/* Tracer reports — SuperAdmin + Staff, enforced by the API roles. */}
+          <Route path="/tracer" element={<Tracer />} />
           <Route path="/manage-admins" element={<SuperAdminRoute><ManageAdmins /></SuperAdminRoute>} />
           <Route path="/trash" element={<Trash />} />
           <Route path="/activity-log" element={<ActivityLog />} />

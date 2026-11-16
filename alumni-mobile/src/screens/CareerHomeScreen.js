@@ -163,7 +163,7 @@ export default function CareerHomeScreen({ navigation }) {
               <View style={[styles.alignmentRow, { backgroundColor: c.tintInfo }]}>
                 <Target size={16} color={c.info} />
                 <View style={styles.alignmentCopy}>
-                  <Text style={[styles.alignmentLabel, { color: c.info }]}>Course alignment</Text>
+                  <Text style={[styles.alignmentLabel, { color: c.info }]}>Program alignment</Text>
                   <Text style={[styles.alignmentValue, { color: c.text }]}>
                     {record.courseAlignment || 'Not assessed yet'}
                   </Text>

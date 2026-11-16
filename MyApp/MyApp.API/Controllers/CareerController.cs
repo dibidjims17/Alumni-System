@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.Application.Interfaces;
@@ -171,6 +172,40 @@ namespace MyApp.API.Controllers
 
             if (!success) return BadRequest(new { message });
             return Ok(new { message });
+        }
+
+        // Month-scoped report: submissions received in the month, review
+        // workload, distributions and the rows (SuperAdmin — the rows carry
+        // alumni PII, same boundary as the queue).
+        // GET /api/Career/report?year=2026&month=11
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpGet("report")]
+        public async Task<IActionResult> GetReport(
+            [FromQuery] int year, [FromQuery] int month)
+        {
+            var report = await _careerService.GetReportAsync(year, month);
+            if (report == null)
+                return BadRequest(new { message = "Invalid year or month." });
+
+            return Ok(report);
+        }
+
+        // The school deliverable: CSV of the same rows (UTF-8 BOM so Excel
+        // renders names correctly). Logs EXPORT_CAREER like other exports.
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpGet("report/export")]
+        public async Task<IActionResult> ExportReport(
+            [FromQuery] int year, [FromQuery] int month)
+        {
+            var (csv, rowCount) = await _careerService.BuildExportCsvAsync(
+                year, month, GetAdminId());
+
+            if (rowCount == 0 && string.IsNullOrEmpty(csv))
+                return BadRequest(new { message = "Invalid year or month." });
+
+            var bytes = Encoding.UTF8.GetBytes(csv);
+            return File(bytes, "text/csv; charset=utf-8",
+                $"career_report_{year}-{month:00}.csv");
         }
 
         // ------------------------------------------------------------------

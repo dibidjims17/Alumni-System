@@ -1,3 +1,4 @@
+using System.Text;
 using MyApp.Application.Interfaces;
 using MyApp.Domain.Entities;
 using MyApp.Shared.DTOs;
@@ -151,6 +152,203 @@ namespace MyApp.Application.Services
         }
 
         // ------------------------------------------------------------------
+        // Admin reporting (P3) — SuperAdmin + Staff read-only
+        // ------------------------------------------------------------------
+
+        // Page size for the admin responses table (ActivityLog convention).
+        private const int AdminPageSize = 10;
+
+        public async Task<(List<TracerResponseRowDto> Items, int Total)> GetAdminResponsesAsync(
+            int page, string? search, string? status, string? employment,
+            string? relatedness, string? program)
+        {
+            if (page < 1) page = 1;
+
+            var (rows, total) = await _tracerRepository.GetAdminResponsesAsync(
+                page, AdminPageSize, search, status, employment, relatedness, program);
+
+            var items = rows.Select(r => new TracerResponseRowDto
+            {
+                Id = r.Id,
+                StudentId = r.StudentId,
+                FullName = r.Student.FullName,
+                StudentNumber = r.Student.StudentNumber,
+                Program = r.Student.Program,
+                Email = r.Student.Email,
+                Status = r.Status,
+                CurrentStep = r.CurrentStep,
+                EmploymentStatus = r.EmploymentStatus,
+                CourseRelatedness = r.CourseRelatedness,
+                CompanyName = r.CompanyName,
+                Position = r.Position,
+                SalaryBand = r.SalaryBand,
+                Satisfied = r.Satisfied,
+                SubmittedAt = r.SubmittedAt,
+                UpdatedAt = r.UpdatedAt
+            }).ToList();
+
+            return (items, total);
+        }
+
+        public async Task<TracerAdminStatsDto> GetAdminStatsAsync()
+        {
+            var all = await _tracerRepository.GetAllWithStudentsAsync();
+            var graduates = await _tracerRepository.GetGraduateCountAsync();
+
+            // Distributions cover SUBMITTED rows only — drafts are partial
+            // and would distort every chart. Drafts feed the funnel instead.
+            var submitted = all.Where(r => r.Status == "Submitted").ToList();
+            var drafts = all.Where(r => r.Status == "Draft").ToList();
+
+            var stats = new TracerAdminStatsDto
+            {
+                TotalGraduates = graduates,
+                Submitted = submitted.Count,
+                Drafts = drafts.Count,
+                ResponseRate = graduates > 0
+                    ? Math.Round(100.0 * submitted.Count / graduates, 1)
+                    : 0
+            };
+
+            // Drop-off funnel: drafts parked at each resume step.
+            for (var step = 1; step <= 5; step++)
+                stats.DraftsByStep.Add(new TracerCountItemDto
+                {
+                    Label = $"Step {step}",
+                    Count = drafts.Count(r => r.CurrentStep == step)
+                });
+
+            stats.EmployedCount = submitted.Count(
+                r => EmployedStatuses.Contains(r.EmploymentStatus ?? ""));
+
+            var answeredRelatedness = submitted.Where(r => r.CourseRelatedness != null).ToList();
+            stats.RelatednessAnswers = answeredRelatedness.Count;
+            stats.CourseRelatedCount = answeredRelatedness.Count(
+                r => r.CourseRelatedness == "Highly Related" || r.CourseRelatedness == "Related");
+
+            stats.SatisfiedYes = submitted.Count(r => r.Satisfied == "Yes");
+            stats.RecommendYes = submitted.Count(r => r.WouldRecommend == "Yes");
+
+            // Distributions in questionnaire order (paper-form order, not
+            // alphabetical) with zero-count options omitted. Ordered lists —
+            // dictionaries would get their keys camelCased by JSON defaults.
+            foreach (var option in EmploymentStatuses)
+            {
+                var count = submitted.Count(r => r.EmploymentStatus == option);
+                if (count > 0)
+                    stats.Employment.Add(new TracerCountItemDto { Label = option, Count = count });
+            }
+            foreach (var option in RelatednessOptions)
+            {
+                var count = submitted.Count(r => r.CourseRelatedness == option);
+                if (count > 0)
+                    stats.Relatedness.Add(new TracerCountItemDto { Label = option, Count = count });
+            }
+            foreach (var band in SalaryBands)
+            {
+                var count = submitted.Count(r => r.SalaryBand == band);
+                if (count > 0)
+                    stats.Salary.Add(new TracerCountItemDto { Label = band, Count = count });
+            }
+
+            // Skills frequency, highest first — "skills the school should
+            // teach more of". Ties break on questionnaire order for stable
+            // rendering.
+            var skillCounts = new Dictionary<string, int>();
+            foreach (var row in submitted)
+            {
+                foreach (var skill in ParseSkills(row.SkillsUsed))
+                    skillCounts[skill] = skillCounts.TryGetValue(skill, out var n) ? n + 1 : 1;
+            }
+            foreach (var pair in skillCounts
+                .OrderByDescending(p => p.Value)
+                .ThenBy(p => SkillOptions.IndexOf(p.Key)))
+            {
+                stats.TopSkills.Add(new TracerCountItemDto { Label = pair.Key, Count = pair.Value });
+            }
+
+            stats.Programs = await _tracerRepository.GetGraduateProgramsAsync();
+            return stats;
+        }
+
+        public async Task<(string Csv, int RowCount)> BuildExportCsvAsync(int adminId)
+        {
+            var rows = await _tracerRepository.GetAllWithStudentsAsync();
+
+            // Submitted first (newest first), then drafts — the school reads
+            // completed responses top-down.
+            rows = rows
+                .OrderByDescending(r => r.SubmittedAt != null)
+                .ThenByDescending(r => r.SubmittedAt ?? DateTime.MinValue)
+                .ThenByDescending(r => r.UpdatedAt)
+                .ToList();
+
+            // UTF-8 BOM so Excel opens Filipino names correctly; every field
+            // quoted so free-text answers with commas/newlines stay intact.
+            var sb = new StringBuilder();
+            sb.Append('\uFEFF');
+            sb.AppendLine(string.Join(",", CsvHeaders));
+
+            foreach (var r in rows)
+            {
+                var cells = new[]
+                {
+                    r.Student.StudentNumber,
+                    r.Student.FullName,
+                    r.Student.Program,
+                    r.Student.Email,
+                    r.Status,
+                    r.Sex,
+                    r.ContactNo,
+                    r.EmailOrFb,
+                    r.PresentAddress,
+                    r.EmploymentStatus,
+                    r.CompanyName,
+                    r.Position,
+                    r.CompanyType,
+                    r.CompanyTypeOther,
+                    r.SalaryBand,
+                    r.MonthsToJob,
+                    r.JobSource,
+                    r.CourseRelatedness,
+                    r.CourseRelatednessComment,
+                    r.SkillsUsed,
+                    r.SkillsUsedOther,
+                    r.SkillsWanted,
+                    r.Satisfied,
+                    r.SatisfiedReason,
+                    r.WouldRecommend,
+                    r.CurrentStep.ToString(),
+                    r.SubmittedAt?.ToString("yyyy-MM-dd HH:mm:ss"),
+                    r.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+                sb.AppendLine(string.Join(",", cells.Select(Q)));
+            }
+
+            await _activityLogRepository.LogAdminAsync(
+                adminId, "EXPORT_TRACER",
+                $"Exported {rows.Count} tracer responses", "system");
+
+            return (sb.ToString(), rows.Count);
+        }
+
+        // Quote-all CSV cell (doubles embedded quotes).
+        private static string Q(string? value) =>
+            "\"" + (value ?? "").Replace("\"", "\"\"") + "\"";
+
+        // 28 columns — every questionnaire field plus the student join.
+        private static readonly string[] CsvHeaders =
+        {
+            "StudentNumber", "FullName", "Program", "Email", "Status",
+            "Sex", "ContactNo", "EmailOrFb", "PresentAddress",
+            "EmploymentStatus", "CompanyName", "Position", "CompanyType",
+            "CompanyTypeOther", "SalaryBand", "MonthsToJob", "JobSource",
+            "CourseRelatedness", "CourseRelatednessComment", "SkillsUsed",
+            "SkillsUsedOther", "SkillsWanted", "Satisfied", "SatisfiedReason",
+            "WouldRecommend", "CurrentStep", "SubmittedAt", "UpdatedAt"
+        };
+
+        // ------------------------------------------------------------------
         // Validation (Section A–E rules from the paper questionnaire)
         // ------------------------------------------------------------------
 
@@ -195,9 +393,9 @@ namespace MyApp.Application.Services
             if (employed)
             {
                 if (!RelatednessOptions.Contains(r.CourseRelatedness ?? ""))
-                    return "Step 4: please rate how related your job is to your course.";
+                    return "Step 4: please rate how related your job is to your program.";
                 if (string.IsNullOrWhiteSpace(r.CourseRelatednessComment))
-                    return "Step 4: please explain how your job uses what you learned in your course.";
+                    return "Step 4: please explain how your job uses what you learned in your program.";
                 var skills = ParseSkills(r.SkillsUsed);
                 if (skills.Count == 0)
                     return "Step 4: please pick the skills you use most at work.";
@@ -208,7 +406,7 @@ namespace MyApp.Application.Services
             }
             else if (r.CourseRelatedness != null && !RelatednessOptions.Contains(r.CourseRelatedness))
             {
-                return "Step 4: please choose a valid course-relatedness answer.";
+                return "Step 4: please choose a valid program-relatedness answer.";
             }
 
             // E. Feedback.
@@ -217,7 +415,7 @@ namespace MyApp.Application.Services
             if (r.Satisfied == "No" && string.IsNullOrWhiteSpace(r.SatisfiedReason))
                 return "Step 5: please tell us why you are not satisfied.";
             if (!YesNo.Contains(r.WouldRecommend ?? ""))
-                return "Step 5: please say whether you would recommend your course.";
+                return "Step 5: please say whether you would recommend your program.";
 
             return null;
         }
