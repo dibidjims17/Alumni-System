@@ -37,6 +37,16 @@ const EMPLOYMENT_STATUSES = ['Employed', 'Self-Employed', 'Unemployed', 'Further
 // These two imply the alumnus holds a job, so job details are required.
 const OCCUPIED_STATUSES = ['Employed', 'Self-Employed'];
 
+function mapTracerEmploymentStatus(status) {
+  if (status === 'Self-Employed / Freelance') return 'Self-Employed';
+  if (status === 'Employed (Full-time)' || status === 'Employed (Part-time / Contractual)')
+    return 'Employed';
+  if (status === 'Currently Studying') return 'Further Studies';
+  if (status === 'Unemployed (Looking for work)' || status === 'Unemployed (Not looking)')
+    return 'Unemployed';
+  return null;
+}
+
 export default function CareerProofScreen({ navigation }) {
   const { student } = useAuth();
   const { theme } = useTheme();
@@ -63,9 +73,10 @@ export default function CareerProofScreen({ navigation }) {
   const isApproved = record?.status === 'Approved';
 
   async function fetchRecord() {
+    let data = null;
     try {
       const res = await apiClient.get('/Career/my-record');
-      const data = res.data || null;
+      data = res.data || null;
       setRecord(data);
       if (data) {
         setEmploymentStatus(data.employmentStatus || 'Employed');
@@ -76,6 +87,23 @@ export default function CareerProofScreen({ navigation }) {
       }
     } catch (err) {
       setRecord(null);
+    }
+
+    if (data) return;
+
+    // With no career record, use submitted tracer answers as local defaults.
+    // No upload occurs until the graduate taps Submit for Review.
+    try {
+      const res = await apiClient.get('/Tracer/me');
+      const tracer = res.data;
+      if (!tracer?.completed) return;
+
+      const mappedStatus = mapTracerEmploymentStatus(tracer.employmentStatus);
+      if (mappedStatus) setEmploymentStatus(mappedStatus);
+      setJobTitle((current) => current || tracer.position || '');
+      setCompany((current) => current || tracer.companyName || '');
+    } catch {
+      // Keep the empty career form usable when no tracer response exists.
     }
   }
 

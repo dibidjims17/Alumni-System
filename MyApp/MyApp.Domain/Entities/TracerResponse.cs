@@ -19,12 +19,17 @@ namespace MyApp.Domain.Entities
         // at the step they left.
         public int CurrentStep { get; set; } = 1;
 
-        // A. Graduate profile — name / course / year live on the Student row
-        // and are joined at report time, never duplicated here.
+        // A. Graduate profile — name / program live on the Student row and
+        // are joined at report time. The actual graduation year belongs to
+        // this response because Student.SchoolYear only says "Graduate".
         // Sex: Male | Female
         public string? Sex { get; set; }
+        public int? YearGraduated { get; set; }
         public string? ContactNo { get; set; }
         public string? EmailOrFb { get; set; }
+        public string? PermanentAddress { get; set; }
+        // Kept as PresentAddress in storage/API for backward compatibility;
+        // the questionnaire labels this value "Current Location".
         public string? PresentAddress { get; set; }
 
         // B. Employment status (the branch point):

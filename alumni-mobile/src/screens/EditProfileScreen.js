@@ -1,5 +1,5 @@
 // src/screens/EditProfileScreen.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -38,9 +38,52 @@ export default function EditProfileScreen({ route, navigation }) {
   const [showInDirectory, setShowInDirectory] = useState(profile.showInDirectory ?? true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { markSaved, discardDialog } = useUnsavedChangesGuard(navigation, [
+  const { markSaved, resetDirty, discardDialog } = useUnsavedChangesGuard(navigation, [
     headline, bio, location, linkedInUrl, phone, address, dateOfBirth, showInDirectory,
   ]);
+
+  // Questionnaire answers are initial form suggestions only. This GET never
+  // updates the profile; data reaches the server only if the user taps Save.
+  useEffect(() => {
+    let isActive = true;
+
+    async function prefillFromTracer() {
+      if (profile.location && profile.phone && profile.address) return;
+
+      try {
+        const res = await apiClient.get('/Tracer/me');
+        const tracer = res.data;
+        if (!isActive || !tracer?.completed) return;
+
+        // Compute which fields will actually change so the one-shot dirty
+        // suppression is armed exactly when needed (and never swallows a
+        // later real edit if nothing gets prefilled).
+        const willPrefillLocation = !profile.location && !!tracer.presentAddress;
+        const willPrefillPhone = !profile.phone && !!tracer.contactNo;
+        const willPrefillAddress =
+          !profile.address && !!(tracer.permanentAddress || tracer.presentAddress);
+
+        setLocation((current) => current || tracer.presentAddress || '');
+        setPhone((current) => current || tracer.contactNo || '');
+        setAddress(
+          (current) => current || tracer.permanentAddress || tracer.presentAddress || ''
+        );
+
+        if (willPrefillLocation || willPrefillPhone || willPrefillAddress) {
+          // Auto-populated values are not user edits — don't arm the
+          // unsaved-changes dialog just because a draft suggestion loaded.
+          resetDirty();
+        }
+      } catch {
+        // Profile editing must still work if no tracer response is available.
+      }
+    }
+
+    prefillFromTracer();
+    return () => {
+      isActive = false;
+    };
+  }, [profile.address, profile.location, profile.phone]);
 
   async function handleSave() {
     setIsSubmitting(true);

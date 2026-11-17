@@ -16,6 +16,8 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import apiClient from '../api/client';
+import AutocompleteInput from '../components/AutocompleteInput';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import { alert as appAlert } from '../components/AppAlert';
 import AppBackground from '../components/AppBackground';
@@ -58,6 +60,7 @@ const JOB_SOURCES = ['Walk-in', 'Online', 'Referral', 'School Job Fair', 'OJT / 
 const RELATEDNESS = ['Highly Related', 'Related', 'Somewhat Related', 'NOT Related'];
 const SKILL_OPTIONS = ['Major Subjects', 'Computer / Technical', 'Communication', 'OJT Experience', 'Others'];
 const YES_NO = ['Yes', 'No'];
+const CURRENT_YEAR = new Date().getFullYear();
 
 export default function TracerStudyScreen({ navigation, onExit }) {
   const { theme } = useTheme();
@@ -73,10 +76,12 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   const [fullName, setFullName] = useState(student?.fullName || '');
   const [sex, setSex] = useState('');
   const [course, setCourse] = useState(student?.program || '');
-  const [yearGraduated, setYearGraduated] = useState(student?.schoolYear || '');
+  const [yearGraduated, setYearGraduated] = useState('');
   const [contactNo, setContactNo] = useState('');
   const [emailOrFb, setEmailOrFb] = useState('');
-  const [presentAddress, setPresentAddress] = useState('');
+  const [permanentAddress, setPermanentAddress] = useState('');
+  const [currentLocation, setCurrentLocation] = useState('');
+  const [sameAsPermanent, setSameAsPermanent] = useState(false);
 
   // Section B — Employment Status (the branch point)
   const [employmentStatus, setEmploymentStatus] = useState('');
@@ -117,6 +122,10 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   function validateStep(index) {
     if (index === 0) {
       if (sex !== 'Male' && sex !== 'Female') return 'Step 1: please choose your sex.';
+      if (!course.trim()) return 'Step 1: program graduated is required.';
+      const graduationYear = Number(yearGraduated);
+      if (!/^\d{4}$/.test(yearGraduated) || graduationYear < 1900 || graduationYear > CURRENT_YEAR)
+        return `Step 1: enter a valid graduation year from 1900 to ${CURRENT_YEAR}.`;
       if (!contactNo.trim()) return 'Step 1: contact number is required.';
     }
     if (index === 1) {
@@ -196,14 +205,37 @@ export default function TracerStudyScreen({ navigation, onExit }) {
     );
   }
 
+  async function fetchSuggestions(term, type) {
+    const res = await apiClient.get(
+      `/Suggestions?term=${encodeURIComponent(term)}&type=${encodeURIComponent(type)}`
+    );
+    return res.data || [];
+  }
+
+  function changePermanentAddress(value) {
+    setPermanentAddress(value);
+    if (sameAsPermanent) setCurrentLocation(value);
+  }
+
+  function toggleSameAsPermanent() {
+    setSameAsPermanent((wasChecked) => {
+      const isChecked = !wasChecked;
+      if (isChecked) setCurrentLocation(permanentAddress);
+      return isChecked;
+    });
+  }
+
   // Client payload identical to TracerAnswersDto (used by the live path).
   function buildPayload() {
     return {
       currentStep: step + 1,
+      program: course.trim() || null,
+      yearGraduated: /^\d{4}$/.test(yearGraduated) ? Number(yearGraduated) : null,
       sex: sex || null,
       contactNo: contactNo.trim() || null,
       emailOrFb: emailOrFb.trim() || null,
-      presentAddress: presentAddress.trim() || null,
+      permanentAddress: permanentAddress.trim() || null,
+      presentAddress: currentLocation.trim() || null,
       employmentStatus: employmentStatus || null,
       companyName: employed ? companyName.trim() || null : null,
       position: employed ? position.trim() || null : null,
@@ -245,7 +277,6 @@ export default function TracerStudyScreen({ navigation, onExit }) {
 
     // LIVE PATH (TRACER_BETA = false) — wire to the P1 backend.
     try {
-      const apiClient = (await import('../api/client')).default;
       await apiClient.post('/Tracer/submit', buildPayload());
       appAlert('Thank you!', 'Your Tracer Study has been submitted. Your Alma Mater appreciates your answers.', [
         { text: 'Continue', onPress: exitFlow },
@@ -418,20 +449,22 @@ export default function TracerStudyScreen({ navigation, onExit }) {
                 />
               ))}
             </View>
-            <Field label="Program Graduated" c={c} hint="from your account">
-              <TextInput
-                style={[styles.input, inputColors(c)]}
+            <Field label="Program Graduated *" c={c} hint="choose a suggestion for consistent records">
+              <AutocompleteInput
                 value={course}
                 onChangeText={setCourse}
-                placeholder="e.g. BS Information Technology"
-                placeholderTextColor={c.placeholder}
+                onSearch={fetchSuggestions}
+                apiType="program"
+                placeholder="Type BSIT, BSCS, BSCPE…"
               />
             </Field>
-            <Field label="Year Graduated" c={c} hint="from your account">
+            <Field label="Year Graduated *" c={c} hint="enter the actual year">
               <TextInput
                 style={[styles.input, inputColors(c)]}
                 value={yearGraduated}
-                onChangeText={setYearGraduated}
+                onChangeText={(value) => setYearGraduated(value.replace(/\D/g, '').slice(0, 4))}
+                keyboardType="number-pad"
+                maxLength={4}
                 placeholder="e.g. 2026"
                 placeholderTextColor={c.placeholder}
               />
@@ -456,13 +489,52 @@ export default function TracerStudyScreen({ navigation, onExit }) {
                 placeholderTextColor={c.placeholder}
               />
             </Field>
-            <Field label="Present Address" c={c}>
+            <Field label="Permanent Address" c={c}>
               <TextInput
                 style={[styles.input, styles.multiline, inputColors(c)]}
-                value={presentAddress}
-                onChangeText={setPresentAddress}
+                value={permanentAddress}
+                onChangeText={changePermanentAddress}
                 multiline
                 placeholder="House no., street, city, province"
+                placeholderTextColor={c.placeholder}
+              />
+            </Field>
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              onPress={toggleSameAsPermanent}
+              activeOpacity={0.7}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: sameAsPermanent }}
+              accessibilityLabel="Same as permanent location"
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  {
+                    borderColor: sameAsPermanent ? c.primary : c.border,
+                    backgroundColor: sameAsPermanent ? c.primary : c.surface,
+                  },
+                ]}
+              >
+                {sameAsPermanent ? (
+                  <Text style={[styles.checkboxMark, { color: c.onPrimary }]}>✓</Text>
+                ) : null}
+              </View>
+              <Text style={[styles.checkboxLabel, { color: c.text }]}>Same as permanent location</Text>
+            </TouchableOpacity>
+            <Field label="Current Location" c={c}>
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.multiline,
+                  inputColors(c),
+                  sameAsPermanent && styles.inputDisabled,
+                ]}
+                value={currentLocation}
+                onChangeText={setCurrentLocation}
+                editable={!sameAsPermanent}
+                multiline
+                placeholder="Where you currently live"
                 placeholderTextColor={c.placeholder}
               />
             </Field>
@@ -751,7 +823,8 @@ export default function TracerStudyScreen({ navigation, onExit }) {
                 ['Year Graduated', yearGraduated],
                 ['Contact No.', contactNo],
                 ['Email / FB', emailOrFb],
-                ['Present Address', presentAddress],
+                ['Permanent Address', permanentAddress],
+                ['Current Location', currentLocation],
               ]}
               c={c}
             />
@@ -937,6 +1010,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   multiline: { minHeight: 80, textAlignVertical: 'top' },
+  inputDisabled: { opacity: 0.65 },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxMark: { fontSize: 15, fontWeight: '800', lineHeight: 18 },
+  checkboxLabel: { marginLeft: 10, fontSize: 13, fontWeight: '600' },
   radioRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   radioRow: {
     flexDirection: 'row',

@@ -36,9 +36,23 @@ namespace MyApp.Application.Services
                 "skill" => await _skillRepository.GetSkillSuggestionsAsync(search),
                 "jobtitle" => await _jobPreferenceRepository.GetJobTitleSuggestionsAsync(search),
                 "industry" => await _jobPreferenceRepository.GetIndustrySuggestionsAsync(search),
-                "program" => await _studentRepository.GetProgramSuggestionsAsync(search),
+                "program" => await GetProgramSuggestionsAsync(search),
                 _ => new List<string>()
             };
+        }
+
+        private async Task<List<string>> GetProgramSuggestionsAsync(string search)
+        {
+            var storedPrograms = await _studentRepository.GetProgramSuggestionsAsync(search);
+
+            // Catalog matches come first so an abbreviation such as BSIT
+            // always recommends one full, uniform value. Unknown programs in
+            // the database still remain discoverable for future offerings.
+            return ProgramCatalog.Search(search)
+                .Concat(storedPrograms.Select(ProgramCatalog.Canonicalize))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(10)
+                .ToList();
         }
     }
 }

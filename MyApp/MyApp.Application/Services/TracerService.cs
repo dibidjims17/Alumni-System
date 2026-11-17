@@ -57,13 +57,16 @@ namespace MyApp.Application.Services
 
         private readonly ITracerRepository _tracerRepository;
         private readonly IActivityLogRepository _activityLogRepository;
+        private readonly IStudentRepository _studentRepository;
 
         public TracerService(
             ITracerRepository tracerRepository,
-            IActivityLogRepository activityLogRepository)
+            IActivityLogRepository activityLogRepository,
+            IStudentRepository studentRepository)
         {
             _tracerRepository = tracerRepository;
             _activityLogRepository = activityLogRepository;
+            _studentRepository = studentRepository;
         }
 
         public async Task<TracerStatusDto> GetStatusAsync(int studentId, bool isGraduate)
@@ -121,6 +124,17 @@ namespace MyApp.Application.Services
             if (row != null && row.Status == "Submitted")
                 return (false, "Your Tracer Study has already been submitted.");
 
+            var student = await _studentRepository.GetByIdAsync(studentId);
+            if (student == null)
+                return (false, "Student account not found.");
+
+            // Older clients may omit Program, so retain the account value as
+            // a compatibility fallback. Known abbreviations are normalized.
+            var requestedProgram = NullIfEmpty(answers.Program) ?? NullIfEmpty(student.Program);
+            if (requestedProgram == null)
+                return (false, "Step 1: program graduated is required.");
+            var canonicalProgram = ProgramCatalog.Canonicalize(requestedProgram);
+
             // Full questionnaire validation — the first failure names the
             // step and the field so the mobile UI can jump straight to it.
             var target = row ?? new TracerResponse { StudentId = studentId };
@@ -138,6 +152,12 @@ namespace MyApp.Application.Services
                 await _tracerRepository.CreateAsync(target);
             else
                 await _tracerRepository.UpdateAsync(target);
+
+            if (!string.Equals(student.Program, canonicalProgram, StringComparison.Ordinal))
+            {
+                student.Program = canonicalProgram;
+                await _studentRepository.UpdateAsync(student);
+            }
 
             await _activityLogRepository.LogStudentAsync(
                 studentId, "TRACER_SUBMIT", "Graduate Tracer Study submitted", ipAddress);
@@ -296,11 +316,13 @@ namespace MyApp.Application.Services
                     r.Student.StudentNumber,
                     r.Student.FullName,
                     r.Student.Program,
+                    r.YearGraduated?.ToString(),
                     r.Student.Email,
                     r.Status,
                     r.Sex,
                     r.ContactNo,
                     r.EmailOrFb,
+                    r.PermanentAddress,
                     r.PresentAddress,
                     r.EmploymentStatus,
                     r.CompanyName,
@@ -336,11 +358,11 @@ namespace MyApp.Application.Services
         private static string Q(string? value) =>
             "\"" + (value ?? "").Replace("\"", "\"\"") + "\"";
 
-        // 28 columns — every questionnaire field plus the student join.
+        // 30 columns — every questionnaire field plus the student join.
         private static readonly string[] CsvHeaders =
         {
-            "StudentNumber", "FullName", "Program", "Email", "Status",
-            "Sex", "ContactNo", "EmailOrFb", "PresentAddress",
+            "StudentNumber", "FullName", "Program", "YearGraduated", "Email", "Status",
+            "Sex", "ContactNo", "EmailOrFb", "PermanentAddress", "PresentAddress",
             "EmploymentStatus", "CompanyName", "Position", "CompanyType",
             "CompanyTypeOther", "SalaryBand", "MonthsToJob", "JobSource",
             "CourseRelatedness", "CourseRelatednessComment", "SkillsUsed",
@@ -354,9 +376,15 @@ namespace MyApp.Application.Services
 
         private static string? Validate(TracerResponse r)
         {
-            // A. Profile — name / course / year come from the account.
+            // A. Profile — name and program come from the account. The
+            // graduate supplies the actual year because SchoolYear is only
+            // the account classification "Graduate".
             if (!Sexes.Contains(r.Sex ?? ""))
                 return "Step 1: please choose your sex.";
+            if (!r.YearGraduated.HasValue ||
+                r.YearGraduated.Value < 1900 ||
+                r.YearGraduated.Value > DateTime.UtcNow.Year)
+                return $"Step 1: enter a valid graduation year from 1900 to {DateTime.UtcNow.Year}.";
             if (string.IsNullOrWhiteSpace(r.ContactNo))
                 return "Step 1: contact number is required.";
 
@@ -430,8 +458,10 @@ namespace MyApp.Application.Services
         {
             row.CurrentStep = Math.Clamp(a.CurrentStep, 1, 5);
             row.Sex = NullIfEmpty(a.Sex);
+            row.YearGraduated = a.YearGraduated;
             row.ContactNo = NullIfEmpty(a.ContactNo);
             row.EmailOrFb = NullIfEmpty(a.EmailOrFb);
+            row.PermanentAddress = NullIfEmpty(a.PermanentAddress);
             row.PresentAddress = NullIfEmpty(a.PresentAddress);
             row.EmploymentStatus = NullIfEmpty(a.EmploymentStatus);
             row.CompanyName = NullIfEmpty(a.CompanyName);
@@ -454,9 +484,12 @@ namespace MyApp.Application.Services
         private static TracerAnswersDto Map(TracerResponse r) => new()
         {
             CurrentStep = r.CurrentStep,
+            Program = r.Student.Program,
+            YearGraduated = r.YearGraduated,
             Sex = r.Sex,
             ContactNo = r.ContactNo,
             EmailOrFb = r.EmailOrFb,
+            PermanentAddress = r.PermanentAddress,
             PresentAddress = r.PresentAddress,
             EmploymentStatus = r.EmploymentStatus,
             CompanyName = r.CompanyName,
