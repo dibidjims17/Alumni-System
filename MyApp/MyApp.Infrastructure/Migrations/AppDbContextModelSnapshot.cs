@@ -951,6 +951,9 @@ namespace MyApp.Infrastructure.Migrations
                     b.Property<string>("MonthsToJob")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("PermanentAddress")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Position")
                         .HasColumnType("longtext");
 
@@ -993,6 +996,9 @@ namespace MyApp.Infrastructure.Migrations
 
                     b.Property<string>("WouldRecommend")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("YearGraduated")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

@@ -3,6 +3,7 @@ import React from 'react';
 import { View, ActivityIndicator, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Header, getHeaderTitle } from '@react-navigation/elements';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { House, Users, Briefcase, User, GraduationCap } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
@@ -59,25 +60,35 @@ const TAB_ICONS = {
 // CDM portal header: deep-green bar + 3px gold strip, white title.
 // statusBarStyle 'light' fits every screen whose top is green; auth screens
 // with a light top (Login/Forgot/Reset) override it per-screen below.
+//
+// The header is JS-rendered (`header:`) instead of the native one: on this
+// setup react-native-screens reports a header height of 0 to native-stack,
+// so the native header's in-flow spacer collapsed and every screen's content
+// rendered *underneath* the opaque header — forms became unscrollable
+// because their top fields were stuck behind it. A JS header lays out in
+// flow and measures itself via onLayout, so content always starts below it.
+// The gold strip moves into headerStyle (it used to come from
+// headerBackground, which only exists to back a native header).
 function headerOptions(c, statusBarStyle = 'light') {
   return {
-    headerStyle: { backgroundColor: c.brandDeep },
+    header: ({ back, options, route }) => (
+      <Header
+        {...options}
+        back={back}
+        title={getHeaderTitle(options, route.name)}
+      />
+    ),
+    headerStyle: {
+      backgroundColor: c.brandDeep,
+      borderBottomWidth: 3,
+      borderBottomColor: c.gold,
+    },
     headerTintColor: '#FFFFFF',
     headerShadowVisible: false,
     headerTitleStyle: { fontWeight: '700', color: '#FFFFFF' },
     contentStyle: { backgroundColor: c.background },
     statusBarStyle,
     statusBarBackgroundColor: statusBarStyle === 'light' ? c.brandDeep : c.background,
-    headerBackground: () => (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: c.brandDeep,
-          borderBottomWidth: 3,
-          borderBottomColor: c.gold,
-        }}
-      />
-    ),
   };
 }
 
@@ -159,7 +170,11 @@ function ProfileStack() {
       <ProfileStackNav.Screen
         name="TracerStudy"
         component={TracerStudyScreen}
-        options={{ title: 'Graduate Tracer Study (BETA)' }}
+        // The screen draws its own green progress header (Step N of 6 + dots
+        // + Skip), filling the status-bar inset itself — exactly like the
+        // pre-login gate. A stack header here would overlay it and hide the
+        // step row behind the title.
+        options={{ title: 'Graduate Tracer Study (BETA)', headerShown: false }}
       />
       <ProfileStackNav.Screen name="YearCorrection" component={YearCorrectionScreen} options={{ headerShown: false }} />
       <ProfileStackNav.Screen

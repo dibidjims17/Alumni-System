@@ -26,9 +26,14 @@ namespace MyApp.Shared.DTOs
         public int CurrentStep { get; set; } = 1;
 
         // A. Graduate profile
+        // Program is stored on Student when the final response is submitted.
+        public string? Program { get; set; }
+        public int? YearGraduated { get; set; }
         public string? Sex { get; set; }
         public string? ContactNo { get; set; }
         public string? EmailOrFb { get; set; }
+        public string? PermanentAddress { get; set; }
+        // Current location (legacy property name retained for API compatibility).
         public string? PresentAddress { get; set; }
 
         // B. Employment status (branch point)
