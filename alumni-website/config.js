@@ -16,4 +16,10 @@ window.SITE_CONFIG = {
   // Static QR image (generate from the hosted APK URL, save as PNG).
   // If the file is missing, a styled placeholder is shown instead.
   qrPath: "assets/qr-download.png",
+
+  // Canonical URL where THIS site is hosted (no trailing fragment). The
+  // printable poster QR (assets/qr-tracer.png) encodes siteUrl + "#tracer"
+  // so graduates land on the Tracer Study guide above. Update this after
+  // the site goes live, then regenerate the QR — see README.
+  siteUrl: "https://dibidjims17.github.io/Alumni-System/alumni-website/",
 };

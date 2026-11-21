@@ -67,17 +67,26 @@
   }
 
   // QR fallback: if the generated QR png is missing, show the placeholder.
-  var qr = document.getElementById("qrImg");
-  var qrFb = document.getElementById("qrFallback");
-  if (qr) {
-    qr.addEventListener("error", function () {
-      qr.style.display = "none";
-      if (qrFb) qrFb.hidden = false;
+  function wireQrFallback(imgId, fallbackId) {
+    var img = document.getElementById(imgId);
+    var fb = document.getElementById(fallbackId);
+    if (!img) return;
+    img.addEventListener("error", function () {
+      img.style.display = "none";
+      if (fb) fb.hidden = false;
     });
     // Fire the check for cached-broken images too.
-    if (qr.complete && qr.naturalWidth === 0) {
-      qr.style.display = "none";
-      if (qrFb) qrFb.hidden = false;
+    if (img.complete && img.naturalWidth === 0) {
+      img.style.display = "none";
+      if (fb) fb.hidden = false;
     }
+  }
+  wireQrFallback("qrImg", "qrFallback");
+  wireQrFallback("qrTracerImg", "qrTracerFallback");
+
+  // Tracer guide: show the printable URL under the poster QR.
+  var tracerUrl = document.getElementById("tracerUrl");
+  if (tracerUrl && cfg.siteUrl) {
+    tracerUrl.textContent = " " + cfg.siteUrl + "#tracer";
   }
 })();
