@@ -3,7 +3,7 @@
 // before the app unlocks. Questions follow the school's paper form
 // (Graduate_Tracer_Study_Questionnaire.docx, Sections A–E) in a step-by-
 // step flow with a review screen, mirroring ProfileSetupWizardScreen.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -112,6 +112,64 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   // before that the section is undecided, not skipped.
   const jobDetailsSkipped = employmentStatus !== '' && !employed;
 
+  // Edit-after-submit (§8 Q2): when a submitted response is re-opened,
+  // prefill every field from GET /Tracer/me and flip the flow into
+  // "editing" mode (banner, review copy, Update answers button).
+  const [editing, setEditing] = useState(false);
+
+  // Live mode only — beta preview stays local and never fetches. Reads
+  // whatever the graduate saved (draft or submitted) so nothing is lost
+  // when they come back; a failed/absent load just starts blank.
+  useEffect(() => {
+    if (TRACER_BETA) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiClient.get('/Tracer/me');
+        const d = res.data;
+        if (cancelled || !d) return; // 200-null = never answered
+        if (d.sex) setSex(d.sex);
+        if (d.program) setCourse(d.program);
+        if (d.yearGraduated != null) setYearGraduated(String(d.yearGraduated));
+        if (d.contactNo) setContactNo(d.contactNo);
+        if (d.emailOrFb) setEmailOrFb(d.emailOrFb);
+        if (d.permanentAddress) setPermanentAddress(d.permanentAddress);
+        if (d.presentAddress) {
+          setCurrentLocation(d.presentAddress);
+          setSameAsPermanent(
+            !!d.permanentAddress && d.presentAddress === d.permanentAddress
+          );
+        }
+        if (d.employmentStatus) setEmploymentStatus(d.employmentStatus);
+        if (d.companyName) setCompanyName(d.companyName);
+        if (d.position) setPosition(d.position);
+        if (d.companyType) setCompanyType(d.companyType);
+        if (d.companyTypeOther) setCompanyTypeOther(d.companyTypeOther);
+        if (d.salaryBand) setSalaryBand(d.salaryBand);
+        if (d.monthsToJob) setMonthsToJob(d.monthsToJob);
+        if (d.jobSource) setJobSource(d.jobSource);
+        if (d.courseRelatedness) setCourseRelatedness(d.courseRelatedness);
+        if (d.courseRelatednessComment) setRelatednessComment(d.courseRelatednessComment);
+        if (d.skillsUsed) {
+          setSkillsUsed(
+            d.skillsUsed.split(',').map((s) => s.trim()).filter(Boolean)
+          );
+        }
+        if (d.skillsUsedOther) setSkillsUsedOther(d.skillsUsedOther);
+        if (d.skillsWanted) setSkillsWanted(d.skillsWanted);
+        if (d.satisfied) setSatisfied(d.satisfied);
+        if (d.satisfiedReason) setSatisfiedReason(d.satisfiedReason);
+        if (d.wouldRecommend) setWouldRecommend(d.wouldRecommend);
+        setEditing(!!d.completed);
+      } catch (e) {
+        // No saved answers (or offline) — start blank, same as before.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Exit = Skip (beta) or goBack when opened from the Profile menu.
   function exitFlow() {
     if (onExit) onExit();
@@ -175,10 +233,27 @@ export default function TracerStudyScreen({ navigation, onExit }) {
     }
     // Section B branch: unemployed / studying skips Job Details entirely.
     if (step === 1 && !employed) {
+      saveDraft(3);
       setStep(3);
       return;
     }
-    if (step < SECTIONS.length - 1) setStep(step + 1);
+    if (step < SECTIONS.length - 1) {
+      saveDraft(step + 1);
+      setStep(step + 1);
+    }
+  }
+
+  // Fire-and-forget draft save as the respondent moves between steps
+  // (live mode only). Editing a submitted row keeps Status=Submitted —
+  // SaveDraft never demotes it — so the gate stays open mid-edit and
+  // SubmittedAt only bumps on the final update.
+  function saveDraft(targetStep) {
+    if (TRACER_BETA) return;
+    apiClient
+      .put('/Tracer/draft', buildPayload(targetStep))
+      .catch(() => {
+        // Best-effort: the final submit re-sends the full payload anyway.
+      });
   }
 
   function back() {
@@ -226,9 +301,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   }
 
   // Client payload identical to TracerAnswersDto (used by the live path).
-  function buildPayload() {
+  // atStep overrides which step the payload claims (draft saves record the
+  // step being entered so an interrupted respondent resumes there).
+  function buildPayload(atStep = step) {
     return {
-      currentStep: step + 1,
+      currentStep: atStep + 1,
       program: course.trim() || null,
       yearGraduated: /^\d{4}$/.test(yearGraduated) ? Number(yearGraduated) : null,
       sex: sex || null,
@@ -277,10 +354,15 @@ export default function TracerStudyScreen({ navigation, onExit }) {
 
     // LIVE PATH (TRACER_BETA = false) — wire to the P1 backend.
     try {
-      await apiClient.post('/Tracer/submit', buildPayload());
-      appAlert('Thank you!', 'Your Tracer Study has been submitted. Your Alma Mater appreciates your answers.', [
-        { text: 'Continue', onPress: exitFlow },
-      ]);
+      const res = await apiClient.post('/Tracer/submit', buildPayload());
+      const updated = editing || res.data?.message === 'Your answers have been updated.';
+      appAlert(
+        'Thank you!',
+        updated
+          ? 'Your answers have been updated. Your Alma Mater appreciates your responses.'
+          : 'Your Tracer Study has been submitted. Your Alma Mater appreciates your answers.',
+        [{ text: 'Continue', onPress: exitFlow }]
+      );
     } catch (err) {
       const message = err.response?.data?.message || 'Could not submit. Please try again.';
       appAlert('Error', message);
@@ -412,6 +494,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         {TRACER_BETA && (
           <Text style={[styles.betaNote, { color: c.goldSoft }]}>
             BETA PREVIEW — answers are not saved
+          </Text>
+        )}
+        {!TRACER_BETA && editing && (
+          <Text style={[styles.betaNote, { color: c.goldSoft }]}>
+            Editing your submitted answers — tap Update answers when done
           </Text>
         )}
       </View>
@@ -809,7 +896,9 @@ export default function TracerStudyScreen({ navigation, onExit }) {
           <View>
             <Text style={[styles.stepTitle, { color: c.text }]}>Review your answers</Text>
             <Text style={[styles.stepSub, { color: c.textMuted }]}>
-              Check everything before submitting — tap Edit to change a section.
+              {editing
+                ? 'Review your changes — tap Update answers to save them.'
+                : 'Check everything before submitting — tap Edit to change a section.'}
             </Text>
 
             <Summary
@@ -895,7 +984,17 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         ) : step < SECTIONS.length - 1 ? (
           <PrimaryButton title="Next" onPress={next} style={styles.nextButton} />
         ) : (
-          <PrimaryButton title={TRACER_BETA ? 'Submit (preview)' : 'Submit'} onPress={submit} style={styles.nextButton} />
+          <PrimaryButton
+            title={
+              TRACER_BETA
+                ? 'Submit (preview)'
+                : editing
+                  ? 'Update answers'
+                  : 'Submit'
+            }
+            onPress={submit}
+            style={styles.nextButton}
+          />
         )}
       </View>
     </KeyboardAvoidingView>

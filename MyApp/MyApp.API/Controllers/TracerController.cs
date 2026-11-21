@@ -71,6 +71,8 @@ namespace MyApp.API.Controllers
 
         // Final submit: validates Sections A–E, flips Draft -> Submitted,
         // and lifts the gate (tracerCompleted becomes true on next login).
+        // Re-submitting updates an existing response instead of failing —
+        // this is the edit-after-submit path (§8 Q2).
         [Authorize(Roles = "Student")]
         [HttpPost("submit")]
         public async Task<IActionResult> Submit([FromBody] TracerAnswersDto answers)
@@ -144,6 +146,21 @@ namespace MyApp.API.Controllers
             var bytes = Encoding.UTF8.GetBytes(csv);
             return File(bytes, "text/csv; charset=utf-8",
                 $"tracer_responses_{DateTime.UtcNow:yyyyMMdd}.csv");
+        }
+
+        // Admin cleanup: delete a response row (smoke-test leftovers, wrong
+        // submissions). SuperAdmin only — Staff stays read-only on this
+        // screen. Logs DELETE_TRACER; the student's gate re-locks because
+        // tracerCompleted is derived from the row.
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpDelete("responses/{id:int}")]
+        public async Task<IActionResult> DeleteResponse(int id)
+        {
+            var (success, message) = await _tracerService.DeleteResponseAsync(
+                id, GetAdminId(), IpAddress());
+
+            if (!success) return NotFound(new { message });
+            return Ok(new { message });
         }
     }
 }

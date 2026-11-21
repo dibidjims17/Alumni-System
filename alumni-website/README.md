@@ -28,6 +28,18 @@ server, or even a USB stick).
 3. **Host this folder** and open it on a PC connected to the demo WiFi.
    Panel members on the same WiFi open the site, scan the QR, install,
    and log in with their alumni accounts.
+4. **Tracer Study campaign QR**: the `#tracer` section explains the
+   graduate pre-screening questionnaire, and
+   `assets/qr-tracer.png` is the printable poster QR that opens it.
+   The QR encodes `siteUrl + "#tracer"` from `config.js`. After the
+   site's final URL is known (or changes), set `siteUrl` and
+   regenerate:
+   ```bash
+   python -m pip install qrcode pillow
+   python -c "import qrcode; q=qrcode.make('<siteUrl>#tracer'); q.save('alumni-website/assets/qr-tracer.png')"
+   ```
+   Current `siteUrl` points at the GitHub Pages path for this repo —
+   update it if you host elsewhere.
 
 ## Notes
 

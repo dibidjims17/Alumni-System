@@ -14,6 +14,14 @@ namespace MyApp.Application.Interfaces
         Task CreateAsync(TracerResponse response);
         Task UpdateAsync(TracerResponse response);
 
+        // ---- Admin cleanup ----
+
+        // A single response by id (with Student joined) — the delete path
+        // needs the student number for the activity-log entry.
+        Task<TracerResponse?> GetByIdAsync(int id);
+
+        Task DeleteAsync(TracerResponse response);
+
         // ---- Admin reporting (P3) ----
 
         // Paged responses joined with Student for the admin table, filtered

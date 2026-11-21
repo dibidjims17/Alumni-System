@@ -39,6 +39,21 @@ namespace MyApp.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        // ---- Admin cleanup ----
+
+        public async Task<TracerResponse?> GetByIdAsync(int id)
+        {
+            return await _context.TracerResponses
+                .Include(r => r.Student)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
+        public async Task DeleteAsync(TracerResponse response)
+        {
+            _context.TracerResponses.Remove(response);
+            await _context.SaveChangesAsync();
+        }
+
         // ---- Admin reporting (P3) ----
 
         public async Task<(List<TracerResponse> Items, int Total)> GetAdminResponsesAsync(

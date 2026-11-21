@@ -98,9 +98,11 @@ namespace MyApp.Application.Services
         {
             var row = await _tracerRepository.GetByStudentAsync(studentId);
 
-            if (row != null && row.Status == "Submitted")
-                return (false, "Your Tracer Study has already been submitted.");
-
+            // No Submitted-lock here: a graduate re-opening the study to
+            // edit (§8 Q2) saves steps as they go. ApplyAnswers never
+            // touches Status, so a submitted row stays Submitted and the
+            // gate remains open mid-edit — only the final submit bumps
+            // SubmittedAt.
             if (row == null)
             {
                 row = new TracerResponse { StudentId = studentId };
@@ -121,8 +123,10 @@ namespace MyApp.Application.Services
             int studentId, TracerAnswersDto answers, string ipAddress)
         {
             var row = await _tracerRepository.GetByStudentAsync(studentId);
-            if (row != null && row.Status == "Submitted")
-                return (false, "Your Tracer Study has already been submitted.");
+            // Editing after submit (§8 Q2): a second submit updates the
+            // existing row instead of being rejected — SubmittedAt/UpdatedAt
+            // move to now so reports show when the answers last changed.
+            var isUpdate = row?.Status == "Submitted";
 
             var student = await _studentRepository.GetByIdAsync(studentId);
             if (student == null)
@@ -160,9 +164,13 @@ namespace MyApp.Application.Services
             }
 
             await _activityLogRepository.LogStudentAsync(
-                studentId, "TRACER_SUBMIT", "Graduate Tracer Study submitted", ipAddress);
+                studentId, "TRACER_SUBMIT",
+                isUpdate ? "Graduate Tracer Study updated" : "Graduate Tracer Study submitted",
+                ipAddress);
 
-            return (true, "Thank you! Your answers have been submitted.");
+            return (true, isUpdate
+                ? "Your answers have been updated."
+                : "Thank you! Your answers have been submitted.");
         }
 
         public async Task<TracerAnswersDto?> GetMyAnswersAsync(int studentId)
@@ -352,6 +360,28 @@ namespace MyApp.Application.Services
                 $"Exported {rows.Count} tracer responses", "system");
 
             return (sb.ToString(), rows.Count);
+        }
+
+        // Admin cleanup — removes a response row outright. Used by the
+        // smoke/seed scripts to reset test accounts and by SuperAdmin to
+        // purge wrong submissions before the school export. Deleting the
+        // row re-locks the student's gate (tracerCompleted is derived from
+        // the row's existence, not a stored flag).
+        public async Task<(bool Success, string Message)> DeleteResponseAsync(
+            int id, int adminId, string ipAddress)
+        {
+            var row = await _tracerRepository.GetByIdAsync(id);
+            if (row == null)
+                return (false, "Response not found.");
+
+            var studentNo = row.Student?.StudentNumber ?? $"#{id}";
+            await _tracerRepository.DeleteAsync(row);
+
+            await _activityLogRepository.LogAdminAsync(
+                adminId, "DELETE_TRACER",
+                $"Deleted tracer response for {studentNo}", ipAddress);
+
+            return (true, $"Deleted tracer response for {studentNo}.");
         }
 
         // Quote-all CSV cell (doubles embedded quotes).

@@ -10,13 +10,16 @@ namespace MyApp.Application.Interfaces
         // Saved answers so far, or null when nothing has been answered yet.
         Task<TracerAnswersDto?> GetDraftAsync(int studentId);
 
-        // Overwrite the single draft row with the full answer set (the
-        // client sends everything it holds on every step change).
+        // Overwrite the single answer row with the full answer set (the
+        // client sends everything it holds on every step change). Also the
+        // save path while editing an already-submitted response — Status is
+        // never demoted, so the gate stays open mid-edit.
         Task<(bool Success, string Message)> SaveDraftAsync(
             int studentId, TracerAnswersDto answers, string ipAddress);
 
         // Validate all five steps against the questionnaire rules, then
-        // flip Draft -> Submitted (this is what lifts the gate).
+        // flip Draft -> Submitted (this is what lifts the gate). Submitting
+        // again updates an existing response (edit after submit, §8 Q2).
         Task<(bool Success, string Message)> SubmitAsync(
             int studentId, TracerAnswersDto answers, string ipAddress);
 
@@ -36,5 +39,11 @@ namespace MyApp.Application.Interfaces
         // Flat CSV of every response (the school deliverable). Writes an
         // EXPORT_TRACER activity-log entry like other admin exports.
         Task<(string Csv, int RowCount)> BuildExportCsvAsync(int adminId);
+
+        // Admin cleanup: remove a response row (smoke-test leftovers, wrong
+        // submissions) so the gate re-locks and reports stay clean. Writes a
+        // DELETE_TRACER activity-log entry.
+        Task<(bool Success, string Message)> DeleteResponseAsync(
+            int id, int adminId, string ipAddress);
     }
 }
