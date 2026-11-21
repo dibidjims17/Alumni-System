@@ -5,8 +5,6 @@ Static landing page that promotes the mobile app (capstone device #3:
 dependencies — host the folder anywhere (GitHub Pages, Netlify, school
 server, or even a USB stick).
 
-## Defense-day checklist
-
 1. **Build the APK** (inside `alumni-mobile/`):
    ```bash
    npx eas build -p android --profile preview
