@@ -4,7 +4,7 @@ import ErrorBoundary from "./ErrorBoundary";
 import {
   LayoutDashboard, Users, FileText, Newspaper, Briefcase, CalendarDays,
   UserCog, Trash2, Activity, LogOut, Moon, Sun, School, Menu, User, BadgeCheck,
-  ClipboardList, FileSpreadsheet,
+  ClipboardList, FileSpreadsheet, Lightbulb,
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
 import { API_BASE_URL } from "../config";
@@ -66,6 +66,7 @@ const GROUPS = [
     label: "Content",
     items: [
       { path: "/news", label: "News", Icon: Newspaper },
+      { path: "/suggestions", label: "Suggestions", Icon: Lightbulb },
       { path: "/jobs", label: "Jobs", Icon: Briefcase },
       { path: "/events", label: "Events", Icon: CalendarDays },
     ],

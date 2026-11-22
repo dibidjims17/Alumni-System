@@ -714,6 +714,61 @@ namespace MyApp.Infrastructure.Migrations
                     b.ToTable("NewsHearts");
                 });
 
+            modelBuilder.Entity("MyApp.Domain.Entities.NewsSuggestion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("NewsId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewNote")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("ReviewedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NewsId");
+
+                    b.HasIndex("ReviewedByAdminId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("NewsSuggestions");
+                });
+
             modelBuilder.Entity("MyApp.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("Id")
@@ -1337,6 +1392,31 @@ namespace MyApp.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("News");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("MyApp.Domain.Entities.NewsSuggestion", b =>
+                {
+                    b.HasOne("MyApp.Domain.Entities.News", "News")
+                        .WithMany()
+                        .HasForeignKey("NewsId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MyApp.Domain.Entities.Admin", "ReviewedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByAdminId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MyApp.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("News");
+
+                    b.Navigation("ReviewedByAdmin");
 
                     b.Navigation("Student");
                 });

@@ -33,6 +33,7 @@ namespace MyApp.Infrastructure.Data
         public DbSet<YearLevelChangeRequest> YearLevelChangeRequests { get; set; }
         public DbSet<CareerRecord> CareerRecords { get; set; }
         public DbSet<TracerResponse> TracerResponses { get; set; }
+        public DbSet<NewsSuggestion> NewsSuggestions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,30 @@ namespace MyApp.Infrastructure.Data
             modelBuilder.Entity<TracerResponse>()
                 .HasIndex(r => r.StudentId)
                 .IsUnique();
+
+            // Post suggestions: a submitter always exists (cascade), while
+            // the reviewer and the published post disappear safely if the
+            // admin account or the News row is removed (set null).
+            modelBuilder.Entity<NewsSuggestion>()
+                .HasOne(s => s.Student)
+                .WithMany()
+                .HasForeignKey(s => s.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<NewsSuggestion>()
+                .HasOne(s => s.ReviewedByAdmin)
+                .WithMany()
+                .HasForeignKey(s => s.ReviewedByAdminId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<NewsSuggestion>()
+                .HasOne(s => s.News)
+                .WithMany()
+                .HasForeignKey(s => s.NewsId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<NewsSuggestion>()
+                .HasIndex(s => s.StudentId);
         }
     }
 }
