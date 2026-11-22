@@ -1,7 +1,12 @@
 const LOCAL_IP = '10.14.135.128';
 const PORT = '5207';
 
-export const API_BASE_URL = `http://${LOCAL_IP}:${PORT}/api`;
+// Expo CLI inlines statically referenced EXPO_PUBLIC_ variables. EAS preview
+// and production profiles supply the Railway URL; local Metro development
+// falls back to the current LAN API.
+export const API_BASE_URL = (
+  process.env.EXPO_PUBLIC_API_URL || `http://${LOCAL_IP}:${PORT}/api`
+).replace(/\/+$/, '');
 
 // Google Sign-In (mobile + Expo web share the same Web client id).
 // 1. Create OAuth clients in Google Cloud Console (or Firebase):
