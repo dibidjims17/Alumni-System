@@ -144,6 +144,50 @@ namespace MyApp.Application.Services
             return (true, "Password reset successfully.");
         }
 
+        public async Task<(bool Success, string Message)> ChangePasswordAsync(
+            int adminId,
+            ChangePasswordRequest request,
+            string ipAddress)
+        {
+            var admin = await _adminRepository.GetByIdAsync(adminId);
+            if (admin == null || !admin.IsActive)
+                return (false, "Admin account not found.");
+
+            bool currentPasswordOk;
+            try
+            {
+                currentPasswordOk = BCrypt.Net.BCrypt.Verify(
+                    request.CurrentPassword,
+                    admin.PasswordHash);
+            }
+            catch
+            {
+                currentPasswordOk = false;
+            }
+
+            if (!currentPasswordOk)
+                return (false, "Current password is incorrect.");
+
+            var (ruleOk, ruleMessage) = MyApp.Shared.PasswordRules.Check(
+                request.NewPassword,
+                request.CurrentPassword);
+            if (!ruleOk)
+                return (false, ruleMessage);
+
+            admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            admin.PasswordResetCode = null;
+            admin.PasswordResetCodeExpiry = null;
+            await _adminRepository.UpdateAsync(admin);
+
+            await _activityLogRepository.LogAdminAsync(
+                admin.Id,
+                "ADMIN_CHANGE_PASSWORD",
+                $"Admin changed password: {admin.Username}",
+                ipAddress);
+
+            return (true, "Password changed successfully.");
+        }
+
         // Only the SHA-256 hash of the code is stored, so a database leak never
         // exposes usable reset codes.
         private static string HashResetCode(string code)

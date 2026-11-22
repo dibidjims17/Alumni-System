@@ -82,6 +82,19 @@ export async function updateMyProfile({ fullName, email }) {
   return response.json();
 }
 
+export async function changeMyPassword(currentPassword, newPassword) {
+  const response = await fetch(`${API_BASE_URL}/Admin/me/change-password`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to change password");
+  }
+  return data;
+}
+
 export async function uploadMyPicture(file) {
   const token = localStorage.getItem("adminToken");
   const formData = new FormData();

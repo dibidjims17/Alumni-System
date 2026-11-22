@@ -144,6 +144,17 @@ namespace MyApp.API.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpPut("me/change-password")]
+        public async Task<IActionResult> ChangeMyPassword([FromBody] ChangePasswordRequest request)
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var (success, message) = await _adminAuthService.ChangePasswordAsync(
+                GetOwnId(), request, ipAddress);
+            if (!success) return BadRequest(new { message });
+            return Ok(new { message });
+        }
+
         [Authorize(Roles = "SuperAdmin")]
         [HttpPut("{id}/toggle-status")]
         public async Task<IActionResult> ToggleAdminStatus(int id)
