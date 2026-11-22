@@ -19,5 +19,5 @@ window.SITE_CONFIG = {
   // Canonical URL where THIS site is hosted (no trailing fragment). The
   // Tracer Study QR is generated automatically as siteUrl + "#tracer".
   // Change only this value if the website moves to another address.
-  siteUrl: "https://dibidjims17.github.io/Alumni-System/alumni-website/",
+  siteUrl: "https://reunio-alumni.pages.dev/",
 };

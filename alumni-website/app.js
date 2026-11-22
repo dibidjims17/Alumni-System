@@ -56,7 +56,7 @@
       btn.setAttribute("rel", "noopener");
       btn.removeAttribute("download");
     }
-    setState(true, "Direct download — tap to get the APK (~190 MB), then follow the install steps below.");
+    setState(true, "Direct download — tap to get the APK (~118 MB), then follow the install steps below.");
   } else if (window.location.protocol.indexOf("http") === 0 && cfg.apkPath) {
     fetch(cfg.apkPath, { method: "HEAD" }).then(
       function (res) { setState(res.ok, "APK is ready — tap to download, then follow the install steps below."); },
