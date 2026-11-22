@@ -188,7 +188,7 @@
             <img id="qrTracerImg" src="assets/qr-tracer.png" alt="QR code linking to this Tracer Study guide" />
             <div class="qr-fallback" id="qrTracerFallback" hidden>
               <div class="qr-dummy" aria-hidden="true"></div>
-              <p>QR not generated yet — see the README to create assets/qr-tracer.png.</p>
+              <p>QR unavailable — open the Tracer Study URL shown below.</p>
             </div>
             <p class="qr-caption">Poster QR — opens this guide<span id="tracerUrl"></span></p>
           </div>
@@ -216,7 +216,7 @@
           <img id="qrImg" src="assets/qr-download.png" alt="QR code to download the app" />
           <div class="qr-fallback" id="qrFallback" hidden>
             <div class="qr-dummy" aria-hidden="true"></div>
-            <p>QR coming soon — point it at the hosted APK before defense day. See README.</p>
+            <p>QR unavailable — use the Download APK button instead.</p>
           </div>
           <p class="qr-caption">Scan with your phone camera</p>
         </div>
@@ -296,6 +296,9 @@
   </footer>
 
   <script src="config.js"></script>
+  <!-- MIT QR generator — builds both QR codes in the browser from
+       config.js, so editing a link there updates the QR automatically. -->
+  <script src="qrcode.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
