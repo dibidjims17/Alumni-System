@@ -5,12 +5,31 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using MyApp.API.Security;
 using MyApp.Application.Interfaces;
 using MyApp.Application.Services;
+using MyApp.Domain.Entities;
 using MyApp.Infrastructure.Data;
 using MyApp.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Do not disclose Kestrel in the Server response header.
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+
+// Optional Cloudflare Worker origin gate. It stays disabled locally and is
+// enabled in production only after the Worker has the same secret.
+var cloudflareOptions = builder.Configuration
+    .GetSection(CloudflareOriginOptions.SectionName)
+    .Get<CloudflareOriginOptions>() ?? new CloudflareOriginOptions();
+if (cloudflareOptions.RequireOriginSecret &&
+    Encoding.UTF8.GetByteCount(cloudflareOptions.OriginSecret) < 32)
+{
+    throw new InvalidOperationException(
+        "Cloudflare origin protection requires a random secret of at least 32 bytes. " +
+        "Set Cloudflare__OriginSecret before enabling Cloudflare__RequireOriginSecret.");
+}
+builder.Services.AddSingleton(cloudflareOptions);
 
 // MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -49,7 +68,7 @@ builder.Services.AddScoped<IAdminManagementService, AdminManagementService>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IEmailService, MyApp.Infrastructure.Notifications.EmailService>();
+builder.Services.AddHttpClient<IEmailService, MyApp.Infrastructure.Notifications.EmailService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAlumniDocumentService, AlumniDocumentService>();
 builder.Services.AddScoped<IEventService, EventService>();
@@ -147,11 +166,23 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var allowedOrigins = (builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [])
+    .Select(origin => origin.Trim().TrimEnd('/'))
+    .Where(origin => Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                     (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+
+if (allowedOrigins.Length == 0)
+    allowedOrigins = ["http://localhost:5173"];
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowDesktopApp", policy =>
+    options.AddPolicy("AllowedClients", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -159,9 +190,107 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Railway (and other container hosts) starts with an empty managed database.
+// Migrations and the one-time first admin are opt-in environment settings, so
+// local development and established production databases remain untouched.
+var migrateOnStartup = builder.Configuration.GetValue<bool>("Database:MigrateOnStartup");
+var bootstrapAdmin = builder.Configuration.GetValue<bool>("BootstrapAdmin:Enabled");
+if (migrateOnStartup || bootstrapAdmin)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    if (migrateOnStartup)
+    {
+        app.Logger.LogInformation("Applying pending database migrations.");
+        await db.Database.MigrateAsync();
+    }
+
+    if (bootstrapAdmin)
+    {
+        var username = (builder.Configuration["BootstrapAdmin:Username"] ?? string.Empty).Trim();
+        var fullName = (builder.Configuration["BootstrapAdmin:FullName"] ?? string.Empty).Trim();
+        var email = (builder.Configuration["BootstrapAdmin:Email"] ?? string.Empty).Trim();
+        var password = builder.Configuration["BootstrapAdmin:Password"] ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(username) ||
+            string.IsNullOrWhiteSpace(fullName) ||
+            string.IsNullOrWhiteSpace(email) ||
+            password.Length < 12)
+        {
+            throw new InvalidOperationException(
+                "BootstrapAdmin is enabled. Username, FullName, Email, and a password " +
+                "of at least 12 characters are required.");
+        }
+
+        if (!await db.Admins.AnyAsync())
+        {
+            db.Admins.Add(new Admin
+            {
+                Username = username,
+                FullName = fullName,
+                Email = email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                Role = "SuperAdmin",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+            await db.SaveChangesAsync();
+            app.Logger.LogInformation(
+                "Created the initial SuperAdmin account {Username}. Disable BootstrapAdmin now.",
+                username);
+        }
+        else
+        {
+            app.Logger.LogInformation(
+                "BootstrapAdmin was enabled, but an admin already exists; no account was created.");
+        }
+    }
+}
+
 // Convert unhandled exceptions into consistent JSON problem details instead of
 // leaking stack traces or returning an empty 500.
 app.UseExceptionHandler();
+
+// Defense-in-depth response headers for API JSON and uploaded files. Pages
+// receives its own browser-specific CSP from each site's _headers file.
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        var headers = context.Response.Headers;
+        headers.TryAdd("X-Content-Type-Options", "nosniff");
+        headers.TryAdd("X-Frame-Options", "DENY");
+        headers.TryAdd("Referrer-Policy", "no-referrer");
+        headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+        headers.TryAdd("Cross-Origin-Resource-Policy", "cross-origin");
+        if (!app.Environment.IsDevelopment())
+        {
+            headers.TryAdd(
+                "Content-Security-Policy",
+                "default-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+        }
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
+
+// When enabled, reject direct access to the hosting-provider origin and trust
+// client forwarding headers only from our secret-bearing Cloudflare Worker.
+app.UseMiddleware<CloudflareOriginMiddleware>();
+
+if (!app.Environment.IsDevelopment())
+    app.UseHsts();
+
+// Provider liveness probes can call /health directly over the provider's
+// internal HTTP network. All user-facing traffic remains HTTPS-only.
+app.UseWhen(
+    context => !string.Equals(
+        context.Request.Path.Value,
+        "/health",
+        StringComparison.OrdinalIgnoreCase),
+    branch => branch.UseHttpsRedirection());
 
 // Serve uploaded files (profile pictures, etc.) under /Uploads.
 app.UseStaticFiles(new StaticFileOptions
@@ -177,11 +306,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowDesktopApp");
-app.UseHttpsRedirection();
+app.UseCors("AllowedClients");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
+    .AllowAnonymous();
 app.MapControllers();
 
 app.Run();

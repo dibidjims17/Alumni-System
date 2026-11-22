@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "reunio-api-gateway",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-22",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    // Replace after choosing Railway, Render, Azure, or another public host.
+    // Use the origin root, without /api (the incoming path is preserved).
+    "ORIGIN_URL": "https://REPLACE_WITH_YOUR_API_ORIGIN"
+  }
+}

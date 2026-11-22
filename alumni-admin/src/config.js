@@ -2,7 +2,11 @@
 const LOCAL_IP = '10.14.135.128';
 const PORT = '5207';
 
-export const API_BASE_URL = `http://${LOCAL_IP}:${PORT}/api`;
+// Cloudflare Pages supplies VITE_API_BASE_URL at build time. Local Electron
+// and Vite development continue to use the current LAN address as fallback.
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || `http://${LOCAL_IP}:${PORT}/api`
+).replace(/\/+$/, '');
 
 // Google Sign-In for the admin console (Google Identity Services).
 // Set via .env file:  VITE_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com

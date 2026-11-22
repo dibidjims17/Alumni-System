@@ -11,6 +11,10 @@ obj/
 
 # Env/secrets
 .env
+.env.*
+!.env.example
+.dev.vars*
+.wrangler/
 appsettings.Development.json
 
 # OS junk
