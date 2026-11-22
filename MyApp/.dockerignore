@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/*.user
+**/.vs/
+**/.idea/
+MyApp.API/appsettings.json
+MyApp.API/appsettings.Development.json
+MyApp.API/appsettings.example.json
+MyApp.API/Uploads/
+*.log
