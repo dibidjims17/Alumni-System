@@ -16,31 +16,27 @@ without a third-party service.
    Offline alternative: `npx expo run:android --variant release`, then
    `android/app/build/outputs/apk/release/app-release.apk`.
 2. **Point the site at it**: set `installUrl` in `config.js` to the APK
-   URL (current: v1.0.0 GitHub Release, ~190 MB). The download QR is
+   URL (current: v1.0.0 GitHub Release, ~118 MB). The download QR is
    generated automatically from that value every time the page loads;
    there is no separate QR command or image update.
    (`downloads/alumni.apk` remains as a self-hosted fallback — used only
    when `installUrl` is empty.) Update `apkVersion` in `config.js` if the
    version changed.
-3. **Host this folder** and open it on a PC connected to the demo WiFi.
-   Panel members on the same WiFi open the site, scan the QR, install,
-   and log in with their alumni accounts.
+3. **Host this folder** on Cloudflare Pages. Visitors can open the site,
+   scan the QR, install, and sign in over ordinary WiFi or mobile data.
 4. **Tracer Study campaign QR**: the `#tracer` section explains the
    graduate pre-screening questionnaire. Its QR is generated
    automatically from `siteUrl + "#tracer"` in `config.js`. The current
-   `siteUrl` points at the GitHub Pages path for this repo — update that
+   `siteUrl` points at the Cloudflare Pages deployment — update that
    one value if you host elsewhere. The PNG files in `assets/` are only
    offline fallbacks; the live page normally displays generated SVG QRs.
 
 ## Notes
 
-- The app talks to the backend over the **local network** (`config.js` in
-  `alumni-mobile/`), so installers must join the same WiFi as the demo
-  server. A public release would need hosted API + rebuild — out of scope
-  for the LAN demo.
+- EAS preview/production builds use the Railway HTTPS API. Local Metro
+  development still falls back to the LAN URL in `alumni-mobile/src/config.js`.
 - The download button auto-detects whether `downloads/alumni.apk` exists
   (via HEAD request when served over http) and shows a "not uploaded yet"
   state otherwise.
-- Keep `installUrl` aligned with `Site:ApkUrl` in the API's local
-  `appsettings.json` so website downloads and backend invitation messages
-  point to the same release.
+- Keep `installUrl` aligned with `Site__ApkUrl` in Railway so website
+  downloads and backend invitation messages point to the same release.
