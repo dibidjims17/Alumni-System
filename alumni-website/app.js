@@ -1,5 +1,5 @@
 // Promo site behavior: mobile nav, config-driven labels, APK availability
-// check, and QR fallback. No dependencies.
+// check, and QR codes generated from config. Depends on qrcode.js (MIT).
 (function () {
   "use strict";
   var cfg = window.SITE_CONFIG || {};
@@ -33,9 +33,9 @@
     });
   }
 
-  // Download wiring: prefer the hosted installUrl (Expo artifact, verified
-  // live); otherwise fall back to the self-hosted apkPath with an
-  // availability check.
+  // Download wiring: prefer the hosted installUrl (GitHub Releases or
+  // Expo artifact); otherwise fall back to the self-hosted apkPath with
+  // an availability check.
   var btn = document.getElementById("apkButton");
   var note = document.getElementById("apkNote");
   function setState(ok, readyText) {
@@ -56,7 +56,7 @@
       btn.setAttribute("rel", "noopener");
       btn.removeAttribute("download");
     }
-    setState(true, "Hosted on Expo — tap to download (~190 MB), then follow the install steps below.");
+    setState(true, "Direct download — tap to get the APK (~190 MB), then follow the install steps below.");
   } else if (window.location.protocol.indexOf("http") === 0 && cfg.apkPath) {
     fetch(cfg.apkPath, { method: "HEAD" }).then(
       function (res) { setState(res.ok, "APK is ready — tap to download, then follow the install steps below."); },
@@ -66,7 +66,10 @@
     note.textContent = "Open this page over http(s) or host it to enable one-tap download checks.";
   }
 
-  // QR fallback: if the generated QR png is missing, show the placeholder.
+  // QR codes are rendered in the browser from config on every load, so
+  // editing a link in config.js updates the QR automatically — no PNG
+  // regeneration step. The static PNGs in assets/ remain as fallback if
+  // qrcode.js is missing or generation fails.
   function wireQrFallback(imgId, fallbackId) {
     var img = document.getElementById(imgId);
     var fb = document.getElementById(fallbackId);
@@ -81,12 +84,55 @@
       if (fb) fb.hidden = false;
     }
   }
-  wireQrFallback("qrImg", "qrFallback");
-  wireQrFallback("qrTracerImg", "qrTracerFallback");
+
+  function renderQr(imgId, fallbackId, text, fallbackPath) {
+    var img = document.getElementById(imgId);
+    var fb = document.getElementById(fallbackId);
+    if (!img) return;
+    // Restore the configured static image first. Successful generation
+    // immediately replaces it; otherwise it remains as the fallback.
+    if (fallbackPath) img.src = fallbackPath;
+    if (!text || typeof qrcode !== "function") {
+      // No source URL, or qrcode.js did not load: keep the static PNG
+      // and let the fallback placeholder cover a missing one.
+      wireQrFallback(imgId, fallbackId);
+      return;
+    }
+    try {
+      var qr = qrcode(0, "M"); // 0 = auto-pick version, M = medium ECC
+      qr.addData(text);
+      qr.make();
+      // SVG data URL stays crisp at any print size.
+      var svg = qr.createSvgTag({ cellSize: 4, margin: 8, scalable: true });
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      img.style.display = "";
+      if (fb) fb.hidden = true;
+    } catch (e) {
+      wireQrFallback(imgId, fallbackId);
+    }
+  }
+
+  var apkQrTarget = cfg.installUrl || "";
+  if (!apkQrTarget && cfg.apkPath && window.location.protocol.indexOf("http") === 0) {
+    apkQrTarget = new URL(cfg.apkPath, window.location.href).href;
+  }
+  // Preserve the trailing slash in siteUrl. For a GitHub Pages project
+  // site, /project/#tracer and /project#tracer are not equivalent.
+  var tracerQrTarget = cfg.siteUrl
+    ? cfg.siteUrl.replace(/#.*$/, "") + "#tracer"
+    : "";
+
+  renderQr("qrImg", "qrFallback", apkQrTarget, cfg.qrPath);
+  renderQr(
+    "qrTracerImg",
+    "qrTracerFallback",
+    tracerQrTarget,
+    "assets/qr-tracer.png"
+  );
 
   // Tracer guide: show the printable URL under the poster QR.
   var tracerUrl = document.getElementById("tracerUrl");
-  if (tracerUrl && cfg.siteUrl) {
-    tracerUrl.textContent = " " + cfg.siteUrl + "#tracer";
+  if (tracerUrl && tracerQrTarget) {
+    tracerUrl.textContent = " " + tracerQrTarget;
   }
 })();
