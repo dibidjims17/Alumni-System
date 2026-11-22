@@ -294,5 +294,29 @@ namespace MyApp.Application.Services
             var tokens = await _pushTokenRepository.GetTokensForActiveStudentsAsync(graduatesOnly: false);
             await _pushService.SendAsync(tokens, "New Event", $"New alumni event: \"{eventTitle}\"", "EVENT", eventId);
         }
+
+        // A reviewed post suggestion: the submitter learns the outcome and
+        // the admin's note (approve links to the published News post).
+        public async Task NotifySuggestionReviewedAsync(int studentId, bool approved, string title, string? note, int? newsId)
+        {
+            var message = approved
+                ? $"Your post \"{title}\" is now live in the Community feed."
+                : $"Your post \"{title}\" was not approved{(string.IsNullOrWhiteSpace(note) ? "." : $": {note}")}";
+
+            var notification = new Notification
+            {
+                StudentId = studentId,
+                Title = approved ? "Post Approved" : "Post Not Approved",
+                Message = message,
+                Type = "SUGGESTION",
+                RelatedId = newsId,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _notificationRepository.CreateAsync(notification);
+
+            var tokens = await _pushTokenRepository.GetTokensByStudentIdAsync(studentId);
+            await _pushService.SendAsync(tokens, notification.Title, notification.Message,
+                notification.Type, notification.RelatedId);
+        }
     }
 }

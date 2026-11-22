@@ -10,7 +10,7 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
-import { Heart, MessageCircle, Globe } from 'lucide-react-native';
+import { Heart, MessageCircle, Globe, Megaphone, ChevronRight } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
@@ -308,6 +308,19 @@ export default function NewsListScreen({ navigation }) {
           onClear={clearSearch}
         />
       </View>
+      {/* Entry point for post suggestions (endorse a business, find
+          clients) — admin-reviewed before it reaches this feed. */}
+      <TouchableOpacity
+        style={[styles.suggestRow, { backgroundColor: c.surface, borderColor: c.border }]}
+        onPress={() => navigation.navigate('SuggestPost')}
+        activeOpacity={0.7}
+      >
+        <Megaphone size={18} color={c.primary} />
+        <Text style={[styles.suggestText, { color: c.text }]}>
+          Suggest a post — endorse your business or find clients
+        </Text>
+        <ChevronRight size={18} color={c.textMuted} />
+      </TouchableOpacity>
       {isLoading ? (
         <View style={styles.skeletonList}>
           {[0, 1, 2].map((i) => (
@@ -391,6 +404,22 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 6,
+  },
+  suggestRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  suggestText: {
+    flex: 1,
+    fontSize: 13.5,
+    fontWeight: '600',
   },
   list: {
     flex: 1,

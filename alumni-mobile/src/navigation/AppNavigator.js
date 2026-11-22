@@ -15,6 +15,7 @@ import YearCorrectionScreen from '../screens/YearCorrectionScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NewsListScreen from '../screens/NewsListScreen';
 import NewsDetailScreen from '../screens/NewsDetailScreen';
+import SuggestPostScreen from '../screens/SuggestPostScreen';
 import EventsListScreen from '../screens/EventsListScreen';
 import EventDetailScreen from '../screens/EventDetailScreen';
 import DirectoryScreen from '../screens/DirectoryScreen';
@@ -115,6 +116,11 @@ function CommunityStack() {
       screenOptions={{ ...headerOptions(theme.colors), headerShown: false }}
     >
       <CommunityStackNav.Screen name="NewsList" component={NewsListScreen} />
+      <CommunityStackNav.Screen
+        name="SuggestPost"
+        component={SuggestPostScreen}
+        options={{ headerShown: false }}
+      />
       <CommunityStackNav.Screen name="EventsList" component={EventsListScreen} />
       <CommunityStackNav.Screen name="Directory" component={DirectoryScreen} />
       <CommunityStackNav.Screen
