@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck, Pencil, Camera } from "lucide-react";
-import { getMyProfile, updateMyProfile, uploadMyPicture } from "../services/adminApi";
+import { ShieldCheck, Pencil, Camera, KeyRound } from "lucide-react";
+import { getMyProfile, updateMyProfile, uploadMyPicture, changeMyPassword } from "../services/adminApi";
 import { patchSession } from "../services/api";
 import { API_BASE_URL } from "../config";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import {
-  ModalShell, Field, textInput,
+  ModalShell, Field, textInput, PasswordInput, PasswordChecklist, passwordMeetsAll,
   card, cardTitle, cardMeta, actionsRow,
   btn, btnPrimary, statusTone, EmptyState, pageWrap,
 } from "../components/kit";
@@ -38,6 +38,12 @@ export default function Profile() {
   const [editFile, setEditFile] = useState(null);
   const [editPreview, setEditPreview] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   async function loadProfile() {
     setLoading(true);
@@ -108,6 +114,39 @@ export default function Profile() {
       notifyError(err.message);
     } finally {
       setEditSaving(false);
+    }
+  }
+
+  function openPasswordModal() {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowPassword(true);
+  }
+
+  async function handlePasswordSave(e) {
+    e.preventDefault();
+    if (!passwordMeetsAll(newPassword)) {
+      notifyError("The new password does not meet all requirements.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      notifyError("New password and confirmation do not match.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      const result = await changeMyPassword(currentPassword, newPassword);
+      notifySuccess(result.message || "Password changed successfully.");
+      setShowPassword(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      notifyError(err.message);
+    } finally {
+      setPasswordSaving(false);
     }
   }
 
@@ -201,7 +240,11 @@ export default function Profile() {
                     </span>
                   </div>
                 </div>
-                <div style={{ paddingBottom: 2 }}>
+                <div style={{ paddingBottom: 2, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button type="button" onClick={openPasswordModal} style={btn}>
+                    <KeyRound size={15} />
+                    Change password
+                  </button>
                   <button type="button" onClick={openEditModal} style={btnPrimary}>
                     <Pencil size={15} />
                     Edit profile
@@ -299,6 +342,43 @@ export default function Profile() {
               </button>
               <button type="submit" disabled={editSaving} style={btnPrimary}>
                 {editSaving ? "Saving..." : "Save changes"}
+              </button>
+            </div>
+          </form>
+        </ModalShell>
+      )}
+
+      {showPassword && (
+        <ModalShell title="Change your password" onClose={() => !passwordSaving && setShowPassword(false)} width={460}>
+          <form onSubmit={handlePasswordSave}>
+            <Field label="Current password">
+              <PasswordInput
+                value={currentPassword}
+                onChange={setCurrentPassword}
+                autoComplete="current-password"
+              />
+            </Field>
+            <Field label="New password">
+              <PasswordInput
+                value={newPassword}
+                onChange={setNewPassword}
+                autoComplete="new-password"
+              />
+            </Field>
+            <PasswordChecklist password={newPassword} />
+            <Field label="Confirm new password">
+              <PasswordInput
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                autoComplete="new-password"
+              />
+            </Field>
+            <div style={actionsRow}>
+              <button type="button" onClick={() => setShowPassword(false)} style={btn} disabled={passwordSaving}>
+                Cancel
+              </button>
+              <button type="submit" style={btnPrimary} disabled={passwordSaving}>
+                {passwordSaving ? "Changing..." : "Change password"}
               </button>
             </div>
           </form>
