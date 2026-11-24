@@ -4,7 +4,7 @@ import { View, ActivityIndicator, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Header, getHeaderTitle } from '@react-navigation/elements';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BottomTabBar, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { House, Users, Briefcase, User, GraduationCap } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -38,6 +38,7 @@ import JobDetailScreen from '../screens/JobDetailScreen';
 import MyApplicationsScreen from '../screens/MyApplicationsScreen';
 
 import NotificationsScreen from '../screens/NotificationsScreen';
+import PilotTourPill from '../components/PilotTourPill';
 
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
@@ -57,6 +58,15 @@ const TAB_ICONS = {
   ProfileTab: User,
   YearTab: GraduationCap,
 };
+
+function AppTabBar(props) {
+  return (
+    <View style={{ position: 'relative' }}>
+      <PilotTourPill navigation={props.navigation} />
+      <BottomTabBar {...props} />
+    </View>
+  );
+}
 
 // CDM portal header: deep-green bar + 3px gold strip, white title.
 // statusBarStyle 'light' fits every screen whose top is green; auth screens
@@ -246,6 +256,7 @@ function AppTabs() {
   const isGraduate = student?.schoolYear === 'Graduate';
   return (
     <Tab.Navigator
+      tabBar={(props) => <AppTabBar {...props} />}
       // Back always exits toward Home first (never walks tab history), and
       // each tab resets when left — returning to a tab always lands on its
       // root screen, never a stale pushed screen like Notifications.
