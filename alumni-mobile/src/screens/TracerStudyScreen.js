@@ -115,10 +115,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   const [yearGraduated, setYearGraduated] = useState('');
   const [contactNo, setContactNo] = useState('');
   const [emailOrFb, setEmailOrFb] = useState(student?.email || '');
-  // Legacy field retained only so editing an older response does not erase
-  // it. The official paper form asks one optional Present Address question.
+  // Both address fields are optional; the shortcut keeps temporary/current
+  // address synchronized when it is the same as the permanent address.
   const [permanentAddress, setPermanentAddress] = useState('');
   const [currentLocation, setCurrentLocation] = useState('');
+  const [sameAsPermanent, setSameAsPermanent] = useState(false);
 
   // Section B — Employment Status (the branch point)
   const [employmentStatus, setEmploymentStatus] = useState('');
@@ -174,8 +175,15 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         if (d.contactNo) setContactNo(d.contactNo);
         if (d.emailOrFb) setEmailOrFb(d.emailOrFb);
         if (d.permanentAddress) setPermanentAddress(d.permanentAddress);
-        if (d.presentAddress) setCurrentLocation(d.presentAddress);
-        else if (d.permanentAddress) setCurrentLocation(d.permanentAddress);
+        if (d.presentAddress) {
+          setCurrentLocation(d.presentAddress);
+          setSameAsPermanent(
+            !!d.permanentAddress && d.presentAddress === d.permanentAddress
+          );
+        } else if (d.permanentAddress) {
+          setCurrentLocation(d.permanentAddress);
+          setSameAsPermanent(true);
+        }
         if (d.employmentStatus) setEmploymentStatus(d.employmentStatus);
         if (d.companyName) setCompanyName(d.companyName);
         if (d.position) setPosition(d.position);
@@ -336,6 +344,19 @@ export default function TracerStudyScreen({ navigation, onExit }) {
       `/Suggestions?term=${encodeURIComponent(term)}&type=${encodeURIComponent(type)}`
     );
     return res.data || [];
+  }
+
+  function changePermanentAddress(value) {
+    setPermanentAddress(value);
+    if (sameAsPermanent) setCurrentLocation(value);
+  }
+
+  function toggleSameAsPermanent() {
+    setSameAsPermanent((wasChecked) => {
+      const isChecked = !wasChecked;
+      if (isChecked) setCurrentLocation(permanentAddress);
+      return isChecked;
+    });
   }
 
   function cleanStepError(message) {
@@ -686,19 +707,62 @@ export default function TracerStudyScreen({ navigation, onExit }) {
 
             <QuestionCard
               number="4"
-              title="Present address"
+              title="Permanent and temporary address"
               optional
-              helper="Your city or municipality and province are enough."
+              helper="Both are optional. Your city or municipality and province are enough."
               c={c}
             >
-              <TextInput
-                style={[styles.input, styles.multiline, inputColors(c)]}
-                value={currentLocation}
-                onChangeText={setCurrentLocation}
-                multiline
-                placeholder="City / Municipality, Province"
-                placeholderTextColor={c.placeholder}
-              />
+              <Field label="Permanent address" c={c}>
+                <TextInput
+                  style={[styles.input, styles.multiline, inputColors(c)]}
+                  value={permanentAddress}
+                  onChangeText={changePermanentAddress}
+                  multiline
+                  placeholder="City / Municipality, Province"
+                  placeholderTextColor={c.placeholder}
+                />
+              </Field>
+              <TouchableOpacity
+                style={styles.addressCheckboxRow}
+                onPress={toggleSameAsPermanent}
+                activeOpacity={0.72}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: sameAsPermanent }}
+                accessibilityLabel="Temporary address is the same as permanent address"
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    {
+                      borderColor: sameAsPermanent ? c.primary : c.border,
+                      backgroundColor: sameAsPermanent ? c.primary : c.surface,
+                    },
+                  ]}
+                >
+                  {sameAsPermanent ? (
+                    <Text style={[styles.checkboxMark, { color: c.onPrimary }]}>✓</Text>
+                  ) : null}
+                </View>
+                <Text style={[styles.addressCheckboxLabel, { color: c.text }]}>
+                  Temporary address is the same as permanent address
+                </Text>
+              </TouchableOpacity>
+              <Field label="Temporary / current address" c={c}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.multiline,
+                    inputColors(c),
+                    sameAsPermanent && styles.inputDisabled,
+                  ]}
+                  value={currentLocation}
+                  onChangeText={setCurrentLocation}
+                  editable={!sameAsPermanent}
+                  multiline
+                  placeholder="City / Municipality, Province"
+                  placeholderTextColor={c.placeholder}
+                />
+              </Field>
             </QuestionCard>
           </View>
         )}
@@ -1040,7 +1104,8 @@ export default function TracerStudyScreen({ navigation, onExit }) {
                 ['2. Year graduated', yearGraduated],
                 ['3. Contact number', contactNo],
                 ['3. Email / Facebook', emailOrFb],
-                ['4. Present address', currentLocation],
+                ['4. Permanent address', permanentAddress],
+                ['4. Temporary / current address', currentLocation],
               ]}
               c={c}
             />
@@ -1447,6 +1512,14 @@ const styles = StyleSheet.create({
     minHeight: 46,
   },
   multiline: { minHeight: 104, textAlignVertical: 'top' },
+  inputDisabled: { opacity: 0.62 },
+  addressCheckboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingVertical: 4,
+  },
+  addressCheckboxLabel: { flex: 1, marginLeft: 9, fontSize: 12.5, lineHeight: 18 },
   choiceGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   checkbox: {
     width: 20,
