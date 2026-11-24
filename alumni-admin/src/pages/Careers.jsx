@@ -65,6 +65,30 @@ function StatTile({ icon: Icon, label, value, tone }) {
   );
 }
 
+// Section heading that spans every column of the stats grid, so the three
+// groups read as labeled rows while all tiles keep identical widths.
+function StatGroupLabel({ children }) {
+  return (
+    <div
+      style={{
+        gridColumn: "1 / -1",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        fontSize: 11,
+        fontWeight: 750,
+        textTransform: "uppercase",
+        letterSpacing: 0.7,
+        color: "var(--muted)",
+        marginTop: 4,
+      }}
+    >
+      <span>{children}</span>
+      <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+    </div>
+  );
+}
+
 // Proof document preview — thumbnail that opens the full-size image.
 function ProofImage({ path, label }) {
   const url = fileUrl(path);
@@ -306,21 +330,32 @@ export default function Careers() {
       {/* ── Stats ─────────────────────────────────────────── */}
       {stats && (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 14, marginTop: 4 }}>
+          {/* One shared five-column grid keeps every desktop tile identical
+              in width and all three groups on the same column lines. Group
+              labels span the full row to keep the sections readable. */}
+          <div
+            className="career-stat-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+              gap: 14,
+              marginTop: 4,
+            }}
+          >
+            <StatGroupLabel>Submissions</StatGroupLabel>
             <StatTile icon={Users} label="Graduates" value={stats.totalGraduates} tone="info" />
             <StatTile icon={Briefcase} label="Submitted" value={stats.submitted} tone="violet" />
             <StatTile icon={Clock3} label="Pending" value={stats.pending} tone="warning" />
             <StatTile icon={BadgeCheck} label="Approved" value={stats.approved} tone="success" />
             <StatTile icon={XCircle} label="Rejected" value={stats.rejected} tone="danger" />
-          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 14, marginTop: 14 }}>
+            <StatGroupLabel>Employment outcomes</StatGroupLabel>
             <StatTile icon={Briefcase} label="Employed" value={stats.employed} tone="success" />
             <StatTile icon={Briefcase} label="Self-Employed" value={stats.selfEmployed} tone="success" />
             <StatTile icon={XCircle} label="Unemployed" value={stats.unemployed} tone="warning" />
             <StatTile icon={BadgeCheck} label="Further Studies" value={stats.furtherStudies} tone="info" />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 14, marginTop: 14 }}>
+
+            <StatGroupLabel>Program alignment</StatGroupLabel>
             <StatTile icon={Target} label="Program-Related" value={`${stats.alignmentRate}%`} tone="success" />
             <StatTile icon={BadgeCheck} label="Aligned" value={stats.aligned} tone="success" />
             <StatTile icon={Target} label="Related" value={stats.related} tone="info" />
@@ -658,6 +693,15 @@ export default function Careers() {
           </div>
         </ModalShell>
       )}
+
+      <style>{`
+        @media (max-width: 900px) {
+          .career-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 560px) {
+          .career-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }
+      `}</style>
     </div>
   );
 }
