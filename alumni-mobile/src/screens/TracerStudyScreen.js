@@ -3,7 +3,7 @@
 // before the app unlocks. Questions follow the school's paper form
 // (Graduate_Tracer_Study_Questionnaire.docx, Sections A–E) in a step-by-
 // step flow with a review screen, mirroring ProfileSetupWizardScreen.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -41,7 +41,14 @@ const SHOW_PARTICIPATION_NOTICE = TRACER_BETA;
 
 // Option sets — kept identical to TracerService's validation lists so the
 // client and server can never disagree on what a valid answer is.
-const SECTIONS = ['Profile', 'Employment', 'Job Details', 'Program Alignment', 'Feedback', 'Review'];
+const SECTIONS = [
+  { code: 'A', title: 'Graduate Profile', range: 'Questions 1-4' },
+  { code: 'B', title: 'Employment Status', range: 'Employment branch' },
+  { code: 'C', title: 'Employment Details', range: 'Questions 5-9' },
+  { code: 'D', title: 'Alignment to Course', range: 'Questions 10-13' },
+  { code: 'E', title: 'Feedback', range: 'Questions 14-15' },
+  { code: null, title: 'Review Answers', range: 'Final step' },
+];
 
 const EMPLOYMENT_OPTIONS = [
   'Employed (Full-time)',
@@ -60,6 +67,33 @@ const JOB_SOURCES = ['Walk-in', 'Online', 'Referral', 'School Job Fair', 'OJT / 
 const RELATEDNESS = ['Highly Related', 'Related', 'Somewhat Related', 'NOT Related'];
 const SKILL_OPTIONS = ['Major Subjects', 'Computer / Technical', 'Communication', 'OJT Experience', 'Others'];
 const YES_NO = ['Yes', 'No'];
+const SALARY_LABELS = {
+  'Below 10k': 'Below PHP 10,000',
+  '10k-15k': 'PHP 10,000-15,000',
+  '15k-20k': 'PHP 15,000-20,000',
+  '20k-30k': 'PHP 20,000-30,000',
+  'Above 30k': 'Above PHP 30,000',
+};
+const MONTHS_TO_JOB_LABELS = {
+  '<1': 'Less than 1 month',
+  '1-3': '1-3 months',
+  '4-6': '4-6 months',
+  '7-12': '7-12 months',
+  '>12': 'More than 12 months',
+};
+const JOB_SOURCE_LABELS = {
+  'Walk-in': 'Walk-in application',
+  Online: 'Online application',
+  Referral: 'Referral',
+  'School Job Fair': 'School job fair',
+  'OJT / Internship': 'OJT / internship',
+};
+const RELATEDNESS_LABELS = {
+  'Highly Related': 'Highly related',
+  Related: 'Related',
+  'Somewhat Related': 'Somewhat related',
+  'NOT Related': 'Not related',
+};
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function TracerStudyScreen({ navigation, onExit }) {
@@ -67,21 +101,24 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   const { student } = useAuth();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef(null);
 
   const [step, setStep] = useState(0);
   const [noticeAccepted, setNoticeAccepted] = useState(!SHOW_PARTICIPATION_NOTICE);
   const [showAll, setShowAll] = useState(false);
+  const [stepError, setStepError] = useState('');
 
   // Section A — Graduate Profile (prefilled from the account)
-  const [fullName, setFullName] = useState(student?.fullName || '');
+  const fullName = student?.fullName || '';
   const [sex, setSex] = useState('');
   const [course, setCourse] = useState(student?.program || '');
   const [yearGraduated, setYearGraduated] = useState('');
   const [contactNo, setContactNo] = useState('');
-  const [emailOrFb, setEmailOrFb] = useState('');
+  const [emailOrFb, setEmailOrFb] = useState(student?.email || '');
+  // Legacy field retained only so editing an older response does not erase
+  // it. The official paper form asks one optional Present Address question.
   const [permanentAddress, setPermanentAddress] = useState('');
   const [currentLocation, setCurrentLocation] = useState('');
-  const [sameAsPermanent, setSameAsPermanent] = useState(false);
 
   // Section B — Employment Status (the branch point)
   const [employmentStatus, setEmploymentStatus] = useState('');
@@ -111,6 +148,9 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   // Job Details is only truly skipped once a status has been chosen —
   // before that the section is undecided, not skipped.
   const jobDetailsSkipped = employmentStatus !== '' && !employed;
+  // "View all" in beta still previews the employed branch before a status is
+  // chosen; once a non-employed answer is selected, show the honest skip state.
+  const showJobQuestions = employed || (showAll && employmentStatus === '');
 
   // Edit-after-submit (§8 Q2): when a submitted response is re-opened,
   // prefill every field from GET /Tracer/me and flip the flow into
@@ -134,12 +174,8 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         if (d.contactNo) setContactNo(d.contactNo);
         if (d.emailOrFb) setEmailOrFb(d.emailOrFb);
         if (d.permanentAddress) setPermanentAddress(d.permanentAddress);
-        if (d.presentAddress) {
-          setCurrentLocation(d.presentAddress);
-          setSameAsPermanent(
-            !!d.permanentAddress && d.presentAddress === d.permanentAddress
-          );
-        }
+        if (d.presentAddress) setCurrentLocation(d.presentAddress);
+        else if (d.permanentAddress) setCurrentLocation(d.permanentAddress);
         if (d.employmentStatus) setEmploymentStatus(d.employmentStatus);
         if (d.companyName) setCompanyName(d.companyName);
         if (d.position) setPosition(d.position);
@@ -161,6 +197,9 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         if (d.satisfiedReason) setSatisfiedReason(d.satisfiedReason);
         if (d.wouldRecommend) setWouldRecommend(d.wouldRecommend);
         setEditing(!!d.completed);
+        if (!d.completed && d.currentStep >= 1 && d.currentStep <= 5) {
+          setStep(d.currentStep - 1);
+        }
       } catch (e) {
         // No saved answers (or offline) — start blank, same as before.
       }
@@ -227,10 +266,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
     if (!TRACER_BETA) {
       const error = validateStep(step);
       if (error) {
-        appAlert('Almost there', error);
+        showValidationError(error);
         return;
       }
     }
+    setStepError('');
     // Section B branch: unemployed / studying skips Job Details entirely.
     if (step === 1 && !employed) {
       saveDraft(3);
@@ -241,6 +281,15 @@ export default function TracerStudyScreen({ navigation, onExit }) {
       saveDraft(step + 1);
       setStep(step + 1);
     }
+  }
+
+  function nextButtonTitle() {
+    if (step === 0) return 'Continue to Employment';
+    if (step === 1 && !employmentStatus) return 'Continue';
+    if (step === 1) return employed ? 'Continue to Job Details' : 'Continue to Alignment';
+    if (step === 2) return 'Continue to Alignment';
+    if (step === 3) return 'Continue to Feedback';
+    return 'Review answers';
   }
 
   // Fire-and-forget draft save as the respondent moves between steps
@@ -257,6 +306,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   }
 
   function back() {
+    setStepError('');
     if (step === 0) {
       exitFlow();
       return;
@@ -271,6 +321,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
 
   function jumpTo(index) {
     setShowAll(false);
+    setStepError('');
     setStep(index);
   }
 
@@ -287,16 +338,16 @@ export default function TracerStudyScreen({ navigation, onExit }) {
     return res.data || [];
   }
 
-  function changePermanentAddress(value) {
-    setPermanentAddress(value);
-    if (sameAsPermanent) setCurrentLocation(value);
+  function cleanStepError(message) {
+    return String(message || '').replace(/^Step \d+:\s*/i, '');
   }
 
-  function toggleSameAsPermanent() {
-    setSameAsPermanent((wasChecked) => {
-      const isChecked = !wasChecked;
-      if (isChecked) setCurrentLocation(permanentAddress);
-      return isChecked;
+  function showValidationError(message, targetStep = step) {
+    setShowAll(false);
+    setStep(targetStep);
+    setStepError(cleanStepError(message));
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
     });
   }
 
@@ -317,14 +368,16 @@ export default function TracerStudyScreen({ navigation, onExit }) {
       companyName: employed ? companyName.trim() || null : null,
       position: employed ? position.trim() || null : null,
       companyType: employed ? companyType || null : null,
-      companyTypeOther: employed ? companyTypeOther.trim() || null : null,
+      companyTypeOther:
+        employed && companyType === 'Others' ? companyTypeOther.trim() || null : null,
       salaryBand: employed ? salaryBand || null : null,
       monthsToJob: employed ? monthsToJob || null : null,
       jobSource: employed ? jobSource || null : null,
-      courseRelatedness: courseRelatedness || null,
-      courseRelatednessComment: relatednessComment.trim() || null,
-      skillsUsed: skillsUsed.length ? skillsUsed.join(', ') : null,
-      skillsUsedOther: skillsUsedOther.trim() || null,
+      courseRelatedness: employed ? courseRelatedness || null : null,
+      courseRelatednessComment: employed ? relatednessComment.trim() || null : null,
+      skillsUsed: employed && skillsUsed.length ? skillsUsed.join(', ') : null,
+      skillsUsedOther:
+        employed && skillsUsed.includes('Others') ? skillsUsedOther.trim() || null : null,
       skillsWanted: skillsWanted.trim() || null,
       satisfied: satisfied || null,
       satisfiedReason: satisfiedReason.trim() || null,
@@ -335,10 +388,13 @@ export default function TracerStudyScreen({ navigation, onExit }) {
   async function submit() {
     // Beta preview: also skip final validation (nothing is recorded anyway).
     if (!TRACER_BETA) {
-      const error = validateStep(0) || validateStep(1) || validateStep(3) || validateStep(4);
-      if (error) {
-        appAlert('Almost there', error);
-        return;
+      const stepsToValidate = employed ? [0, 1, 2, 3, 4] : [0, 1, 3, 4];
+      for (const targetStep of stepsToValidate) {
+        const error = validateStep(targetStep);
+        if (error) {
+          showValidationError(error, targetStep);
+          return;
+        }
       }
     }
 
@@ -365,6 +421,11 @@ export default function TracerStudyScreen({ navigation, onExit }) {
       );
     } catch (err) {
       const message = err.response?.data?.message || 'Could not submit. Please try again.';
+      const stepMatch = /^Step ([1-5]):/i.exec(message);
+      if (stepMatch) {
+        showValidationError(message, Number(stepMatch[1]) - 1);
+        return;
+      }
       appAlert('Error', message);
     }
   }
@@ -397,7 +458,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               Please read the following before you start:
             </Text>
             {[
-              'Takes about 2 minutes — 6 short sections based on the official school questionnaire.',
+              'Usually takes 2-3 minutes: 5 questionnaire sections plus a final review.',
               'Your answers are confidential and used for school improvement only.',
               'You can review and edit everything on the last step before submitting.',
               'Completing the study is required of every graduate before the app unlocks.',
@@ -414,7 +475,16 @@ export default function TracerStudyScreen({ navigation, onExit }) {
             )}
           </View>
         </ScrollView>
-        <View style={[styles.footer, { borderTopColor: c.border, backgroundColor: c.background }]}>
+        <View
+          style={[
+            styles.footer,
+            {
+              borderTopColor: c.border,
+              backgroundColor: c.background,
+              paddingBottom: Math.max(insets.bottom, 12),
+            },
+          ]}
+        >
           {TRACER_BETA ? (
             <TouchableOpacity style={styles.backButton} onPress={exitFlow}>
               <Text style={[styles.backText, { color: c.textMuted }]}>Skip for now</Text>
@@ -450,8 +520,10 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         <View style={styles.progressTop}>
           <Text style={[styles.stepCount, { color: 'rgba(255,255,255,0.75)' }]}>
             {showAll
-              ? 'All questions · Sections A–E'
-              : `Step ${step + 1} of ${SECTIONS.length} · ${SECTIONS[step]}`}
+              ? 'All questions - Sections A-E'
+              : step === SECTIONS.length - 1
+                ? `Final review - ${step + 1} of ${SECTIONS.length}`
+                : `Section ${SECTIONS[step].code} - ${step + 1} of ${SECTIONS.length}`}
           </Text>
           <View style={styles.headerActions}>
             {TRACER_BETA && !showAll && (
@@ -468,12 +540,12 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         </View>
         {!showAll && (
           <View style={styles.dots}>
-            {SECTIONS.map((s, i) => {
+            {SECTIONS.map((section, i) => {
               const skipped = i === 2 && jobDetailsSkipped && step !== 2;
               const done = i <= step && !skipped;
               return (
                 <View
-                  key={s}
+                  key={section.title}
                   style={[
                     styles.dot,
                     {
@@ -504,416 +576,471 @@ export default function TracerStudyScreen({ navigation, onExit }) {
       </View>
       <View style={[styles.progressAccent, { backgroundColor: c.gold }]} />
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {stepError && !showAll ? (
+          <View
+            style={[
+              styles.validationBanner,
+              { backgroundColor: c.tintDanger, borderColor: c.danger },
+            ]}
+            accessibilityRole="alert"
+          >
+            <Text style={[styles.validationTitle, { color: c.danger }]}>Please check this section</Text>
+            <Text style={[styles.validationText, { color: c.text }]}>{stepError}</Text>
+          </View>
+        ) : null}
         {/* ── Step 1 · Section A ─────────────────────────── */}
         {(showAll || step === 0) && (
           <View>
-            <Text style={[styles.stepTitle, { color: c.text }]}>
-              {showAll ? 'A · Graduate Profile' : 'Graduate Profile'}
-            </Text>
-            <Text style={[styles.stepSub, { color: c.textMuted }]}>
-              Please answer honestly. All information will be kept confidential and used for
-              school improvement only.
-            </Text>
-            <Field label="Full Name" c={c} hint="from your account">
-              <TextInput
-                style={[styles.input, inputColors(c)]}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Full name"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>Sex *</Text>
-            <View style={styles.radioRowWrap}>
-              {['Male', 'Female'].map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={sex === opt}
-                  onPress={() => setSex(opt)}
+            <SectionIntro
+              code="A"
+              title="Graduate Profile"
+              range="Questions 1-4"
+              description="Confirm your basic graduate information. Required items are marked clearly."
+              c={c}
+            />
+
+            <InfoNote
+              text="Please answer honestly. Your responses are confidential and used for school improvement only."
+              c={c}
+            />
+
+            <QuestionCard
+              number="1"
+              title="Full name and sex"
+              required
+              helper="The report uses the name linked to your alumni account."
+              c={c}
+            >
+              <Field label="Full name" c={c} hint="from your account">
+                <AccountValue value={fullName || 'Name unavailable'} c={c} />
+              </Field>
+              <Field label="Sex" c={c}>
+                <ChoiceGroup
+                  options={['Male', 'Female']}
+                  value={sex}
+                  onChange={setSex}
+                  columns={2}
                   c={c}
                 />
-              ))}
-            </View>
-            <Field label="Program Graduated *" c={c} hint="choose a suggestion for consistent records">
-              <AutocompleteInput
-                value={course}
-                onChangeText={setCourse}
-                onSearch={fetchSuggestions}
-                apiType="program"
-                placeholder="Type BSIT, BSCS, BSCPE…"
-              />
-            </Field>
-            <Field label="Year Graduated *" c={c} hint="enter the actual year">
-              <TextInput
-                style={[styles.input, inputColors(c)]}
-                value={yearGraduated}
-                onChangeText={(value) => setYearGraduated(value.replace(/\D/g, '').slice(0, 4))}
-                keyboardType="number-pad"
-                maxLength={4}
-                placeholder="e.g. 2026"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <Field label="Contact No. *" c={c}>
-              <TextInput
-                style={[styles.input, inputColors(c)]}
-                value={contactNo}
-                onChangeText={setContactNo}
-                keyboardType="phone-pad"
-                placeholder="09xxxxxxxxx"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <Field label="Email / FB" c={c}>
-              <TextInput
-                style={[styles.input, inputColors(c)]}
-                value={emailOrFb}
-                onChangeText={setEmailOrFb}
-                autoCapitalize="none"
-                placeholder="email or Facebook profile"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <Field label="Permanent Address" c={c}>
+              </Field>
+            </QuestionCard>
+
+            <QuestionCard number="2" title="Course and year graduated" required c={c}>
+              <Field label="Course graduated" c={c} hint="choose a suggestion for consistent records">
+                <AutocompleteInput
+                  value={course}
+                  onChangeText={setCourse}
+                  onSearch={fetchSuggestions}
+                  apiType="program"
+                  placeholder="Type BSIT, BSCS, BSCPE..."
+                />
+              </Field>
+              <Field label="Year graduated" c={c} hint={`1900-${CURRENT_YEAR}`}>
+                <TextInput
+                  style={[styles.input, inputColors(c)]}
+                  value={yearGraduated}
+                  onChangeText={(value) => setYearGraduated(value.replace(/\D/g, '').slice(0, 4))}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  placeholder="e.g. 2026"
+                  placeholderTextColor={c.placeholder}
+                />
+              </Field>
+            </QuestionCard>
+
+            <QuestionCard
+              number="3"
+              title="Contact number and Email / Facebook"
+              required
+              helper="Contact number is required; Email / Facebook is optional."
+              c={c}
+            >
+              <Field label="Contact number" c={c}>
+                <TextInput
+                  style={[styles.input, inputColors(c)]}
+                  value={contactNo}
+                  onChangeText={setContactNo}
+                  keyboardType="phone-pad"
+                  placeholder="09xxxxxxxxx"
+                  placeholderTextColor={c.placeholder}
+                />
+              </Field>
+              <Field label="Email / Facebook (optional)" c={c}>
+                <TextInput
+                  style={[styles.input, inputColors(c)]}
+                  value={emailOrFb}
+                  onChangeText={setEmailOrFb}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  placeholder="Email address or Facebook profile"
+                  placeholderTextColor={c.placeholder}
+                />
+              </Field>
+            </QuestionCard>
+
+            <QuestionCard
+              number="4"
+              title="Present address"
+              optional
+              helper="Your city or municipality and province are enough."
+              c={c}
+            >
               <TextInput
                 style={[styles.input, styles.multiline, inputColors(c)]}
-                value={permanentAddress}
-                onChangeText={changePermanentAddress}
-                multiline
-                placeholder="House no., street, city, province"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              onPress={toggleSameAsPermanent}
-              activeOpacity={0.7}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: sameAsPermanent }}
-              accessibilityLabel="Same as permanent location"
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  {
-                    borderColor: sameAsPermanent ? c.primary : c.border,
-                    backgroundColor: sameAsPermanent ? c.primary : c.surface,
-                  },
-                ]}
-              >
-                {sameAsPermanent ? (
-                  <Text style={[styles.checkboxMark, { color: c.onPrimary }]}>✓</Text>
-                ) : null}
-              </View>
-              <Text style={[styles.checkboxLabel, { color: c.text }]}>Same as permanent location</Text>
-            </TouchableOpacity>
-            <Field label="Current Location" c={c}>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.multiline,
-                  inputColors(c),
-                  sameAsPermanent && styles.inputDisabled,
-                ]}
                 value={currentLocation}
                 onChangeText={setCurrentLocation}
-                editable={!sameAsPermanent}
                 multiline
-                placeholder="Where you currently live"
+                placeholder="City / Municipality, Province"
                 placeholderTextColor={c.placeholder}
               />
-            </Field>
+            </QuestionCard>
           </View>
         )}
 
         {/* ── Step 2 · Section B ─────────────────────────── */}
         {(showAll || step === 1) && (
           <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
-            <Text style={[styles.stepTitle, { color: c.text }]}>
-              {showAll ? 'B · Employment Status' : 'Employment Status'}
-            </Text>
-            <Text style={[styles.stepSub, { color: c.textMuted }]}>
-              Check one — this decides which sections follow.
-            </Text>
-            <View style={{ marginTop: 12 }}>
-              {EMPLOYMENT_OPTIONS.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={employmentStatus === opt}
-                  onPress={() => setEmploymentStatus(opt)}
+            <SectionIntro
+              code="B"
+              title="Employment Status"
+              range="Choose one answer"
+              description="Your answer determines whether the current-employment questions apply to you."
+              c={c}
+            />
+
+            <QuestionCard number="B" title="What is your current employment status?" required c={c}>
+              <ChoiceGroup
+                options={EMPLOYMENT_OPTIONS}
+                value={employmentStatus}
+                onChange={setEmploymentStatus}
+                c={c}
+              />
+              {employmentStatus ? (
+                <InfoNote
+                  compact
+                  text={
+                    employed
+                      ? 'Next: tell us about your current job.'
+                      : 'Current-employment questions will be skipped. You will continue to Section D.'
+                  }
                   c={c}
-                  big
                 />
-              ))}
-            </View>
-            <Text style={[styles.branchHint, { color: c.textMuted }]}>
-              {employmentStatus
-                ? employed
-                  ? 'Employed → next you will describe your current job.'
-                  : 'Not employed → you will skip straight to Program Alignment.'
-                : ''}
-            </Text>
+              ) : null}
+            </QuestionCard>
           </View>
         )}
 
         {/* ── Step 3 · Section C (conditional) ───────────── */}
         {(showAll || step === 2) && (
           <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
-            <Text style={[styles.stepTitle, { color: c.text }]}>
-              {showAll ? 'C · Current Employment Details' : 'Current Employment Details'}
-            </Text>
-            <Text style={[styles.stepSub, { color: c.textMuted }]}>
-              About the job you have now.
-            </Text>
-            <Field label="Company Name *" c={c}>
-              <TextInput
-                style={[styles.input, inputColors(c)]}
-                value={companyName}
-                onChangeText={setCompanyName}
-                placeholder="e.g. ACME Corporation"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <Field label="Position / Job Title *" c={c}>
-              <TextInput
-                style={[styles.input, inputColors(c)]}
-                value={position}
-                onChangeText={setPosition}
-                placeholder="e.g. Junior Web Developer"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>Type of Company *</Text>
-            <View style={styles.radioRowWrap}>
-              {COMPANY_TYPES.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={companyType === opt}
-                  onPress={() => setCompanyType(opt)}
+            <SectionIntro
+              code="C"
+              title="Current Employment Details"
+              range="Questions 5-9"
+              description="Answer these questions about the job or self-employment you have now."
+              c={c}
+            />
+
+            {showJobQuestions ? (
+              <>
+                <QuestionCard
+                  number="5"
+                  title="Company name and position / job title"
+                  required
+                  helper="If self-employed, enter your business name or Freelance and your role."
                   c={c}
-                />
-              ))}
-            </View>
-            {companyType === 'Others' && (
-              <Field label="Please specify *" c={c}>
-                <TextInput
-                  style={[styles.input, inputColors(c)]}
-                  value={companyTypeOther}
-                  onChangeText={setCompanyTypeOther}
-                  placeholder="Company type"
-                  placeholderTextColor={c.placeholder}
-                />
-              </Field>
+                >
+                  <Field label="Company name" c={c}>
+                    <TextInput
+                      style={[styles.input, inputColors(c)]}
+                      value={companyName}
+                      onChangeText={setCompanyName}
+                      placeholder="e.g. ACME Corporation"
+                      placeholderTextColor={c.placeholder}
+                    />
+                  </Field>
+                  <Field label="Position / job title" c={c} hint="choose a suggestion if it matches">
+                    <AutocompleteInput
+                      value={position}
+                      onChangeText={setPosition}
+                      onSearch={fetchSuggestions}
+                      apiType="jobtitle"
+                      placeholder="e.g. Junior Web Developer"
+                    />
+                  </Field>
+                </QuestionCard>
+
+                <QuestionCard number="6" title="What type of company do you work for?" required c={c}>
+                  <ChoiceGroup
+                    options={COMPANY_TYPES}
+                    value={companyType}
+                    onChange={setCompanyType}
+                    columns={2}
+                    c={c}
+                  />
+                  {companyType === 'Others' ? (
+                    <Field label="Please specify (required)" c={c}>
+                      <TextInput
+                        style={[styles.input, inputColors(c)]}
+                        value={companyTypeOther}
+                        onChangeText={setCompanyTypeOther}
+                        placeholder="Company type"
+                        placeholderTextColor={c.placeholder}
+                      />
+                    </Field>
+                  ) : null}
+                </QuestionCard>
+
+                <QuestionCard number="7" title="What is your monthly salary range?" required c={c}>
+                  <ChoiceGroup
+                    options={SALARY_BANDS}
+                    labels={SALARY_LABELS}
+                    value={salaryBand}
+                    onChange={setSalaryBand}
+                    c={c}
+                  />
+                </QuestionCard>
+
+                <QuestionCard
+                  number="8"
+                  title="How many months after graduation did you get this job?"
+                  required
+                  helper="If self-employed, count until you started your business or freelance work."
+                  c={c}
+                >
+                  <ChoiceGroup
+                    options={MONTHS_TO_JOB}
+                    labels={MONTHS_TO_JOB_LABELS}
+                    value={monthsToJob}
+                    onChange={setMonthsToJob}
+                    columns={2}
+                    c={c}
+                  />
+                </QuestionCard>
+
+                <QuestionCard number="9" title="How did you get the job?" required c={c}>
+                  <ChoiceGroup
+                    options={JOB_SOURCES}
+                    labels={JOB_SOURCE_LABELS}
+                    value={jobSource}
+                    onChange={setJobSource}
+                    columns={2}
+                    c={c}
+                  />
+                </QuestionCard>
+              </>
+            ) : (
+              <InfoNote
+                text="Section C is not applicable because you reported that you are not currently employed. No job details are required."
+                c={c}
+              />
             )}
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>Monthly Salary *</Text>
-            <View style={styles.radioRowWrap}>
-              {SALARY_BANDS.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={salaryBand === opt}
-                  onPress={() => setSalaryBand(opt)}
-                  c={c}
-                />
-              ))}
-            </View>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              Months after graduation until this job *
-            </Text>
-            <View style={styles.radioRowWrap}>
-              {MONTHS_TO_JOB.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={monthsToJob === opt}
-                  onPress={() => setMonthsToJob(opt)}
-                  c={c}
-                />
-              ))}
-            </View>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              How did you get the job? *
-            </Text>
-            <View style={styles.radioRowWrap}>
-              {JOB_SOURCES.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={jobSource === opt}
-                  onPress={() => setJobSource(opt)}
-                  c={c}
-                  big
-                />
-              ))}
-            </View>
           </View>
         )}
 
         {/* ── Step 4 · Section D ─────────────────────────── */}
         {(showAll || step === 3) && (
           <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
-            <Text style={[styles.stepTitle, { color: c.text }]}>
-              {showAll ? 'D · Alignment to Program' : 'Alignment to Program'}
-            </Text>
-            <Text style={[styles.stepSub, { color: c.textMuted }]}>
-              The section your Alma Mater cares about most.
-            </Text>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              Is your current job RELATED to your program?
-              {employed ? ' *' : ' (optional — no current job)'}
-            </Text>
-            <View style={styles.radioRowWrap}>
-              {RELATEDNESS.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={courseRelatedness === opt}
-                  onPress={() => setCourseRelatedness(opt)}
+            <SectionIntro
+              code="D"
+              title="Alignment to Course"
+              range="Questions 10-13"
+              description="This section helps the school understand course relevance and skill gaps."
+              important
+              c={c}
+            />
+
+            {showJobQuestions ? (
+              <>
+                <QuestionCard
+                  number="10"
+                  title="Is your current job related to the course you graduated from?"
+                  required
                   c={c}
-                  big
-                />
-              ))}
-            </View>
-            <Field
-              label={
-                employed
-                  ? 'Explain: how does your job use what you learned? *'
-                  : 'Explain: how does your job use what you learned?'
-              }
+                >
+                  <ChoiceGroup
+                    options={RELATEDNESS}
+                    labels={RELATEDNESS_LABELS}
+                    value={courseRelatedness}
+                    onChange={setCourseRelatedness}
+                    columns={2}
+                    c={c}
+                  />
+                </QuestionCard>
+
+                <QuestionCard
+                  number="11"
+                  title="How does your job use what you learned in your course?"
+                  required
+                  helper="A short, specific example is enough."
+                  c={c}
+                >
+                  <TextInput
+                    style={[styles.input, styles.multiline, inputColors(c)]}
+                    value={relatednessComment}
+                    onChangeText={setRelatednessComment}
+                    multiline
+                    placeholder="e.g. I use programming and database skills in my current role."
+                    placeholderTextColor={c.placeholder}
+                  />
+                </QuestionCard>
+
+                <QuestionCard
+                  number="12"
+                  title="Which skills or subjects from your course do you use most at work?"
+                  required
+                  helper="Select all that apply."
+                  c={c}
+                >
+                  <MultiChoiceGroup
+                    options={SKILL_OPTIONS}
+                    values={skillsUsed}
+                    onToggle={toggleSkill}
+                    c={c}
+                  />
+                  {skillsUsed.includes('Others') ? (
+                    <Field label="Please specify the other skill (required)" c={c}>
+                      <TextInput
+                        style={[styles.input, inputColors(c)]}
+                        value={skillsUsedOther}
+                        onChangeText={setSkillsUsedOther}
+                        placeholder="Other skill or subject"
+                        placeholderTextColor={c.placeholder}
+                      />
+                    </Field>
+                  ) : null}
+                </QuestionCard>
+              </>
+            ) : (
+              <InfoNote
+                text="Questions 10-12 are about a current job, so they are not required for your employment status."
+                c={c}
+              />
+            )}
+
+            <QuestionCard
+              number="13"
+              title="What skills do you wish the school taught you more?"
+              optional
+              helper="Your answer helps identify topics for future students and alumni training."
               c={c}
             >
-              <TextInput
-                style={[styles.input, styles.multiline, inputColors(c)]}
-                value={relatednessComment}
-                onChangeText={setRelatednessComment}
-                multiline
-                placeholder="A few sentences"
-                placeholderTextColor={c.placeholder}
-              />
-            </Field>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              Which skills/subjects do you use MOST at work?{employed ? ' *' : ''}
-            </Text>
-            <View style={styles.chipRow}>
-              {SKILL_OPTIONS.map((opt) => {
-                const on = skillsUsed.includes(opt);
-                return (
-                  <TouchableOpacity
-                    key={opt}
-                    style={[
-                      styles.chip,
-                      { backgroundColor: on ? c.primary : c.surfaceAlt, borderColor: on ? c.primary : c.border },
-                    ]}
-                    onPress={() => toggleSkill(opt)}
-                  >
-                    <Text style={[styles.chipText, { color: on ? c.onPrimary : c.text }]}>{opt}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {skillsUsed.includes('Others') && (
-              <Field label="Please specify *" c={c}>
-                <TextInput
-                  style={[styles.input, inputColors(c)]}
-                  value={skillsUsedOther}
-                  onChangeText={setSkillsUsedOther}
-                  placeholder="Other skills"
-                  placeholderTextColor={c.placeholder}
-                />
-              </Field>
-            )}
-            <Field label="What skills do you wish the school taught you MORE?" c={c}>
               <TextInput
                 style={[styles.input, styles.multiline, inputColors(c)]}
                 value={skillsWanted}
                 onChangeText={setSkillsWanted}
                 multiline
-                placeholder="e.g. more hands-on projects, cloud deployment"
+                placeholder="e.g. More hands-on projects, cloud deployment, or client communication"
                 placeholderTextColor={c.placeholder}
               />
-            </Field>
+            </QuestionCard>
           </View>
         )}
 
         {/* ── Step 5 · Section E ─────────────────────────── */}
         {(showAll || step === 4) && (
           <View style={showAll ? [styles.allSection, { borderTopColor: c.border }] : undefined}>
-            <Text style={[styles.stepTitle, { color: c.text }]}>
-              {showAll ? 'E · Feedback' : 'Feedback'}
-            </Text>
-            <Text style={[styles.stepSub, { color: c.textMuted }]}>
-              Last questions — then you can review everything.
-            </Text>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              Are you satisfied with the training you received? *
-            </Text>
-            <View style={styles.radioRowWrap}>
-              {YES_NO.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={satisfied === opt}
-                  onPress={() => setSatisfied(opt)}
-                  c={c}
-                  big
-                />
-              ))}
-            </View>
-            <Field label={satisfied === 'No' ? 'Why? *' : 'Why? (optional)'} c={c}>
-              <TextInput
-                style={[styles.input, styles.multiline, inputColors(c)]}
-                value={satisfiedReason}
-                onChangeText={setSatisfiedReason}
-                multiline
-                placeholder="What worked, what could be better"
-                placeholderTextColor={c.placeholder}
+            <SectionIntro
+              code="E"
+              title="Feedback"
+              range="Questions 14-15"
+              description="These are the final questions before you review your answers."
+              c={c}
+            />
+
+            <QuestionCard
+              number="14"
+              title="Are you satisfied with the training you received?"
+              required
+              c={c}
+            >
+              <ChoiceGroup
+                options={YES_NO}
+                value={satisfied}
+                onChange={setSatisfied}
+                columns={2}
+                c={c}
               />
-            </Field>
-            <Text style={[styles.label, { color: c.textMuted, marginTop: 16 }]}>
-              Would you recommend your program to others? *
-            </Text>
-            <View style={styles.radioRowWrap}>
-              {YES_NO.map((opt) => (
-                <Radio
-                  key={opt}
-                  label={opt}
-                  selected={wouldRecommend === opt}
-                  onPress={() => setWouldRecommend(opt)}
+              {satisfied ? (
+                <Field
+                  label={
+                    satisfied === 'No'
+                      ? 'Why are you not satisfied? (required)'
+                      : 'What worked well? (optional)'
+                  }
                   c={c}
-                  big
-                />
-              ))}
-            </View>
+                >
+                  <TextInput
+                    style={[styles.input, styles.multiline, inputColors(c)]}
+                    value={satisfiedReason}
+                    onChangeText={setSatisfiedReason}
+                    multiline
+                    placeholder={
+                      satisfied === 'No'
+                        ? 'Tell us what could be improved.'
+                        : 'Share what helped you most, if you wish.'
+                    }
+                    placeholderTextColor={c.placeholder}
+                  />
+                </Field>
+              ) : null}
+            </QuestionCard>
+
+            <QuestionCard
+              number="15"
+              title="Would you recommend your course to others?"
+              required
+              c={c}
+            >
+              <ChoiceGroup
+                options={YES_NO}
+                value={wouldRecommend}
+                onChange={setWouldRecommend}
+                columns={2}
+                c={c}
+              />
+            </QuestionCard>
           </View>
         )}
 
         {/* ── Step 6 · Review & Submit ───────────────────── */}
         {step === 5 && !showAll && (
           <View>
-            <Text style={[styles.stepTitle, { color: c.text }]}>Review your answers</Text>
-            <Text style={[styles.stepSub, { color: c.textMuted }]}>
-              {editing
-                ? 'Review your changes — tap Update answers to save them.'
-                : 'Check everything before submitting — tap Edit to change a section.'}
-            </Text>
+            <SectionIntro
+              code="6"
+              title="Review Your Answers"
+              range="Final step"
+              description={
+                editing
+                  ? 'Check your changes, then tap Update answers to save them.'
+                  : 'Check each section before submitting. Use Edit to correct an answer.'
+              }
+              c={c}
+            />
+
+            <InfoNote
+              text="Your answers contribute to the school's employment, course-alignment, and curriculum-improvement reports."
+              c={c}
+            />
 
             <Summary
               title="A · Graduate Profile"
               editTo={0}
               onEdit={jumpTo}
               rows={[
-                ['Full Name', fullName],
-                ['Sex', sex],
-                ['Program Graduated', course],
-                ['Year Graduated', yearGraduated],
-                ['Contact No.', contactNo],
-                ['Email / FB', emailOrFb],
-                ['Permanent Address', permanentAddress],
-                ['Current Location', currentLocation],
+                ['1. Full name', fullName],
+                ['1. Sex', sex],
+                ['2. Course graduated', course],
+                ['2. Year graduated', yearGraduated],
+                ['3. Contact number', contactNo],
+                ['3. Email / Facebook', emailOrFb],
+                ['4. Present address', currentLocation],
               ]}
               c={c}
             />
@@ -921,7 +1048,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               title="B · Employment Status"
               editTo={1}
               onEdit={jumpTo}
-              rows={[['Status', employmentStatus]]}
+              rows={[['Current employment status', employmentStatus]]}
               c={c}
             />
             <Summary
@@ -930,25 +1057,32 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               onEdit={jumpTo}
               skipped={jobDetailsSkipped}
               rows={[
-                ['Company', companyName],
-                ['Position', position],
-                ['Type of Company', companyType === 'Others' ? `Others — ${companyTypeOther}` : companyType],
-                ['Monthly Salary', salaryBand],
-                ['Months to job', monthsToJob],
-                ['How you got the job', jobSource],
+                ['5. Company name', companyName],
+                ['5. Position / job title', position],
+                ['6. Type of company', companyType === 'Others' ? `Others - ${companyTypeOther}` : companyType],
+                ['7. Monthly salary', SALARY_LABELS[salaryBand] || salaryBand],
+                ['8. Months to job', MONTHS_TO_JOB_LABELS[monthsToJob] || monthsToJob],
+                ['9. How you got the job', JOB_SOURCE_LABELS[jobSource] || jobSource],
               ]}
               c={c}
             />
             <Summary
-              title="D · Alignment to Program"
+              title="D · Alignment to Course"
               editTo={3}
               onEdit={jumpTo}
-              rows={[
-                ['Job related to program', courseRelatedness || (employed ? '' : '— (not employed)')],
-                ['Explanation', relatednessComment],
-                ['Skills used most', skillsUsed.join(', ') + (skillsUsedOther ? ` — ${skillsUsedOther}` : '')],
-                ['Skills you wanted more of', skillsWanted],
-              ]}
+              rows={
+                employed
+                  ? [
+                      ['10. Job-course relationship', RELATEDNESS_LABELS[courseRelatedness] || ''],
+                      ['11. Explanation', relatednessComment],
+                      ['12. Skills used most', skillsUsed.join(', ') + (skillsUsedOther ? ` - ${skillsUsedOther}` : '')],
+                      ['13. Skills wanted', skillsWanted],
+                    ]
+                  : [
+                      ['10-12. Current-job questions', 'Not applicable - no current job'],
+                      ['13. Skills wanted', skillsWanted],
+                    ]
+              }
               c={c}
             />
             <Summary
@@ -956,9 +1090,9 @@ export default function TracerStudyScreen({ navigation, onExit }) {
               editTo={4}
               onEdit={jumpTo}
               rows={[
-                ['Satisfied with training', satisfied],
-                ['Why', satisfiedReason],
-                ['Would recommend program', wouldRecommend],
+                ['14. Satisfied with training', satisfied],
+                ['14. Reason', satisfiedReason],
+                ['15. Would recommend course', wouldRecommend],
               ]}
               c={c}
             />
@@ -967,7 +1101,16 @@ export default function TracerStudyScreen({ navigation, onExit }) {
       </ScrollView>
 
       {/* Footer nav — mirrors the profile wizard; in "View all" it offers step/exit */}
-      <View style={[styles.footer, { borderTopColor: c.border, backgroundColor: c.background }]}>
+      <View
+        style={[
+          styles.footer,
+          {
+            borderTopColor: c.border,
+            backgroundColor: c.background,
+            paddingBottom: Math.max(insets.bottom, 12),
+          },
+        ]}
+      >
         {showAll ? (
           <TouchableOpacity style={styles.backButton} onPress={() => setShowAll(false)}>
             <Text style={[styles.backText, { color: c.textMuted }]}>← Step-by-step</Text>
@@ -982,7 +1125,7 @@ export default function TracerStudyScreen({ navigation, onExit }) {
         {showAll ? (
           <PrimaryButton title="Exit preview" onPress={exitFlow} style={styles.nextButton} />
         ) : step < SECTIONS.length - 1 ? (
-          <PrimaryButton title="Next" onPress={next} style={styles.nextButton} />
+          <PrimaryButton title={nextButtonTitle()} onPress={next} style={styles.nextButton} />
         ) : (
           <PrimaryButton
             title={
@@ -1003,31 +1146,158 @@ export default function TracerStudyScreen({ navigation, onExit }) {
 
 // ─── Small building blocks ──────────────────────────────────────────────────
 
+function SectionIntro({ code, title, range, description, important, c }) {
+  const kicker = code === '6' ? 'FINAL REVIEW' : `SECTION ${code}`;
+  return (
+    <View style={styles.sectionIntro}>
+      <View style={styles.sectionMetaRow}>
+        <View style={[styles.sectionCode, { backgroundColor: c.primaryTint }]}>
+          <Text style={[styles.sectionCodeText, { color: c.primary }]}>{kicker}</Text>
+        </View>
+        <Text style={[styles.sectionRange, { color: c.textMuted }]}>{range}</Text>
+      </View>
+      <Text style={[styles.sectionTitle, { color: c.text }]}>{title}</Text>
+      <Text style={[styles.sectionDescription, { color: c.textMuted }]}>{description}</Text>
+      {important ? (
+        <View style={[styles.importantBadge, { backgroundColor: c.tintWarning }]}>
+          <Text style={[styles.importantText, { color: c.warning }]}>MOST IMPORTANT TO THE SCHOOL</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function InfoNote({ text, c, compact = false }) {
+  return (
+    <View
+      style={[
+        styles.infoNote,
+        { backgroundColor: c.tintInfo, borderColor: c.info },
+        compact && styles.infoNoteCompact,
+      ]}
+    >
+      <Text style={[styles.infoNoteText, { color: c.text }]}>{text}</Text>
+    </View>
+  );
+}
+
+function QuestionCard({ number, title, required, optional, helper, children, c }) {
+  return (
+    <View style={[styles.questionCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+      <View style={styles.questionHead}>
+        <View style={[styles.questionNumber, { backgroundColor: c.primaryTint }]}>
+          <Text style={[styles.questionNumberText, { color: c.primary }]}>{number}</Text>
+        </View>
+        <View style={styles.questionHeading}>
+          <Text style={[styles.questionTitle, { color: c.text }]}>{title}</Text>
+          {required || optional ? (
+            <Text
+              style={[
+                styles.requirementText,
+                { color: required ? c.danger : c.textMuted },
+              ]}
+            >
+              {required ? 'REQUIRED' : 'OPTIONAL'}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+      {helper ? <Text style={[styles.questionHelper, { color: c.textMuted }]}>{helper}</Text> : null}
+      <View style={styles.questionBody}>{children}</View>
+    </View>
+  );
+}
+
+function AccountValue({ value, c }) {
+  return (
+    <View style={[styles.accountValue, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}>
+      <Text style={[styles.accountValueText, { color: c.text }]}>{value}</Text>
+      <Text style={[styles.accountValueHint, { color: c.textMuted }]}>Linked to your account</Text>
+    </View>
+  );
+}
+
+function ChoiceGroup({ options, labels = {}, value, onChange, columns = 1, c }) {
+  return (
+    <View style={styles.choiceGroup}>
+      {options.map((option) => (
+        <Radio
+          key={option}
+          label={labels[option] || option}
+          selected={value === option}
+          onPress={() => onChange(option)}
+          c={c}
+          half={columns === 2}
+        />
+      ))}
+    </View>
+  );
+}
+
+function MultiChoiceGroup({ options, values, onToggle, c }) {
+  return (
+    <View style={styles.choiceGroup}>
+      {options.map((option) => {
+        const selected = values.includes(option);
+        return (
+          <TouchableOpacity
+            key={option}
+            style={[
+              styles.multiChoice,
+              {
+                backgroundColor: selected ? c.primaryTint : c.surface,
+                borderColor: selected ? c.primary : c.border,
+              },
+            ]}
+            onPress={() => onToggle(option)}
+            activeOpacity={0.72}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: selected }}
+          >
+            <View
+              style={[
+                styles.checkbox,
+                {
+                  borderColor: selected ? c.primary : c.border,
+                  backgroundColor: selected ? c.primary : c.surface,
+                },
+              ]}
+            >
+              {selected ? <Text style={[styles.checkboxMark, { color: c.onPrimary }]}>✓</Text> : null}
+            </View>
+            <Text style={[styles.multiChoiceText, { color: c.text }]}>{option}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
 function Field({ label, children, c, hint }) {
   return (
-    <View style={{ marginTop: 14 }}>
-      <View style={styles.labelRow}>
-        <Text style={[styles.label, { color: c.textMuted }]}>{label}</Text>
-        {hint ? <Text style={[styles.labelHint, { color: c.textMuted }]}>· {hint}</Text> : null}
-      </View>
+    <View style={styles.field}>
+      <Text style={[styles.fieldLabel, { color: c.text }]}>{label}</Text>
+      {hint ? <Text style={[styles.fieldHint, { color: c.textMuted }]}>{hint}</Text> : null}
       {children}
     </View>
   );
 }
 
-function Radio({ label, selected, onPress, c, big }) {
+function Radio({ label, selected, onPress, c, half }) {
   return (
     <TouchableOpacity
       style={[
         styles.radioRow,
+        half ? styles.radioHalf : styles.radioFull,
         {
           borderColor: selected ? c.primary : c.border,
-          backgroundColor: selected ? (c.surfaceAlt || c.surface) : c.surface,
+          backgroundColor: selected ? c.primaryTint : c.surface,
         },
-        big && styles.radioRowBig,
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.72}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
     >
       <View
         style={[
@@ -1047,7 +1317,12 @@ function Summary({ title, rows, editTo, onEdit, c, skipped }) {
     <View style={[styles.summaryCard, { backgroundColor: c.surface, borderColor: c.border }]}>
       <View style={styles.summaryHead}>
         <Text style={[styles.summaryTitle, { color: c.text }]}>{title}</Text>
-        <TouchableOpacity onPress={() => onEdit(editTo)}>
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: c.primaryTint }]}
+          onPress={() => onEdit(editTo)}
+          accessibilityRole="button"
+          accessibilityLabel={`Edit ${title}`}
+        >
           <Text style={[styles.editText, { color: c.primary }]}>Edit</Text>
         </TouchableOpacity>
       </View>
@@ -1056,14 +1331,17 @@ function Summary({ title, rows, editTo, onEdit, c, skipped }) {
           Skipped — not employed
         </Text>
       ) : (
-        rows.map(([label, value]) =>
-          String(value || '').trim() ? (
-            <View key={label} style={styles.summaryRow}>
+        rows.map(([label, value]) => {
+          const displayValue = String(value || '').trim();
+          return (
+            <View key={label} style={[styles.summaryRow, { borderTopColor: c.border }]}>
               <Text style={[styles.summaryLabel, { color: c.textMuted }]}>{label}</Text>
-              <Text style={[styles.summaryValue, { color: c.text }]}>{String(value)}</Text>
+              <Text style={[styles.summaryValue, { color: displayValue ? c.text : c.textMuted }]}>
+                {displayValue || 'Not provided'}
+              </Text>
             </View>
-          ) : null
-        )
+          );
+        })
       )}
     </View>
   );
@@ -1078,13 +1356,13 @@ const styles = StyleSheet.create({
   progressTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   noticeBeginButton: { flex: 1, marginLeft: 12, paddingHorizontal: 24 },
-  allSection: { marginTop: 24, paddingTop: 18, borderTopWidth: StyleSheet.hairlineWidth },
+  allSection: { marginTop: 28, paddingTop: 22, borderTopWidth: StyleSheet.hairlineWidth },
   stepCount: { fontSize: 12, fontWeight: '600' },
   skipButtonText: { fontSize: 13, fontWeight: '700' },
   dots: { flexDirection: 'row', gap: 6, marginTop: 8 },
   dot: { flex: 1, height: 6, borderRadius: 3, borderWidth: 1 },
   betaNote: { fontSize: 10, fontWeight: '700', marginTop: 8, letterSpacing: 0.4 },
-  content: { padding: 20, paddingBottom: 24 },
+  content: { padding: 16, paddingBottom: 28 },
   noticeTop: { paddingHorizontal: 20, paddingBottom: 10 },
   noticeTopText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
   noticeTopAccent: { height: 3 },
@@ -1097,83 +1375,146 @@ const styles = StyleSheet.create({
   noticeBullet: { flexDirection: 'row', marginTop: 12 },
   noticeBulletDot: { fontSize: 16, lineHeight: 20, marginRight: 8, fontWeight: '700' },
   noticeBulletText: { flex: 1, fontSize: 13, lineHeight: 20 },
-  stepTitle: { fontSize: 22, fontWeight: '700' },
-  stepSub: { fontSize: 13, marginTop: 4, lineHeight: 19 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  label: { fontSize: 12, fontWeight: '600' },
-  labelHint: { fontSize: 11, marginLeft: 6, fontStyle: 'italic' },
+  validationBanner: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+  validationTitle: { fontSize: 12.5, fontWeight: '800' },
+  validationText: { fontSize: 12.5, lineHeight: 18, marginTop: 3 },
+  sectionIntro: { marginBottom: 16 },
+  sectionMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  sectionCode: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 },
+  sectionCodeText: { fontSize: 10.5, fontWeight: '800', letterSpacing: 0.6 },
+  sectionRange: { fontSize: 11.5, fontWeight: '600' },
+  sectionTitle: { fontSize: 22, fontWeight: '700', lineHeight: 28, marginTop: 9 },
+  sectionDescription: { fontSize: 13, lineHeight: 19, marginTop: 4 },
+  importantBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginTop: 10,
+  },
+  importantText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.45 },
+  infoNote: {
+    borderLeftWidth: 4,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+  infoNoteCompact: { marginTop: 12, marginBottom: 0 },
+  infoNoteText: { fontSize: 12.5, lineHeight: 19 },
+  questionCard: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
+  },
+  questionHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
+  questionNumber: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  questionNumberText: { fontSize: 12, fontWeight: '800' },
+  questionHeading: { flex: 1, minWidth: 0 },
+  questionTitle: { fontSize: 15, lineHeight: 20, fontWeight: '700' },
+  requirementText: { fontSize: 9.5, fontWeight: '800', letterSpacing: 0.7, marginTop: 4 },
+  questionHelper: { fontSize: 11.5, lineHeight: 17, marginTop: 9 },
+  questionBody: { marginTop: 6 },
+  field: { marginTop: 12 },
+  fieldLabel: { fontSize: 12.5, lineHeight: 17, fontWeight: '700', marginBottom: 5 },
+  fieldHint: { fontSize: 11, lineHeight: 15, marginTop: -2, marginBottom: 5 },
+  accountValue: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    justifyContent: 'center',
+  },
+  accountValueText: { fontSize: 14, fontWeight: '700' },
+  accountValueHint: { fontSize: 10.5, marginTop: 2 },
   input: {
     borderWidth: 1,
     borderRadius: 12,
     padding: 12,
     fontSize: 14,
+    minHeight: 46,
   },
-  multiline: { minHeight: 80, textAlignVertical: 'top' },
-  inputDisabled: { opacity: 0.65 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
+  multiline: { minHeight: 104, textAlignVertical: 'top' },
+  choiceGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 5,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkboxMark: { fontSize: 15, fontWeight: '800', lineHeight: 18 },
-  checkboxLabel: { marginLeft: 10, fontSize: 13, fontWeight: '600' },
-  radioRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  checkboxMark: { fontSize: 14, fontWeight: '800', lineHeight: 16 },
   radioRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingVertical: 8,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    minHeight: 48,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    marginRight: 0,
   },
-  radioRowBig: { width: '100%', borderRadius: 12, paddingVertical: 12 },
+  radioFull: { width: '100%' },
+  radioHalf: { width: '48.5%' },
   radioDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 2,
-    marginRight: 8,
+    marginRight: 9,
     justifyContent: 'center',
     alignItems: 'center',
   },
   radioInner: { width: 8, height: 8, borderRadius: 4 },
-  radioLabel: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
-  branchHint: { fontSize: 12, marginTop: 14, fontStyle: 'italic' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  chip: {
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
+  radioLabel: { fontSize: 12.5, lineHeight: 17, fontWeight: '600', flex: 1 },
+  multiChoice: {
+    width: '48.5%',
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    padding: 10,
   },
-  chipText: { fontSize: 13, fontWeight: '600' },
+  multiChoiceText: { flex: 1, fontSize: 12, lineHeight: 16, fontWeight: '600' },
   summaryCard: {
     borderRadius: 14,
     borderWidth: 1,
-    padding: 14,
+    padding: 15,
     marginTop: 14,
   },
   summaryHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  summaryTitle: { fontSize: 14, fontWeight: '700' },
-  editText: { fontSize: 13, fontWeight: '700' },
-  summaryRow: { flexDirection: 'row', marginTop: 8 },
-  summaryLabel: { width: 130, fontSize: 12, fontWeight: '600' },
-  summaryValue: { flex: 1, fontSize: 13 },
-  skippedText: { fontSize: 13, marginTop: 8, fontStyle: 'italic' },
+  summaryTitle: { flex: 1, fontSize: 14, lineHeight: 19, fontWeight: '700', marginRight: 10 },
+  editButton: { borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6 },
+  editText: { fontSize: 12, fontWeight: '800' },
+  summaryRow: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 9, marginTop: 9 },
+  summaryLabel: { fontSize: 11, lineHeight: 15, fontWeight: '700' },
+  summaryValue: { fontSize: 13, lineHeight: 19, marginTop: 2 },
+  skippedText: { fontSize: 13, marginTop: 10, lineHeight: 18, fontStyle: 'italic' },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  backButton: { padding: 10 },
+  backButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   backText: { fontSize: 14, fontWeight: '600' },
-  nextButton: { minWidth: 140 },
+  nextButton: { minWidth: 164, paddingHorizontal: 12 },
 });
