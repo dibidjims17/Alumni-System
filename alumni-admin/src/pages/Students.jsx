@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse";
 import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert } from "lucide-react";
 import { API_BASE_URL } from "../config";
@@ -8,6 +8,7 @@ import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 import KebabMenu from "../components/KebabMenu";
+import FileDropZone from "../components/FileDropZone";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "Graduate" };
@@ -51,7 +52,7 @@ export default function Students() {
 
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
-  const fileInputRef = useRef(null);
+  const [importFileName, setImportFileName] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [yearFilter, setYearFilter] = useState("");
@@ -146,23 +147,25 @@ export default function Students() {
 
   function openImportModal() {
     setImportResult(null);
+    setImportFileName("");
     setShowImportModal(true);
   }
 
   function closeImportModal() {
+    if (importing) return;
     setShowImportModal(false);
   }
 
-  function handleFileSelect(e) {
-    const file = e.target.files[0];
+  function handleImportFile(file) {
     if (!file) return;
 
+    setImporting(true);
+    setImportFileName(file.name);
+    setImportResult(null);
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        setImporting(true);
-        setImportResult(null);
         try {
           const result = await importStudents(results.data);
           const summary = `Imported ${result.imported ?? 0}, updated ${result.skipped ?? 0}, ` +
@@ -173,11 +176,11 @@ export default function Students() {
           setImportResult({ success: false, message: err.message });
         } finally {
           setImporting(false);
-          if (fileInputRef.current) fileInputRef.current.value = "";
         }
       },
       error: (err) => {
         setImportResult({ success: false, message: err.message });
+        setImporting(false);
       },
     });
   }
@@ -579,18 +582,27 @@ export default function Students() {
       )}
 
       {showImportModal && (
-        <ModalShell title="Import Alumni (CSV)" onClose={closeImportModal} width={480}>
+        <ModalShell title="Import Alumni (CSV)" onClose={closeImportModal} width={500}>
           <div>
-            <input
-              type="file"
-              accept=".csv"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              disabled={importing}
+            <FileDropZone
+              fileName={importFileName}
+              busy={importing}
+              onPick={handleImportFile}
+              prompt="Drag an alumni CSV here"
+              dropPrompt="Drop the alumni CSV to import"
             />
-            {importing && <p style={{ color: "var(--muted)" }}>Importing...</p>}
             {importResult && (
-              <p style={{ color: importResult.success ? "var(--success)" : "var(--danger)" }}>
+              <p
+                role="status"
+                style={{
+                  color: importResult.success ? "var(--success)" : "var(--danger)",
+                  background: importResult.success ? "var(--success-tint)" : "var(--danger-tint)",
+                  borderRadius: 8,
+                  padding: "9px 11px",
+                  margin: "12px 0 0",
+                  fontSize: 12.5,
+                }}
+              >
                 {importResult.message}
               </p>
             )}
@@ -601,7 +613,7 @@ export default function Students() {
               them with the app download link, once Site:WebsiteUrl is configured.
             </p>
             <div style={{ marginTop: 16, textAlign: "right" }}>
-              <button onClick={closeImportModal} style={btn}>Close</button>
+              <button onClick={closeImportModal} style={btn} disabled={importing}>Close</button>
             </div>
           </div>
         </ModalShell>

@@ -8,6 +8,7 @@ import { importDocuments } from "../services/documentsApi";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, btn, btnPrimary, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
+import FileDropZone from "../components/FileDropZone";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 export default function Documents() {
@@ -18,6 +19,7 @@ export default function Documents() {
   const [showImport, setShowImport] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  const [importFileName, setImportFileName] = useState("");
 
   async function load() {
     setLoading(true);
@@ -36,15 +38,27 @@ export default function Documents() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleFileSelect(e) {
-    const file = e.target.files[0];
+  function openImport() {
+    setImportResult(null);
+    setImportFileName("");
+    setShowImport(true);
+  }
+
+  function closeImport() {
+    if (importing) return;
+    setShowImport(false);
+  }
+
+  function handleImportFile(file) {
     if (!file) return;
+
+    setImporting(true);
+    setImportFileName(file.name);
+    setImportResult(null);
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        setImporting(true);
-        setImportResult(null);
         try {
           const result = await importDocuments(results.data);
           setImportResult({ success: true, detail: result });
@@ -59,6 +73,7 @@ export default function Documents() {
       },
       error: (err) => {
         setImportResult({ success: false, message: err.message });
+        setImporting(false);
       },
     });
   }
@@ -75,7 +90,7 @@ export default function Documents() {
   return (
     <div style={pageWrap}>
       <div style={{ ...toolbar, justifyContent: "flex-end" }}>
-        <button style={btnPrimary} onClick={() => { setImportResult(null); setShowImport(true); }}>
+        <button style={btnPrimary} onClick={openImport}>
           <Upload size={15} />
           Import Statuses (CSV)
         </button>
@@ -138,25 +153,37 @@ export default function Documents() {
       )}
 
       {showImport && (
-        <ModalShell title="Import Document Statuses (CSV)" onClose={() => setShowImport(false)} width={480}>
+        <ModalShell title="Import Document Statuses (CSV)" onClose={closeImport} width={500}>
           <div>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileSelect}
-              disabled={importing}
+            <FileDropZone
+              fileName={importFileName}
+              busy={importing}
+              onPick={handleImportFile}
+              prompt="Drag a document-status CSV here"
+              dropPrompt="Drop the status CSV to import"
             />
-            {importing && <p style={{ color: "var(--muted)" }}>Importing...</p>}
             {importResult && !importResult.success && (
-              <p style={{ color: "var(--danger)" }}>{importResult.message}</p>
+              <p
+                role="alert"
+                style={{
+                  color: "var(--danger)",
+                  background: "var(--danger-tint)",
+                  borderRadius: 8,
+                  padding: "9px 11px",
+                  margin: "12px 0 0",
+                  fontSize: 12.5,
+                }}
+              >
+                {importResult.message}
+              </p>
             )}
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
               Upload a CSV of document statuses to bulk-update the checklist.
               Use <RotateCcw size={12} style={{ verticalAlign: "middle" }} /> Initialize on a
-              alumni checklist to seed the standard documents first.
+              graduate checklist to seed the standard documents first.
             </p>
             <div style={{ marginTop: 16, textAlign: "right" }}>
-              <button style={btn} onClick={() => setShowImport(false)}>Close</button>
+              <button style={btn} onClick={closeImport} disabled={importing}>Close</button>
             </div>
           </div>
         </ModalShell>
