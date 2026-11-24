@@ -23,6 +23,8 @@ import AppBackground from '../components/AppBackground';
 import ImageViewer from '../components/ImageViewer';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
+import useSectionSwipe from '../hooks/useSectionSwipe';
+import SectionBodyTransition from '../components/SectionBodyTransition';
 
 const COMMUNITY_TABS = [
   { key: 'News', label: 'News', screen: 'NewsList' },
@@ -30,7 +32,7 @@ const COMMUNITY_TABS = [
   { key: 'Alumni', label: 'Alumni', screen: 'Directory' },
 ];
 
-export default function NewsListScreen({ navigation }) {
+export default function NewsListScreen({ navigation, route }) {
   const { theme } = useTheme();
   const { student } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
@@ -56,6 +58,12 @@ export default function NewsListScreen({ navigation }) {
   const searchRef = useRef('');
   const hasLoadedRef = useRef(false);
   searchRef.current = search;
+  const swipeHandlers = useSectionSwipe({
+    items: tabs,
+    active: 'NewsList',
+    navigation,
+    enabled: viewerImage == null,
+  });
 
   async function fetchNews(activeSearch = '') {
     try {
@@ -294,35 +302,39 @@ export default function NewsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: 'transparent' }]}
+      edges={['top', 'left', 'right']}
+    >
       <AppBackground />
       <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={tabs} active="NewsList" navigation={navigation} />
-      {error && <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>}
-      <View style={styles.searchRow}>
-        <SearchBar
-          placeholder="Search news"
-          value={search}
-          onChangeText={setSearch}
-          onSubmit={submitSearch}
-          onClear={clearSearch}
-        />
-      </View>
-      {/* Entry point for post suggestions (endorse a business, find
-          clients) — admin-reviewed before it reaches this feed. */}
-      <TouchableOpacity
-        style={[styles.suggestRow, { backgroundColor: c.surface, borderColor: c.border }]}
-        onPress={() => navigation.navigate('SuggestPost')}
-        activeOpacity={0.7}
-      >
-        <Megaphone size={18} color={c.primary} />
-        <Text style={[styles.suggestText, { color: c.text }]}>
-          Suggest a post — endorse your business or find clients
-        </Text>
-        <ChevronRight size={18} color={c.textMuted} />
-      </TouchableOpacity>
-      {isLoading ? (
-        <View style={styles.skeletonList}>
+      <SectionBodyTransition route={route} panHandlers={swipeHandlers}>
+        {error && <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>}
+        <View style={styles.searchRow}>
+          <SearchBar
+            placeholder="Search news"
+            value={search}
+            onChangeText={setSearch}
+            onSubmit={submitSearch}
+            onClear={clearSearch}
+          />
+        </View>
+        {/* Entry point for post suggestions (endorse a business, find
+            clients) — admin-reviewed before it reaches this feed. */}
+        <TouchableOpacity
+          style={[styles.suggestRow, { backgroundColor: c.surface, borderColor: c.border }]}
+          onPress={() => navigation.navigate('SuggestPost')}
+          activeOpacity={0.7}
+        >
+          <Megaphone size={18} color={c.primary} />
+          <Text style={[styles.suggestText, { color: c.text }]}>
+            Suggest a post — endorse your business or find clients
+          </Text>
+          <ChevronRight size={18} color={c.textMuted} />
+        </TouchableOpacity>
+        {isLoading ? (
+          <View style={styles.skeletonList}>
           {[0, 1, 2].map((i) => (
             <View
               key={i}
@@ -346,9 +358,9 @@ export default function NewsListScreen({ navigation }) {
               </View>
             </View>
           ))}
-        </View>
-      ) : (
-        <FlatList
+          </View>
+        ) : (
+          <FlatList
           data={items}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
@@ -367,8 +379,9 @@ export default function NewsListScreen({ navigation }) {
               {search.trim() ? 'No posts match your search.' : 'No news posts yet.'}
             </Text>
           }
-        />
-      )}
+          />
+        )}
+      </SectionBodyTransition>
       <ImageViewer imageUrl={viewerImage} onClose={() => setViewerImage(null)} />
     </SafeAreaView>
   );

@@ -22,6 +22,8 @@ import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
+import useSectionSwipe from '../hooks/useSectionSwipe';
+import SectionBodyTransition from '../components/SectionBodyTransition';
 
 const SERVER_ROOT = API_BASE_URL.replace('/api', '');
 
@@ -39,7 +41,7 @@ function buildQuery(search, program, page) {
   return `/Directory?${params.toString()}`;
 }
 
-export default function DirectoryScreen({ navigation }) {
+export default function DirectoryScreen({ navigation, route }) {
   const { theme } = useTheme();
   const c = theme.colors;
   const [search, setSearch] = useState('');
@@ -59,6 +61,12 @@ export default function DirectoryScreen({ navigation }) {
   const hasLoadedRef = useRef(false);
   searchRef.current = search;
   programRef.current = program;
+  const swipeHandlers = useSectionSwipe({
+    items: COMMUNITY_TABS,
+    active: 'Directory',
+    navigation,
+    enabled: !pickerOpen,
+  });
 
   async function loadFilters() {
     try {
@@ -165,10 +173,14 @@ export default function DirectoryScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: 'transparent' }]}
+      edges={['top', 'left', 'right']}
+    >
       <AppBackground />
       <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={COMMUNITY_TABS} active="Directory" navigation={navigation} />
+      <SectionBodyTransition route={route} panHandlers={swipeHandlers}>
       <View style={styles.content}>
       <SearchBar
         placeholder="Search alumni by name"
@@ -278,6 +290,7 @@ export default function DirectoryScreen({ navigation }) {
         />
       )}
       </View>
+      </SectionBodyTransition>
     </SafeAreaView>
   );
 }

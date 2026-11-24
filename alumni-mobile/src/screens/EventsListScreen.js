@@ -13,6 +13,8 @@ import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import { useTheme } from '../theme/ThemeContext';
+import useSectionSwipe from '../hooks/useSectionSwipe';
+import SectionBodyTransition from '../components/SectionBodyTransition';
 
 const COMMUNITY_TABS = [
   { key: 'News', label: 'News', screen: 'NewsList' },
@@ -20,7 +22,7 @@ const COMMUNITY_TABS = [
   { key: 'Alumni', label: 'Alumni', screen: 'Directory' },
 ];
 
-export default function EventsListScreen({ navigation }) {
+export default function EventsListScreen({ navigation, route }) {
   const { theme } = useTheme();
   const { student } = useAuth();
   const c = theme.colors;
@@ -36,6 +38,11 @@ export default function EventsListScreen({ navigation }) {
   const searchRef = useRef('');
   const hasLoadedRef = useRef(false);
   searchRef.current = search;
+  const swipeHandlers = useSectionSwipe({
+    items: tabs,
+    active: 'EventsList',
+    navigation,
+  });
 
   async function loadEvents(activeSearch = '') {
     try {
@@ -157,21 +164,25 @@ export default function EventsListScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: 'transparent' }]}
+      edges={['top', 'left', 'right']}
+    >
       <AppBackground />
       <AppHeader title="Community" navigation={navigation} />
       <SectionTabs items={tabs} active="EventsList" navigation={navigation} />
-      <View style={styles.searchRow}>
-        <SearchBar
-          placeholder="Search events or locations"
-          value={search}
-          onChangeText={setSearch}
-          onSubmit={submitSearch}
-          onClear={clearSearch}
-        />
-      </View>
-      {loading ? (
-        <View style={styles.skeletonList}>
+      <SectionBodyTransition route={route} panHandlers={swipeHandlers}>
+        <View style={styles.searchRow}>
+          <SearchBar
+            placeholder="Search events or locations"
+            value={search}
+            onChangeText={setSearch}
+            onSubmit={submitSearch}
+            onClear={clearSearch}
+          />
+        </View>
+        {loading ? (
+          <View style={styles.skeletonList}>
           {[0, 1, 2].map((i) => (
             <View
               key={i}
@@ -186,9 +197,9 @@ export default function EventsListScreen({ navigation }) {
               </View>
             </View>
           ))}
-        </View>
-      ) : (
-        <FlatList
+          </View>
+        ) : (
+          <FlatList
           style={styles.list}
           data={events}
           keyExtractor={(item) => String(item.id)}
@@ -206,8 +217,9 @@ export default function EventsListScreen({ navigation }) {
               {search.trim() ? 'No events match your search.' : 'No upcoming events.'}
             </Text>
           }
-          />
-        )}
+            />
+          )}
+      </SectionBodyTransition>
     </SafeAreaView>
   );
 }

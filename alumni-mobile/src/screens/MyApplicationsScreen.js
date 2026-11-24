@@ -19,6 +19,8 @@ import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import { useTheme } from '../theme/ThemeContext';
+import useSectionSwipe from '../hooks/useSectionSwipe';
+import SectionBodyTransition from '../components/SectionBodyTransition';
 
 const CAREER_TABS = [
   { key: 'Overview', label: 'Overview', screen: 'CareerHome' },
@@ -26,7 +28,7 @@ const CAREER_TABS = [
   { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
 ];
 
-export default function MyApplicationsScreen({ navigation }) {
+export default function MyApplicationsScreen({ navigation, route }) {
   const { theme } = useTheme();
   const c = theme.colors;
 
@@ -50,6 +52,12 @@ export default function MyApplicationsScreen({ navigation }) {
   const [historyFor, setHistoryFor] = useState(null);
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const swipeHandlers = useSectionSwipe({
+    items: CAREER_TABS,
+    active: 'MyApplications',
+    navigation,
+    enabled: historyFor == null,
+  });
 
   async function fetchApplications() {
     try {
@@ -124,8 +132,9 @@ export default function MyApplicationsScreen({ navigation }) {
       <AppBackground />
       <AppHeader title="Career" navigation={navigation} />
       <SectionTabs items={CAREER_TABS} active="MyApplications" navigation={navigation} />
-      {isLoading ? (
-        <View style={styles.skeletonList}>
+      <SectionBodyTransition route={route} panHandlers={swipeHandlers}>
+        {isLoading ? (
+          <View style={styles.skeletonList}>
           {[0, 1, 2].map((i) => (
             <View
               key={i}
@@ -136,9 +145,9 @@ export default function MyApplicationsScreen({ navigation }) {
               <Skeleton width={90} height={22} borderRadius={999} />
             </View>
           ))}
-        </View>
-      ) : (
-        <FlatList
+          </View>
+        ) : (
+          <FlatList
           data={items}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
@@ -165,8 +174,9 @@ export default function MyApplicationsScreen({ navigation }) {
               </Text>
             )
           }
-        />
-      )}
+          />
+        )}
+      </SectionBodyTransition>
 
       <Modal visible={historyFor != null} animationType="slide" transparent onRequestClose={() => setHistoryFor(null)}>
         <View style={[styles.modalBackdrop, { backgroundColor: c.overlay }]}>

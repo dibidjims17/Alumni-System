@@ -20,6 +20,8 @@ import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import Skeleton from '../components/ui/Skeleton';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import useSectionSwipe from '../hooks/useSectionSwipe';
+import SectionBodyTransition from '../components/SectionBodyTransition';
 
 const CAREER_TABS = [
   { key: 'Overview', label: 'Overview', screen: 'CareerHome' },
@@ -27,11 +29,16 @@ const CAREER_TABS = [
   { key: 'Applications', label: 'Applications', screen: 'MyApplications' },
 ];
 
-export default function JobsListScreen({ navigation }) {
+export default function JobsListScreen({ navigation, route }) {
   const { student } = useAuth();
   const { theme } = useTheme();
   const c = theme.colors;
   const isGraduate = student?.schoolYear === 'Graduate';
+  const swipeHandlers = useSectionSwipe({
+    items: CAREER_TABS,
+    active: 'JobsList',
+    navigation,
+  });
 
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,11 +170,13 @@ export default function JobsListScreen({ navigation }) {
         <AppBackground />
         <AppHeader title="Career" navigation={navigation} />
         <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
-        <View style={styles.centered}>
-          <Text style={[styles.infoText, { color: c.text }]}>
-            Job listings are available to graduates only.
-          </Text>
-        </View>
+        <SectionBodyTransition route={route} panHandlers={swipeHandlers}>
+          <View style={styles.centered}>
+            <Text style={[styles.infoText, { color: c.text }]}>
+              Job listings are available to graduates only.
+            </Text>
+          </View>
+        </SectionBodyTransition>
       </SafeAreaView>
     );
   }
@@ -180,17 +189,18 @@ export default function JobsListScreen({ navigation }) {
       <AppBackground />
       <AppHeader title="Career" navigation={navigation} />
       <SectionTabs items={CAREER_TABS} active="JobsList" navigation={navigation} />
-      <View style={styles.searchRow}>
-        <SearchBar
-          placeholder="Search jobs or companies"
-          value={search}
-          onChangeText={setSearch}
-          onSubmit={submitSearch}
-          onClear={clearSearch}
-        />
-      </View>
-      {isLoading ? (
-        <View style={styles.skeletonList}>
+      <SectionBodyTransition route={route} panHandlers={swipeHandlers}>
+        <View style={styles.searchRow}>
+          <SearchBar
+            placeholder="Search jobs or companies"
+            value={search}
+            onChangeText={setSearch}
+            onSubmit={submitSearch}
+            onClear={clearSearch}
+          />
+        </View>
+        {isLoading ? (
+          <View style={styles.skeletonList}>
           {[0, 1, 2].map((i) => (
             <View
               key={i}
@@ -205,9 +215,9 @@ export default function JobsListScreen({ navigation }) {
               </View>
             </View>
           ))}
-        </View>
-      ) : (
-        <FlatList
+          </View>
+        ) : (
+          <FlatList
           data={items}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
@@ -234,8 +244,9 @@ export default function JobsListScreen({ navigation }) {
               </Text>
             )
           }
-        />
-      )}
+          />
+        )}
+      </SectionBodyTransition>
     </SafeAreaView>
   );
 }

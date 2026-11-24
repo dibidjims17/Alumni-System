@@ -6,11 +6,12 @@ import { useTheme } from '../theme/ThemeContext';
 export default function SectionTabs({ items, active, navigation }) {
   const { theme } = useTheme();
   const c = theme.colors;
+  const activeIndex = items.findIndex((item) => item.screen === active);
 
   return (
     <View style={styles.wrap}>
       <View style={[styles.group, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}>
-        {items.map((item) => {
+        {items.map((item, index) => {
           const isActive = item.screen === active;
           return (
             <TouchableOpacity
@@ -21,10 +22,16 @@ export default function SectionTabs({ items, active, navigation }) {
               ]}
               onPress={() => {
                 if (item.screen !== active && navigation) {
-                  navigation.navigate(item.screen);
+                  navigation.navigate(item.screen, {
+                    sectionDirection: index > activeIndex ? 1 : -1,
+                    sectionTransitionKey: Date.now(),
+                  });
                 }
               }}
               activeOpacity={0.8}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={`${item.label} section`}
             >
               <Text
                 style={[
@@ -42,6 +49,7 @@ export default function SectionTabs({ items, active, navigation }) {
           );
         })}
       </View>
+      <Text style={[styles.swipeHint, { color: c.textMuted }]}>Swipe left or right to switch</Text>
     </View>
   );
 }
@@ -75,4 +83,5 @@ const styles = StyleSheet.create({
     marginTop: 3, // was 4
     alignSelf: 'stretch',
   },
+  swipeHint: { fontSize: 10.5, marginTop: 4 },
 });

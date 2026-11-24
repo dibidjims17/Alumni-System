@@ -27,6 +27,8 @@ import AppBackground from '../components/AppBackground';
 import SectionTabs from '../components/SectionTabs';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import Skeleton from '../components/ui/Skeleton';
+import useSectionSwipe from '../hooks/useSectionSwipe';
+import SectionBodyTransition from '../components/SectionBodyTransition';
 
 const CAREER_TABS = [
   { key: 'Overview', label: 'Overview', screen: 'CareerHome' },
@@ -73,9 +75,14 @@ function ActionRow({ icon: Icon, title, subtitle, onPress, c }) {
   );
 }
 
-export default function CareerHomeScreen({ navigation }) {
+export default function CareerHomeScreen({ navigation, route }) {
   const { theme } = useTheme();
   const c = theme.colors;
+  const swipeHandlers = useSectionSwipe({
+    items: CAREER_TABS,
+    active: 'CareerHome',
+    navigation,
+  });
   const [record, setRecord] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -113,22 +120,26 @@ export default function CareerHomeScreen({ navigation }) {
   const StatusIcon = status.Icon;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={styles.container}
+      edges={['top', 'left', 'right']}
+    >
       <AppBackground />
       <AppHeader title="Career" navigation={navigation} />
       <SectionTabs items={CAREER_TABS} active="CareerHome" navigation={navigation} />
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={refresh}
-            colors={[c.primary]}
-            tintColor={c.primary}
-          />
-        }
-      >
+      <SectionBodyTransition route={route} panHandlers={swipeHandlers}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refresh}
+              colors={[c.primary]}
+              tintColor={c.primary}
+            />
+          }
+        >
         <Text style={[styles.eyebrow, { color: c.textMuted }]}>YOUR CAREER</Text>
 
         {isLoading ? (
@@ -203,7 +214,8 @@ export default function CareerHomeScreen({ navigation }) {
             c={c}
           />
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SectionBodyTransition>
     </SafeAreaView>
   );
 }

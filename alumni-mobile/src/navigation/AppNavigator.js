@@ -115,14 +115,26 @@ function CommunityStack() {
     <CommunityStackNav.Navigator
       screenOptions={{ ...headerOptions(theme.colors), headerShown: false }}
     >
-      <CommunityStackNav.Screen name="NewsList" component={NewsListScreen} />
+      <CommunityStackNav.Screen
+        name="NewsList"
+        component={NewsListScreen}
+        options={{ animation: 'none' }}
+      />
       <CommunityStackNav.Screen
         name="SuggestPost"
         component={SuggestPostScreen}
         options={{ headerShown: false }}
       />
-      <CommunityStackNav.Screen name="EventsList" component={EventsListScreen} />
-      <CommunityStackNav.Screen name="Directory" component={DirectoryScreen} />
+      <CommunityStackNav.Screen
+        name="EventsList"
+        component={EventsListScreen}
+        options={{ animation: 'none' }}
+      />
+      <CommunityStackNav.Screen
+        name="Directory"
+        component={DirectoryScreen}
+        options={{ animation: 'none' }}
+      />
       <CommunityStackNav.Screen
         name="EventDetail"
         component={EventDetailScreen}
@@ -143,10 +155,22 @@ function CareerStack() {
     <CareerStackNav.Navigator
       screenOptions={{ ...headerOptions(theme.colors), headerShown: false }}
     >
-      <CareerStackNav.Screen name="CareerHome" component={CareerHomeScreen} />
+      <CareerStackNav.Screen
+        name="CareerHome"
+        component={CareerHomeScreen}
+        options={{ animation: 'none' }}
+      />
       <CareerStackNav.Screen name="CareerProof" component={CareerProofScreen} />
-      <CareerStackNav.Screen name="JobsList" component={JobsListScreen} />
-      <CareerStackNav.Screen name="MyApplications" component={MyApplicationsScreen} />
+      <CareerStackNav.Screen
+        name="JobsList"
+        component={JobsListScreen}
+        options={{ animation: 'none' }}
+      />
+      <CareerStackNav.Screen
+        name="MyApplications"
+        component={MyApplicationsScreen}
+        options={{ animation: 'none' }}
+      />
       <CareerStackNav.Screen
         name="JobDetail"
         component={JobDetailScreen}
