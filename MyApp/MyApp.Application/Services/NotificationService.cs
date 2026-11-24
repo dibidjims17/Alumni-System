@@ -107,6 +107,25 @@ namespace MyApp.Application.Services
             return (true, "Career reminder sent by in-app notification and device push when available.");
         }
 
+        // Cooldown lookup shared by the Careers screen: which graduates have
+        // an active career reminder (unread or sent within the cooldown), so
+        // the admin UI can disable the remind buttons before the API rejects
+        // a repeat send. `reminderType` narrows to one reminder kind when the
+        // caller only cares about one (e.g. resubmit vs first report).
+        public async Task<IReadOnlyDictionary<int, DateTime>> GetActiveCareerRemindersAsync(
+            IEnumerable<int> studentIds,
+            string? reminderType = null)
+        {
+            var reminders = await _notificationRepository.GetActiveCareerRemindersByStudentIdsAsync(
+                studentIds,
+                DateTime.UtcNow.AddDays(-CareerReminderCooldownDays));
+
+            return reminders
+                .Where(r => reminderType == null || r.Type == reminderType)
+                .GroupBy(r => r.StudentId)
+                .ToDictionary(g => g.Key, g => g.First().CreatedAt);
+        }
+
         // One-shot encouragement: graduates with no active resume get a
         // single unread nudge (in-app + push). Self-throttling — a live
         // nudge suppresses repeats until read.

@@ -270,14 +270,14 @@ export default function Dashboard() {
             boxShadow: "var(--stat-shadow)",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
+            justifyContent: "flex-start",
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
             <h3 style={{ margin: 0, fontSize: 14.5 }}>Career outcomes</h3>
             <span style={{ fontSize: 12, color: "var(--muted)" }}>Approved records only</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16, flex: 1, justifyContent: "space-evenly" }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
                 <span style={{ fontWeight: 650 }}>Submitted</span>
@@ -318,6 +318,7 @@ export default function Dashboard() {
         </div>
 
         <div
+          className="dash-quick-card"
           style={{
             background: "var(--surface)",
             border: "1px solid var(--border)",
@@ -327,14 +328,14 @@ export default function Dashboard() {
             boxShadow: "var(--stat-shadow)",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
+            justifyContent: "flex-start",
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
             <h3 style={{ margin: 0, fontSize: 14.5 }}>Quick actions</h3>
             <span style={{ fontSize: 12, color: "var(--muted)" }}>Most-used workflows</span>
           </div>
-          <div className="dash-quick-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, marginTop: 16 }}>
+          <div className="dash-quick-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, marginTop: 16, flex: 1, alignContent: "space-evenly" }}>
             {quickLinks.map(({ to, label, desc, Icon }) => (
               <Link
                 key={to}

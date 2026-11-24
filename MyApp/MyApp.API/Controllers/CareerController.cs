@@ -174,6 +174,29 @@ namespace MyApp.API.Controllers
             return Ok(new { message });
         }
 
+        // Graduates with no career submission — the not-reported list the
+        // Careers page shows alongside the review queue.
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpGet("not-reported")]
+        public async Task<IActionResult> GetNotReported()
+        {
+            var result = await _careerService.GetNotReportedAsync();
+            return Ok(result);
+        }
+
+        // One bulk send to every graduate without a submission. Students in
+        // the 7-day cooldown are skipped, never failed, so the whole send
+        // completes and the response reports exact counts.
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPost("remind-all")]
+        public async Task<IActionResult> RemindAllNotReported()
+        {
+            var (sent, skipped, failed, message) = await _careerService
+                .RemindAllNotReportedAsync(GetAdminId(), IpAddress());
+
+            return Ok(new { message, sent, skipped, failed });
+        }
+
         // Month-scoped report: submissions received in the month, review
         // workload, distributions and the rows (SuperAdmin — the rows carry
         // alumni PII, same boundary as the queue).

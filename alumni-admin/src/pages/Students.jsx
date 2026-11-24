@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import Papa from "papaparse";
-import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert, BellRing, CheckCircle2 } from "lucide-react";
+import { UserPlus, Pencil, Eye, KeyRound, FileText, RotateCcw, UserCheck, UserX, Upload, Send, Users, Search, BriefcaseBusiness, BadgeCheck, Clock3, CircleAlert } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import { getStudents, importStudents, toggleStudentStatus, getStudentProfile, updateStudent, resetStudentPassword, createStudent, sendInvite, getYearChangeRequests, reviewYearChangeRequest } from "../services/studentsApi";
 import { SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone, ModalShell, Field, textInput, selectStyle, btn, btnPrimary, btnDanger, toolbar, filterRow, EmptyState, pageWrap } from "../components/kit";
@@ -8,7 +8,6 @@ import { GridSkeleton } from "../components/Skeleton";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 import KebabMenu from "../components/KebabMenu";
-import { sendCareerReminder } from "../services/careersApi";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 const emptyAddForm = { studentNumber: "", fullName: "", email: "", program: "", schoolYear: "Graduate" };
@@ -58,8 +57,6 @@ export default function Students() {
   const [yearFilter, setYearFilter] = useState("");
   const [programFilter, setProgramFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState(""); // "", "active", "inactive", "unclaimed"
-  const [sendingCareerReminderId, setSendingCareerReminderId] = useState(null);
-  const [remindedCareerIds, setRemindedCareerIds] = useState([]);
 
   const [viewingProfile, setViewingProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -293,32 +290,6 @@ export default function Students() {
       { confirmLabel: student.isActive ? "Deactivate" : "Activate", danger: student.isActive }
     );
     if (ok) await handleToggleStatus(student.id);
-  }
-
-  async function confirmCareerReminder(student) {
-    const needsResubmission = student.career?.reviewStatus === "Rejected";
-    const ok = await askConfirm(
-      needsResubmission
-        ? `Remind ${student.fullName} to review the rejection note and resubmit their career proof?`
-        : `Remind ${student.fullName} to report their employment status and upload career proof?`,
-      { confirmLabel: "Send reminder" }
-    );
-    if (!ok) return;
-
-    setSendingCareerReminderId(student.id);
-    try {
-      const result = await sendCareerReminder(student.id);
-      notifySuccess(result.message || "Career reminder sent.");
-      setRemindedCareerIds((current) => [...current, student.id]);
-    } catch (err) {
-      notifyError(err.message);
-    } finally {
-      setSendingCareerReminderId(null);
-    }
-  }
-
-  function careerReminderAlreadySent(student) {
-    return student.careerReminderActive || remindedCareerIds.includes(student.id);
   }
 
   const programOptions = useMemo(() => {
@@ -575,50 +546,6 @@ export default function Students() {
                           )}
                         </div>
                       )}
-                      {s.schoolYear === "Graduate" && s.isActive &&
-                        (!s.career || s.career.reviewStatus === "Rejected") && (
-                          <button
-                            type="button"
-                            className="career-reminder-button"
-                            title={
-                              careerReminderAlreadySent(s) && s.careerReminderSentAt
-                                ? `Reminder sent ${new Date(s.careerReminderSentAt).toLocaleString()}`
-                                : undefined
-                            }
-                            disabled={
-                              sendingCareerReminderId === s.id ||
-                              careerReminderAlreadySent(s)
-                            }
-                            style={{
-                              ...btn,
-                              marginTop: 10,
-                              padding: "6px 10px",
-                              background: careerReminderAlreadySent(s)
-                                ? "var(--success-tint)"
-                                : "var(--warning-tint)",
-                              border: careerReminderAlreadySent(s)
-                                ? "1px solid var(--success)"
-                                : "1px solid var(--warning)",
-                              color: careerReminderAlreadySent(s)
-                                ? "var(--success)"
-                                : "var(--warning)",
-                            }}
-                            onClick={() => confirmCareerReminder(s)}
-                          >
-                            {careerReminderAlreadySent(s) ? (
-                              <CheckCircle2 size={14} />
-                            ) : (
-                              <BellRing size={14} />
-                            )}
-                            {sendingCareerReminderId === s.id
-                              ? "Sending…"
-                              : careerReminderAlreadySent(s)
-                                ? "Reminder sent"
-                                : s.career?.reviewStatus === "Rejected"
-                                  ? "Remind to resubmit"
-                                  : "Remind to report"}
-                          </button>
-                        )}
                     </div>
                   </div>
                 </div>
@@ -978,9 +905,6 @@ export default function Students() {
         .alumni-card:focus-within {
           outline: 2px solid var(--primary);
           outline-offset: 2px;
-        }
-        .career-reminder-button:hover:not(:disabled) {
-          filter: brightness(0.97);
         }
       `}</style>
     </div>

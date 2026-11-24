@@ -54,6 +54,29 @@ export async function sendCareerReminder(studentId) {
   return data;
 }
 
+// Graduates who never submitted a career report — the "not reported"
+// chase list on the Careers page, with reminder cooldown state.
+export async function getNotReported() {
+  const response = await fetch(`${API_BASE_URL}/Career/not-reported`, {
+    headers: authHeaders(),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || "Failed to fetch non-reporters");
+  return data;
+}
+
+// One bulk send to every graduate without a submission. Students in the
+// 7-day cooldown are skipped server-side; the response carries counts.
+export async function remindAllNotReported() {
+  const response = await fetch(`${API_BASE_URL}/Career/remind-all`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || "Failed to send reminders");
+  return data;
+}
+
 // Month-scoped career report (SuperAdmin): submissions received in the
 // month, review workload, distributions and the rows behind them.
 export async function getCareerReport(year, month) {

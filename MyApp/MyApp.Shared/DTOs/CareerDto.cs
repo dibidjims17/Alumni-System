@@ -32,6 +32,29 @@ namespace MyApp.Shared.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime? ReviewedAt { get; set; }
+
+        // Admin-queue reminder cooldown state. Populated only for rows the
+        // admin can remind (rejected submissions); the student-facing record
+        // never carries it.
+        public bool ReminderActive { get; set; }
+        public DateTime? ReminderSentAt { get; set; }
+    }
+
+    // A graduate who has never submitted a career report — listed on the
+    // admin Careers page so the office can chase them individually or in
+    // one bulk send.
+    public class CareerNotReportedDto
+    {
+        public int StudentId { get; set; }
+        public string? StudentName { get; set; }
+        public string? StudentNumber { get; set; }
+        public string? Program { get; set; }
+        public string? SchoolYear { get; set; }
+
+        // Cooldown state: an unread reminder or one sent within the last
+        // seven days blocks another send (same rule the API enforces).
+        public bool ReminderActive { get; set; }
+        public DateTime? ReminderSentAt { get; set; }
     }
 
     // Path fields are filled in by the controller once both files have been

@@ -137,7 +137,29 @@ namespace MyApp.Application.Services
                 ).ToList();
             }
 
-            return records.Select(Map).ToList();
+            var dtos = records.Select(Map).ToList();
+
+            // Rejected rows can be reminded to resubmit — surface cooldown
+            // state so the UI disables the button instead of erroring.
+            var rejectedIds = records
+                .Where(r => r.Status == "Rejected")
+                .Select(r => r.StudentId)
+                .ToList();
+            if (rejectedIds.Count > 0)
+            {
+                var reminders = await _notificationService.GetActiveCareerRemindersAsync(
+                    rejectedIds, "CAREER_RESUBMIT_REMINDER");
+                foreach (var dto in dtos.Where(d => d.Status == "Rejected"))
+                {
+                    if (reminders.TryGetValue(dto.StudentId, out var sentAt))
+                    {
+                        dto.ReminderActive = true;
+                        dto.ReminderSentAt = sentAt;
+                    }
+                }
+            }
+
+            return dtos;
         }
 
         public async Task<CareerRecordDto?> GetByIdAsync(int id)
@@ -413,6 +435,77 @@ namespace MyApp.Application.Services
                 ipAddress);
 
             return (true, message);
+        }
+
+        // Active graduates who never submitted — the not-reported chase list
+        // on the admin Careers page. Cooldown state rides along so the UI can
+        // disable remind buttons before the API would reject a repeat send.
+        public async Task<List<CareerNotReportedDto>> GetNotReportedAsync()
+        {
+            var students = await _studentRepository.GetAllAsync();
+            var graduates = students
+                .Where(s => s.IsActive &&
+                    s.SchoolYear.Trim().Equals("Graduate", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var careers = await _careerRepository
+                .GetLatestByStudentIdsAsync(graduates.Select(s => s.Id));
+            var missing = graduates.Where(s => !careers.ContainsKey(s.Id)).ToList();
+
+            var reminders = await _notificationService.GetActiveCareerRemindersAsync(
+                missing.Select(s => s.Id), "CAREER_REMINDER");
+
+            return missing
+                .OrderBy(s => s.FullName)
+                .Select(s =>
+                {
+                    reminders.TryGetValue(s.Id, out var sentAt);
+                    return new CareerNotReportedDto
+                    {
+                        StudentId = s.Id,
+                        StudentName = s.FullName,
+                        StudentNumber = s.StudentNumber,
+                        Program = s.Program,
+                        SchoolYear = s.SchoolYear,
+                        ReminderActive = sentAt != default,
+                        ReminderSentAt = sentAt != default ? sentAt : null
+                    };
+                })
+                .ToList();
+        }
+
+        // One bulk send to every graduate without a submission. Students
+        // already in cooldown are skipped (not failed), so the whole send
+        // completes and the admin sees exactly what went out.
+        public async Task<(int Sent, int Skipped, int Failed, string Message)> RemindAllNotReportedAsync(
+            int adminId,
+            string ipAddress)
+        {
+            var missing = await GetNotReportedAsync();
+            if (missing.Count == 0)
+                return (0, 0, 0, "Every active graduate already has a career submission.");
+
+            int sent = 0, skipped = 0, failed = 0;
+            foreach (var row in missing)
+            {
+                if (row.ReminderActive)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                var (success, _) = await SendReminderAsync(row.StudentId, adminId, ipAddress);
+                if (success) sent++;
+                else failed++;
+            }
+
+            var parts = new List<string> { $"Sent {sent} reminder{(sent == 1 ? "" : "s")}" };
+            if (skipped > 0)
+                parts.Add($"{skipped} skipped (already reminded within the last 7 days)");
+            if (failed > 0)
+                parts.Add($"{failed} failed");
+
+            return (sent, skipped, failed, string.Join("; ", parts) + ".");
         }
 
         private static CareerRecordDto Map(CareerRecord r)

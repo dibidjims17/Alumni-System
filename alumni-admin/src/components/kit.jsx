@@ -815,9 +815,10 @@ export function StatCard({ label, value, sub, Icon, accent, tint, loading }) {
             letterSpacing: 0.5,
             textTransform: "uppercase",
             color: "var(--muted)",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            // Wrap instead of truncating: at 6 columns wide the labels
+            // ("Verified Careers", "Awaiting Review") get cut off in landscape.
+            lineHeight: 1.25,
+            minWidth: 0,
           }}
         >
           {label}

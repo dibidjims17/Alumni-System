@@ -21,6 +21,15 @@ namespace MyApp.Application.Interfaces
         Task<(bool Success, string Message)> SendReminderAsync(
             int studentId, int adminId, string ipAddress);
 
+        // Graduates with no career submission at all — the "not reported"
+        // rows on the admin Careers page, with reminder cooldown state.
+        Task<List<CareerNotReportedDto>> GetNotReportedAsync();
+
+        // One bulk send to every graduate without a submission. Students in
+        // cooldown are skipped, not failed; returns per-outcome counts.
+        Task<(int Sent, int Skipped, int Failed, string Message)> RemindAllNotReportedAsync(
+            int adminId, string ipAddress);
+
         Task<CareerStatsDto> GetStatsAsync();
 
         // Month-scoped report (registrar deliverable): submissions received

@@ -1,10 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Briefcase, Users, Clock3, BadgeCheck, XCircle, RotateCcw,
-  Eye, Check, ExternalLink, Search as SearchIcon, Target,
+  Eye, Check, ExternalLink, Search as SearchIcon, Target, BellRing,
 } from "lucide-react";
 import { API_BASE_URL } from "../config";
-import { getCareers, getCareerStats, reviewCareer } from "../services/careersApi";
+import {
+  getCareers, getCareerStats, reviewCareer,
+  getNotReported, remindAllNotReported, sendCareerReminder,
+} from "../services/careersApi";
 import { notifyError, notifySuccess } from "../components/toastBus";
 import { askConfirm } from "../components/confirmBus";
 import {
@@ -105,6 +108,7 @@ function ProofImage({ path, label }) {
 export default function Careers() {
   const [records, setRecords] = useState([]);
   const [stats, setStats] = useState(null);
+  const [notReported, setNotReported] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -113,6 +117,13 @@ export default function Careers() {
   const [note, setNote] = useState("");
   const [alignment, setAlignment] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Reminder sends: per-row id while an individual send is in flight, and a
+  // flag for the bulk send. Locally-sent ids flip the button instantly; the
+  // server's 7-day cooldown state is re-fetched on the next load.
+  const [remindingId, setRemindingId] = useState(null);
+  const [remindingAll, setRemindingAll] = useState(false);
+  const [locallyReminded, setLocallyReminded] = useState([]);
 
   async function loadRecords() {
     setLoading(true);
@@ -133,14 +144,23 @@ export default function Careers() {
     }
   }
 
+  async function loadNotReported() {
+    try {
+      setNotReported(await getNotReported());
+    } catch {
+      // Same as stats: the chase list is supplementary to the queue.
+    }
+  }
+
   async function loadAll() {
-    await Promise.all([loadRecords(), loadStats()]);
+    await Promise.all([loadRecords(), loadStats(), loadNotReported()]);
   }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRecords();
     loadStats();
+    loadNotReported();
     // Loaders are stable for the lifetime of this screen; only the status
     // filter should trigger a refetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,6 +210,59 @@ export default function Careers() {
     }
   }
 
+  // ── Reminders ───────────────────────────────────────────
+  // One reminder per graduate is gated server-side by a 7-day cooldown
+  // (plus unread suppression), so buttons disable on active cooldown and
+  // the bulk send reports skipped rows instead of failing.
+  function reminderInCooldown(row) {
+    return row.reminderActive || locallyReminded.includes(row.studentId ?? row.id);
+  }
+
+  async function confirmIndividualRemind(row, isRejectedRow = false) {
+    const who = row.studentName || row.fullName;
+    const ok = await askConfirm(
+      isRejectedRow
+        ? `Remind ${who} to review the rejection note and resubmit their career proof?`
+        : `Remind ${who} to report their employment status and upload career proof?`,
+      { confirmLabel: "Send reminder" }
+    );
+    if (!ok) return;
+
+    const studentId = row.studentId ?? row.id;
+    setRemindingId(studentId);
+    try {
+      const result = await sendCareerReminder(studentId);
+      notifySuccess(result.message || "Career reminder sent.");
+      setLocallyReminded((current) => [...current, studentId]);
+      await loadNotReported();
+      if (isRejectedRow) await loadRecords();
+    } catch (err) {
+      notifyError(err.message);
+    } finally {
+      setRemindingId(null);
+    }
+  }
+
+  async function confirmBulkRemind() {
+    if (notReported.length === 0) return;
+    const ok = await askConfirm(
+      `Send a career-report reminder to all ${notReported.length} graduate${notReported.length === 1 ? "" : "s"} who have not submitted yet? Anyone reminded within the last 7 days is skipped automatically.`,
+      { confirmLabel: "Send reminders" }
+    );
+    if (!ok) return;
+
+    setRemindingAll(true);
+    try {
+      const result = await remindAllNotReported();
+      notifySuccess(result.message || "Reminders processed.");
+      await loadNotReported();
+    } catch (err) {
+      notifyError(err.message);
+    } finally {
+      setRemindingAll(false);
+    }
+  }
+
   const filtered = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return records;
@@ -209,9 +282,25 @@ export default function Careers() {
         <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
           Review the proof of occupation alumni submit from the mobile app.
         </p>
-        <button type="button" style={btn} onClick={loadAll}>
-          <RotateCcw size={14} /> Refresh
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            style={btnPrimary}
+            onClick={confirmBulkRemind}
+            disabled={remindingAll || notReported.length === 0}
+            title={
+              notReported.length === 0
+                ? "Every active graduate already submitted."
+                : "Send a career-report reminder to every graduate without a submission."
+            }
+          >
+            <BellRing size={14} />
+            {remindingAll ? "Sending..." : `Send reminders (${notReported.length})`}
+          </button>
+          <button type="button" style={btn} onClick={loadAll}>
+            <RotateCcw size={14} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* ── Stats ─────────────────────────────────────────── */}
@@ -264,6 +353,83 @@ export default function Careers() {
           ))}
         </select>
       </div>
+
+      {/* ── Not reported yet ──────────────────────────────── */}
+      {notReported.length > 0 && (
+        <div style={{ ...card, marginTop: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ ...cardTitle, margin: 0 }}>
+                Not reported yet — {notReported.length} graduate{notReported.length === 1 ? "" : "s"}
+              </h3>
+              <p style={{ ...cardMeta, margin: "3px 0 0" }}>
+                Active graduates with no career submission. Reminders respect the 7-day cooldown.
+              </p>
+            </div>
+            <button
+              type="button"
+              style={btnPrimary}
+              onClick={confirmBulkRemind}
+              disabled={remindingAll}
+            >
+              <BellRing size={14} /> {remindingAll ? "Sending..." : "Send reminders to all"}
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 10, marginTop: 14 }}>
+            {notReported.map((n) => {
+              const inCooldown = reminderInCooldown(n);
+              return (
+                <div
+                  key={n.studentId}
+                  style={{
+                    border: "1px solid var(--border)",
+                    borderRadius: 11,
+                    padding: "11px 13px",
+                    background: "var(--surface-alt)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)", lineHeight: 1.35 }}>
+                      {n.studentName}
+                    </div>
+                    <div style={{ ...cardMeta, marginTop: 2 }}>{n.studentNumber}</div>
+                    <div style={{ ...cardMeta, marginTop: 2 }}>
+                      {n.program} • {n.schoolYear}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: "auto" }}>
+                    <span style={{ ...pill, ...(inCooldown ? statusTone("warning") : statusTone("danger")) }}>
+                      {inCooldown ? "Reminder active" : "No submission"}
+                    </span>
+                    <button
+                      type="button"
+                      style={{
+                        ...btn,
+                        ...(inCooldown ? { opacity: 0.55, cursor: "not-allowed" } : null),
+                      }}
+                      disabled={inCooldown || remindingId === n.studentId}
+                      title={inCooldown ? "A reminder is already active for this graduate." : undefined}
+                      onClick={() => confirmIndividualRemind(n)}
+                    >
+                      <BellRing size={14} />
+                      {remindingId === n.studentId
+                        ? "Sending..."
+                        : inCooldown
+                          ? "Reminded"
+                          : "Remind"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {loading && <GridSkeleton count={6} />}
 
@@ -337,6 +503,27 @@ export default function Careers() {
                   <button type="button" style={{ ...btn, flex: 1, justifyContent: "center" }} onClick={() => openReview(r)}>
                     <Eye size={15} /> Review
                   </button>
+                  {r.status === "Rejected" && (
+                    <button
+                      type="button"
+                      style={{
+                        ...btn,
+                        flex: 1,
+                        justifyContent: "center",
+                        ...(reminderInCooldown(r) ? { opacity: 0.55, cursor: "not-allowed" } : null),
+                      }}
+                      disabled={reminderInCooldown(r) || remindingId === r.studentId}
+                      title={reminderInCooldown(r) ? "A resubmit reminder is already active." : undefined}
+                      onClick={() => confirmIndividualRemind(r, true)}
+                    >
+                      <BellRing size={14} />
+                      {remindingId === r.studentId
+                        ? "Sending..."
+                        : reminderInCooldown(r)
+                          ? "Reminded"
+                          : "Remind"}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
