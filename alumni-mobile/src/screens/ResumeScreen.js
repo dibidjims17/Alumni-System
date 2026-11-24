@@ -23,6 +23,7 @@ import AppBackground from '../components/AppBackground';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import UploadPickerCard from '../components/ui/UploadPickerCard';
 import { API_BASE_URL } from '../config';
 import { alert as appAlert } from '../components/AppAlert';
 import KebabMenu from '../components/KebabMenu';
@@ -35,12 +36,14 @@ export default function ResumeScreen({ navigation }) {
   const c = theme.colors;
   const [activeResume, setActiveResume] = useState(null);
   const [localPdfPath, setLocalPdfPath] = useState(null);
+  const [pendingResume, setPendingResume] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadAction, setUploadAction] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const isGraduate = student?.schoolYear === 'Graduate';
+  const isUploading = uploadAction !== null;
 
   async function fetchActiveResume() {
     try {
@@ -83,6 +86,7 @@ export default function ResumeScreen({ navigation }) {
         return;
       }
       setIsLoading(true);
+      setPendingResume(null);
       fetchActiveResume().finally(() => setIsLoading(false));
     }, [isGraduate])
   );
@@ -142,10 +146,12 @@ export default function ResumeScreen({ navigation }) {
     }
   }
 
-  async function handleGenerate() {    setIsGenerating(true);
+  async function handleGenerate() {
+    setIsGenerating(true);
     try {
       await apiClient.post('/Resume/generate');
       await fetchActiveResume();
+      setPendingResume(null);
       appAlert('Generated', 'Your ATS-friendly CV is ready.');
     } catch (err) {
       const message =
@@ -166,6 +172,13 @@ export default function ResumeScreen({ navigation }) {
     if (result.canceled) return null;
 
     const file = result.assets[0];
+    const looksLikePdf =
+      file.mimeType === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+
+    if (!looksLikePdf) {
+      appAlert('Invalid file', 'Please choose a PDF document.');
+      return null;
+    }
 
     if (file.size && file.size > MAX_SIZE_BYTES) {
       appAlert('File too large', 'Resume must be 5MB or smaller.');
@@ -175,31 +188,38 @@ export default function ResumeScreen({ navigation }) {
     return file;
   }
 
-  async function handlePickAndUpload() {
+  async function handleChooseResume() {
     const file = await pickPdf();
+    if (file) setPendingResume(file);
+  }
+
+  async function handlePickAndUpload() {
+    const file = pendingResume;
     if (!file) return;
 
-    setIsUploading(true);
+    setUploadAction('upload');
     try {
       await apiClient.uploadFile('/Resume/upload', file.uri, file.name, 'application/pdf');
       await fetchActiveResume();
+      setPendingResume(null);
       appAlert('Uploaded', 'Your resume has been uploaded successfully.');
     } catch (err) {
       const message = err.response?.data?.message || 'Could not upload resume.';
       appAlert('Error', message);
     } finally {
-      setIsUploading(false);
+      setUploadAction(null);
     }
   }
 
   async function handleUploadAndFill() {
-    const file = await pickPdf();
+    const file = pendingResume;
     if (!file) return;
 
-    setIsUploading(true);
+    setUploadAction('fill');
     try {
       const res = await apiClient.uploadFile('/Resume/upload-fill', file.uri, file.name, 'application/pdf');
       await fetchActiveResume();
+      setPendingResume(null);
       const filled = res.data?.filled || {};
       const parts = [];
       if (filled.workAdded > 0) parts.push(`${filled.workAdded} work experience`);
@@ -219,7 +239,7 @@ export default function ResumeScreen({ navigation }) {
       const message = err.response?.data?.message || 'Could not process resume.';
       appAlert('Error', message);
     } finally {
-      setIsUploading(false);
+      setUploadAction(null);
     }
   }
 
@@ -318,24 +338,50 @@ export default function ResumeScreen({ navigation }) {
         title="Generate ATS CV from Profile"
         onPress={handleGenerate}
         loading={isGenerating}
+        disabled={isUploading}
+        style={{ marginTop: 8 }}
+      />
+
+      <Text style={[styles.uploadSectionTitle, { color: c.text }]}>Upload your own PDF</Text>
+      <UploadPickerCard
+        variant="document"
+        fileName={pendingResume?.name || activeResume?.fileName || ''}
+        selected={!!pendingResume}
+        hasExisting={!!activeResume}
+        statusText={
+          pendingResume
+            ? 'Selected and ready to upload'
+            : activeResume
+              ? 'Current resume on file'
+              : 'No PDF selected yet'
+        }
+        emptyText="Select a PDF resume"
+        chooseText="Tap to choose a PDF"
+        replaceText={
+          pendingResume ? 'Tap to choose a different PDF' : 'Tap to choose a replacement'
+        }
+        helperText="PDF only, max 5 MB. Choose a file, then select how to upload it."
+        busy={isUploading}
+        disabled={isGenerating}
+        onPress={handleChooseResume}
+        onRemove={pendingResume ? () => setPendingResume(null) : undefined}
         style={{ marginTop: 8 }}
       />
 
       <PrimaryButton
         title="Upload & Auto-fill Profile"
         onPress={handleUploadAndFill}
-        loading={isUploading}
-        style={{ marginTop: 8 }}
+        loading={uploadAction === 'fill'}
+        disabled={!pendingResume || isUploading || isGenerating}
       />
 
       <PrimaryButton
-        title={activeResume ? 'Replace Resume' : 'Upload Resume'}
+        title={activeResume ? 'Replace Resume Only' : 'Upload Resume Only'}
         onPress={handlePickAndUpload}
-        loading={isUploading}
+        loading={uploadAction === 'upload'}
+        disabled={!pendingResume || isUploading || isGenerating}
         style={{ marginTop: 8 }}
       />
-
-      <Text style={[styles.hintText, { color: c.textMuted }]}>PDF only, max 5MB.</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -353,6 +399,7 @@ const styles = StyleSheet.create({
   },
   fieldValue: { fontSize: 13 },
   fieldLabel: { fontSize: 11, marginTop: 4, marginBottom: 12 },
+  uploadSectionTitle: { fontSize: 14, fontWeight: '800', marginTop: 18 },
   pdfContainer: {
     height: 420,
     borderWidth: 1,
@@ -378,6 +425,5 @@ const styles = StyleSheet.create({
   },
   downloadButton: {},
   actionButtonText: { fontSize: 14, fontWeight: '700' },
-  hintText: { fontSize: 11, marginTop: 8, textAlign: 'center' },
   infoText: { fontSize: 13, textAlign: 'center' },
 });

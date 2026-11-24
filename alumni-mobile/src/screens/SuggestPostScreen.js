@@ -10,18 +10,18 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Image,
   StyleSheet,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
-import { Megaphone, ImagePlus, X, ChevronRight } from 'lucide-react-native';
+import { Megaphone, ChevronRight } from 'lucide-react-native';
 import apiClient from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
 import AppBackground from '../components/AppBackground';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import UploadPickerCard from '../components/ui/UploadPickerCard';
 import Skeleton from '../components/ui/Skeleton';
 import { alert as appAlert } from '../components/AppAlert';
 
@@ -70,9 +70,9 @@ export default function SuggestPostScreen({ navigation }) {
     if (result.canceled) return;
 
     const file = result.assets[0];
-    const looksLikeImage = file.mimeType
-      ? file.mimeType.startsWith('image/')
-      : /\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name || '');
+    const looksLikeImage =
+      file.mimeType?.startsWith('image/') ||
+      /\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name || '');
 
     if (!looksLikeImage) {
       appAlert('Invalid file', 'Please choose an image file.');
@@ -185,30 +185,22 @@ export default function SuggestPostScreen({ navigation }) {
           </Text>
 
           {/* Optional photo */}
-          {image ? (
-            <View style={styles.imageRow}>
-              <Image source={{ uri: image.uri }} style={styles.thumb} />
-              <View style={styles.imageMeta}>
-                <Text style={[styles.imageName, { color: c.text }]} numberOfLines={1}>
-                  {image.name || 'Photo'}
-                </Text>
-                <TouchableOpacity onPress={() => setImage(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={{ color: c.danger, fontWeight: '700', fontSize: 13 }}>Remove</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={[styles.pickRow, { borderColor: c.border, backgroundColor: c.surfaceAlt }]}
-              onPress={pickImage}
-              activeOpacity={0.7}
-            >
-              <ImagePlus size={18} color={c.primary} />
-              <Text style={{ color: c.primary, fontWeight: '600', fontSize: 14 }}>
-                Add a photo (optional)
-              </Text>
-            </TouchableOpacity>
-          )}
+          <UploadPickerCard
+            label="Photo"
+            variant="image"
+            fileName={image?.name || ''}
+            previewUri={image?.uri}
+            selected={!!image}
+            statusText={image ? 'Selected for this post' : 'Optional attachment'}
+            emptyText="Add a photo (optional)"
+            chooseText="Tap to choose an image"
+            replaceText="Tap to replace image"
+            helperText="JPG, PNG, WEBP, GIF or BMP; max 5 MB"
+            busy={isSubmitting && !!image}
+            disabled={isSubmitting}
+            onPress={pickImage}
+            onRemove={image ? () => setImage(null) : undefined}
+          />
 
           <PrimaryButton
             title={isSubmitting ? 'Submitting…' : 'Submit for review'}
@@ -296,21 +288,6 @@ const styles = StyleSheet.create({
   },
   multiline: { minHeight: 140 },
   counter: { fontSize: 11, textAlign: 'right', marginTop: 4, marginBottom: 8 },
-  pickRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderRadius: 10,
-    paddingVertical: 14,
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  imageRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  thumb: { width: 56, height: 56, borderRadius: 8 },
-  imageMeta: { flex: 1, gap: 6 },
-  imageName: { fontSize: 14, fontWeight: '600' },
   submitButton: { marginTop: 4 },
   sectionTitle: { fontSize: 16, fontWeight: '800', marginTop: 8 },
   empty: { fontSize: 13.5, lineHeight: 20 },

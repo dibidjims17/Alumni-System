@@ -9,6 +9,7 @@ import {
   StyleSheet,
   RefreshControl,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +18,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import RNBlobUtil from 'react-native-blob-util';
 import apiClient from '../api/client';
 import { API_BASE_URL } from '../config';
-import { LogOut } from 'lucide-react-native';
+import { Camera, LogOut } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import ProfileCompleteness, { computeCompleteness } from '../components/ProfileCompleteness';
@@ -55,6 +56,7 @@ export default function ProfileScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isUpdatingPicture, setIsUpdatingPicture] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
   async function fetchProfile() {
@@ -136,7 +138,10 @@ export default function ProfileScreen({ navigation }) {
       if (result.canceled) return;
 
       const file = result.assets[0];
-      if (!file.mimeType || !file.mimeType.startsWith('image/')) {
+      const looksLikeImage =
+        file.mimeType?.startsWith('image/') ||
+        /\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name || '');
+      if (!looksLikeImage) {
         appAlert('Invalid file', 'Please choose an image file.');
         return;
       }
@@ -145,11 +150,19 @@ export default function ProfileScreen({ navigation }) {
         return;
       }
 
-      await apiClient.uploadFile('/Profile/picture', file.uri, file.name, file.mimeType);
+      setIsUpdatingPicture(true);
+      await apiClient.uploadFile(
+        '/Profile/picture',
+        file.uri,
+        file.name,
+        file.mimeType || 'image/jpeg'
+      );
       await fetchProfile();
     } catch (err) {
       const message = err.response?.data?.message || 'Could not upload profile picture.';
       appAlert('Error', message);
+    } finally {
+      setIsUpdatingPicture(false);
     }
   }
 
@@ -161,12 +174,15 @@ export default function ProfileScreen({ navigation }) {
   }
 
   async function handleRemovePicture() {
+    setIsUpdatingPicture(true);
     try {
       await apiClient.delete('/Profile/picture');
       await fetchProfile();
     } catch (err) {
       const message = err.response?.data?.message || 'Could not remove profile picture.';
       appAlert('Error', message);
+    } finally {
+      setIsUpdatingPicture(false);
     }
   }
 
@@ -273,18 +289,42 @@ export default function ProfileScreen({ navigation }) {
       >
         {/* ── Identity header ─────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
-          <TouchableOpacity onPress={handleChangePicture} accessibilityLabel="Change profile picture">
-            <Image
-              source={
-                profile.profilePictureUrl
-                  ? { uri: `${SERVER_ROOT}/${profile.profilePictureUrl}` }
-                  : require('../../assets/defaultPFP.png')
-              }
-              style={styles.avatar}
-            />
-          </TouchableOpacity>
+          <View style={styles.avatarPickerWrap}>
+            <TouchableOpacity
+              style={styles.avatarTouch}
+              onPress={handleChangePicture}
+              disabled={isUpdatingPicture}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Choose a profile picture"
+            >
+              <Image
+                source={
+                  profile.profilePictureUrl
+                    ? { uri: `${SERVER_ROOT}/${profile.profilePictureUrl}` }
+                    : require('../../assets/defaultPFP.png')
+                }
+                style={styles.avatar}
+              />
+              <View
+                style={[
+                  styles.photoBadge,
+                  { backgroundColor: c.primary, borderColor: c.surface },
+                ]}
+              >
+                {isUpdatingPicture ? (
+                  <ActivityIndicator size="small" color={c.onPrimary} />
+                ) : (
+                  <Camera size={15} color={c.onPrimary} />
+                )}
+              </View>
+            </TouchableOpacity>
+            <Text style={[styles.photoHint, { color: c.textMuted }]}>
+              {isUpdatingPicture ? 'Updating photo...' : 'Tap photo to choose or replace'}
+            </Text>
+          </View>
           {profile.profilePictureUrl ? (
-            <TouchableOpacity onPress={confirmRemovePicture}>
+            <TouchableOpacity onPress={confirmRemovePicture} disabled={isUpdatingPicture}>
               <Text style={[styles.removePhotoText, { color: c.primary }]}>Remove photo</Text>
             </TouchableOpacity>
           ) : null}
@@ -556,16 +596,29 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
+  avatarPickerWrap: { alignItems: 'center', marginBottom: 6 },
+  avatarTouch: { position: 'relative' },
   avatar: {
     width: 96,
     height: 96,
     borderRadius: 48,
     alignSelf: 'center',
-    marginBottom: 6,
     // Gold ring — portal avatar-chip accent (same in light & dark).
     borderWidth: 3,
     borderColor: '#D4BD40',
   },
+  photoBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoHint: { fontSize: 11.5, marginTop: 7, textAlign: 'center' },
   removePhotoText: { fontSize: 12, textAlign: 'center', marginBottom: 10 },
   name: { fontSize: 21, fontWeight: '700', textAlign: 'center' },
   subtext: { fontSize: 13, marginTop: 2, textAlign: 'center' },

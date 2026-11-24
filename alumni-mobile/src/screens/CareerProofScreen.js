@@ -12,19 +12,19 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
-import { BadgeCheck, FileImage, Clock, XCircle, Plus, Target } from 'lucide-react-native';
+import { BadgeCheck, Clock, XCircle, Target } from 'lucide-react-native';
 import apiClient from '../api/client';
 import AppBackground from '../components/AppBackground';
 import AppHeader from '../components/AppHeader';
 import Skeleton from '../components/ui/Skeleton';
 import PrimaryButton from '../components/ui/PrimaryButton';
+import UploadPickerCard from '../components/ui/UploadPickerCard';
 import AutocompleteInput from '../components/AutocompleteInput';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -136,9 +136,9 @@ export default function CareerProofScreen({ navigation }) {
     if (result.canceled) return null;
 
     const file = result.assets[0];
-    const looksLikeImage = file.mimeType
-      ? file.mimeType.startsWith('image/')
-      : /\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name || '');
+    const looksLikeImage =
+      file.mimeType?.startsWith('image/') ||
+      /\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name || '');
 
     if (!looksLikeImage) {
       appAlert('Invalid file', 'Please choose an image file.');
@@ -439,24 +439,40 @@ export default function CareerProofScreen({ navigation }) {
             JPG, PNG, WEBP, GIF or BMP · max 5MB each
           </Text>
 
-          <FileSlot
+          <UploadPickerCard
             label="Certificate of Employment"
-            pickedFile={certificate}
-            existingPath={record?.certificatePath}
-            existingName={record?.certificateFileName}
-            onPick={handlePickCertificate}
-            onClear={() => setCertificate(null)}
-            c={c}
+            required
+            variant="image"
+            fileName={certificate?.name || record?.certificateFileName || ''}
+            previewUri={certificate?.uri || assetUrl(record?.certificatePath)}
+            selected={!!certificate}
+            hasExisting={!!record?.certificatePath}
+            statusText={certificate ? 'New image selected' : record?.certificatePath ? 'Already uploaded' : 'Required image'}
+            emptyText="Choose certificate image"
+            chooseText="Tap to choose an image"
+            replaceText="Tap to replace image"
+            busy={isSubmitting && !!certificate}
+            disabled={isSubmitting}
+            onPress={handlePickCertificate}
+            onRemove={certificate ? () => setCertificate(null) : undefined}
           />
 
-          <FileSlot
+          <UploadPickerCard
             label="Work ID"
-            pickedFile={workId}
-            existingPath={record?.workIdPath}
-            existingName={record?.workIdFileName}
-            onPick={handlePickWorkId}
-            onClear={() => setWorkId(null)}
-            c={c}
+            required
+            variant="image"
+            fileName={workId?.name || record?.workIdFileName || ''}
+            previewUri={workId?.uri || assetUrl(record?.workIdPath)}
+            selected={!!workId}
+            hasExisting={!!record?.workIdPath}
+            statusText={workId ? 'New image selected' : record?.workIdPath ? 'Already uploaded' : 'Required image'}
+            emptyText="Choose work ID image"
+            chooseText="Tap to choose an image"
+            replaceText="Tap to replace image"
+            busy={isSubmitting && !!workId}
+            disabled={isSubmitting}
+            onPress={handlePickWorkId}
+            onRemove={workId ? () => setWorkId(null) : undefined}
           />
 
           <PrimaryButton
@@ -496,55 +512,6 @@ function StatusChip({ status, c }) {
     <View style={[styles.statusChip, { backgroundColor: palette.bg }]}>
       <Icon size={13} color={palette.fg} />
       <Text style={[styles.statusChipText, { color: palette.fg }]}>{status}</Text>
-    </View>
-  );
-}
-
-function FileSlot({ label, pickedFile, existingPath, existingName, onPick, onClear, c }) {
-  const previewUri = pickedFile ? pickedFile.uri : assetUrl(existingPath);
-  const displayName = pickedFile ? pickedFile.name : existingName;
-
-  return (
-    <View style={[styles.fileSlot, { backgroundColor: c.surface, borderColor: c.border }]}>
-      <View style={styles.fileHeader}>
-        <FileImage size={16} color={c.primary} />
-        <Text style={[styles.fileLabel, { color: c.text }]}>{label} *</Text>
-      </View>
-
-      {previewUri ? (
-        <View style={styles.filePreviewRow}>
-          <Image source={{ uri: previewUri }} style={[styles.fileThumb, { backgroundColor: c.surfaceAlt }]} resizeMode="cover" />
-          <View style={styles.fileMeta}>
-            <Text style={[styles.fileName, { color: c.text }]} numberOfLines={2}>
-              {displayName || 'Image on file'}
-            </Text>
-            {pickedFile ? (
-              <Text style={[styles.fileState, { color: c.success }]}>New image selected</Text>
-            ) : (
-              <Text style={[styles.fileState, { color: c.textMuted }]}>Already uploaded</Text>
-            )}
-          </View>
-          <TouchableOpacity
-            style={styles.fileClear}
-            onPress={onClear}
-            disabled={!pickedFile}
-            accessibilityLabel={`Remove selected ${label}`}
-          >
-            {pickedFile ? <XCircle size={18} color={c.danger} /> : null}
-          </TouchableOpacity>
-        </View>
-      ) : null}
-
-      <TouchableOpacity
-        style={[styles.fileButton, { borderColor: c.primary }]}
-        onPress={onPick}
-        activeOpacity={0.8}
-      >
-        <Plus size={15} color={c.primary} />
-        <Text style={[styles.fileButtonText, { color: c.primary }]}>
-          {previewUri ? 'Replace image' : `Upload ${label}`}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -629,41 +596,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   chipText: { fontSize: 12.5, fontWeight: '600' },
-
-  fileSlot: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-  },
-  fileHeader: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  fileLabel: { fontSize: 13, fontWeight: '700' },
-  filePreviewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 10,
-  },
-  fileThumb: {
-    width: 54,
-    height: 54,
-    borderRadius: 8,
-  },
-  fileMeta: { flex: 1 },
-  fileName: { fontSize: 12.5, fontWeight: '600' },
-  fileState: { fontSize: 11, marginTop: 3 },
-  fileClear: { padding: 4 },
-  fileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 10,
-    marginTop: 10,
-  },
-  fileButtonText: { fontSize: 13, fontWeight: '700' },
 
   footnote: { fontSize: 11, textAlign: 'center', marginTop: 12, lineHeight: 16 },
 });
