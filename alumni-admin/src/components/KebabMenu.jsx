@@ -7,7 +7,7 @@
 // Extracted from the Alumni page so every screen behaves the same way:
 // clicking outside closes it, Escape closes it, and items get real
 // menu/menuitem ARIA roles.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { MoreVertical } from "lucide-react";
 import { btn } from "./kit";
@@ -21,6 +21,8 @@ export default function KebabMenu({
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
+  const menuRef = useRef(null);
+  const [flipped, setFlipped] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -38,6 +40,55 @@ export default function KebabMenu({
     return () => {
       document.removeEventListener("pointerdown", closeOnOutsideClick);
       document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  // The trigger usually sits in a card's footer, so a downward menu spills
+  // onto the neighbouring card. Measure the room we actually have inside the
+  // nearest positioned owner and open upward when it is too tight.
+  useLayoutEffect(() => {
+    if (!open) {
+      setFlipped(false);
+      return;
+    }
+    const menu = menuRef.current;
+    const root = rootRef.current;
+    if (!menu || !root) return;
+
+    let owner = root.parentElement;
+    while (owner && owner !== document.body) {
+      if (window.getComputedStyle(owner).position !== "static") break;
+      owner = owner.parentElement;
+    }
+
+    const roomBelow =
+      (owner ? owner.getBoundingClientRect().bottom : window.innerHeight) -
+      root.getBoundingClientRect().bottom;
+
+    // One-directional on purpose: the same two numbers decide it every time,
+    // so the menu cannot oscillate between orientations.
+    setFlipped(menu.offsetHeight > roomBelow - 6);
+  }, [open]);
+
+  // A card with a hover transform forms a stacking context that traps the
+  // menu, letting the next card paint over it. Lift the owning card for as
+  // long as the menu is open, then hand its z-index back.
+  useEffect(() => {
+    if (!open) return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    let owner = root.parentElement;
+    while (owner && owner !== document.body) {
+      if (window.getComputedStyle(owner).position !== "static") break;
+      owner = owner.parentElement;
+    }
+    if (!owner || owner === document.body) return;
+
+    const previous = owner.style.zIndex;
+    owner.style.zIndex = "5";
+    return () => {
+      owner.style.zIndex = previous;
     };
   }, [open]);
 
@@ -70,6 +121,7 @@ export default function KebabMenu({
 
       {open && (
         <div
+          ref={menuRef}
           role="menu"
           aria-label={label}
           onClick={(event) => event.stopPropagation()}
@@ -77,7 +129,9 @@ export default function KebabMenu({
           style={{
             position: "absolute",
             [align]: 0,
-            top: "calc(100% + 6px)",
+            ...(flipped
+              ? { bottom: "calc(100% + 6px)" }
+              : { top: "calc(100% + 6px)" }),
             zIndex: 30,
             width: menuWidth,
             padding: 6,
