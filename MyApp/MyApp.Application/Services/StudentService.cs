@@ -305,11 +305,24 @@ namespace MyApp.Application.Services
             return true;
         }
 
-        public async Task<bool> UpdateStudentAsync(int studentId, UpdateStudentRequest request, int adminId)
+        public async Task<(bool Success, string Message)> UpdateStudentAsync(int studentId, UpdateStudentRequest request, int adminId)
         {
             var student = await _studentRepository.GetByIdAsync(studentId);
-            if (student == null) return false;
+            if (student == null) return (false, "Alumni record not found.");
 
+            var studentNumber = request.StudentNumber.Trim();
+
+            // The alumni number doubles as a login identifier, so it must stay
+            // unique — same rule the manual create path enforces.
+            if (!string.Equals(studentNumber, student.StudentNumber, StringComparison.OrdinalIgnoreCase))
+            {
+                var existing = await _studentRepository.GetByStudentNumberAsync(studentNumber);
+                if (existing != null && existing.Id != studentId)
+                    return (false, $"Alumni number {studentNumber} is already used by another record.");
+            }
+
+            var oldNumber = student.StudentNumber;
+            student.StudentNumber = studentNumber;
             student.FullName = request.FullName;
             student.Email = request.Email;
             student.Program = request.Program;
@@ -317,9 +330,12 @@ namespace MyApp.Application.Services
             await _studentRepository.UpdateAsync(student);
 
             await _activityLogRepository.LogAdminAsync(adminId, "UPDATE_STUDENT",
-                $"Updated alumni record: {student.StudentNumber}", "system");
+                oldNumber == studentNumber
+                    ? $"Updated alumni record: {student.StudentNumber}"
+                    : $"Updated alumni record: {oldNumber} (alumni number changed to {student.StudentNumber})",
+                "system");
 
-            return true;
+            return (true, "Alumni record updated.");
         }
 
         public async Task<string?> ResetStudentPasswordAsync(int studentId, int adminId)

@@ -49,7 +49,16 @@ export async function updateStudent(id, payload) {
   });
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(errText || "Failed to update alumni");
+    // The API returns { message } for domain errors (duplicate alumni number);
+    // show that instead of raw JSON.
+    let message = errText;
+    try {
+      const body = JSON.parse(errText);
+      if (body?.message) message = body.message;
+    } catch {
+      // Not JSON — display as-is.
+    }
+    throw new Error(message || "Failed to update alumni");
   }
   return response.json();
 }

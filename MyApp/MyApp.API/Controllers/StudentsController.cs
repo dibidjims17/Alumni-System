@@ -81,8 +81,8 @@ namespace MyApp.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateStudent(int id, [FromBody] UpdateStudentRequest request)
         {
-            var success = await _studentService.UpdateStudentAsync(id, request, GetUserId());
-            if (!success) return NotFound();
+            var (success, message) = await _studentService.UpdateStudentAsync(id, request, GetUserId());
+            if (!success) return BadRequest(new { message });
             return Ok(new { message = "Alumni record updated." });
         }
 

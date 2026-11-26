@@ -5,6 +5,9 @@ namespace MyApp.Shared.DTOs
     public class UpdateStudentRequest
     {
         [Required(AllowEmptyStrings = false)]
+        public string StudentNumber { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = false)]
         public string FullName { get; set; } = string.Empty;
 
         [Required(AllowEmptyStrings = false)]

@@ -9,7 +9,7 @@ namespace MyApp.Application.Interfaces
         Task<bool> ToggleStudentStatusAsync(int studentId, int adminId);
         Task<(int Total, int Active, int Graduate)> GetStatsAsync();
         Task<int> GetClaimedCountAsync();
-        Task<bool> UpdateStudentAsync(int studentId, UpdateStudentRequest request, int adminId);
+        Task<(bool Success, string Message)> UpdateStudentAsync(int studentId, UpdateStudentRequest request, int adminId);
         Task<string?> ResetStudentPasswordAsync(int studentId, int adminId);
         Task<(bool Success, string Message, string? TemporaryPassword)> SendInviteAsync(int studentId, int adminId);
         Task<List<YearChangeRequestDto>> GetYearChangeRequestsAsync(string? status);

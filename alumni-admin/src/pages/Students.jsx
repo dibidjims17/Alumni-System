@@ -63,7 +63,7 @@ export default function Students() {
   const [loadingProfile, setLoadingProfile] = useState(false);
 
   const [editingStudent, setEditingStudent] = useState(null);
-  const [editForm, setEditForm] = useState({ fullName: "", email: "", program: "", schoolYear: "" });
+  const [editForm, setEditForm] = useState({ studentNumber: "", fullName: "", email: "", program: "", schoolYear: "" });
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [resetResult, setResetResult] = useState(null);
@@ -210,6 +210,7 @@ export default function Students() {
   function openEditModal(student) {
     setEditingStudent(student);
     setEditForm({
+      studentNumber: student.studentNumber || "",
       fullName: student.fullName || "",
       email: student.email || "",
       program: student.program || "",
@@ -223,6 +224,7 @@ export default function Students() {
 
   async function requestCloseEdit() {
     const changed =
+      editForm.studentNumber !== editingStudent?.studentNumber ||
       editForm.fullName !== editingStudent?.fullName ||
       editForm.email !== editingStudent?.email ||
       editForm.program !== editingStudent?.program ||
@@ -744,6 +746,19 @@ export default function Students() {
       {editingStudent && (
         <ModalShell title={`Edit Alumni — ${editingStudent.studentNumber}`} onClose={requestCloseEdit} width={480}>
           <form onSubmit={handleEditSave}>
+            <Field label="Alumni Number">
+              <input
+                type="text"
+                value={editForm.studentNumber}
+                onChange={(e) => setEditForm({ ...editForm, studentNumber: e.target.value })}
+                required
+                style={textInput}
+              />
+            </Field>
+            <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "-4px 0 10px" }}>
+              This is also their login username. It must be unique.
+            </p>
+
             <Field label="Full Name">
               <input
                 type="text"
