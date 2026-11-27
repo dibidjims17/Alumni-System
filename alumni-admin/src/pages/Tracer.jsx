@@ -87,13 +87,6 @@ const td = {
   verticalAlign: "top",
 };
 
-const statGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))",
-  gap: 16,
-  marginBottom: 16,
-};
-
 const panelGrid = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
@@ -120,6 +113,12 @@ function pctOf(count, whole) {
 
 function sum(items) {
   return items.reduce((total, item) => total + item.count, 0);
+}
+
+// Stat subtitles print raw counts ("1 respondent", "2 respondents"), so the
+// noun needs its singular form whenever the count is 1.
+function plural(count, noun) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 // Card holding a titled list of Bar rows (distribution / funnel / skills).
@@ -341,13 +340,13 @@ export default function Tracer() {
         />
       ) : (
         <>
-          <div style={statGrid}>
+          <div className="tracer-stat-grid">
             <StatCard
               label="Response rate"
               value={stats ? `${stats.responseRate}%` : "—"}
               sub={
                 stats
-                  ? `${stats.submitted} of ${stats.totalGraduates} graduates`
+                  ? `${stats.submitted} of ${plural(stats.totalGraduates, "graduate")}`
                   : ""
               }
               Icon={Users}
@@ -360,7 +359,7 @@ export default function Tracer() {
               value={stats ? `${employedPct}%` : "—"}
               sub={
                 stats
-                  ? `${stats.employedCount} respondents in work`
+                  ? `${plural(stats.employedCount, "respondent")} in work`
                   : ""
               }
               Icon={Briefcase}
@@ -373,7 +372,7 @@ export default function Tracer() {
               value={stats ? `${relatedPct}%` : "—"}
               sub={
                 stats
-                  ? `${stats.courseRelatedCount} of ${stats.relatednessAnswers} answers`
+                  ? `${stats.courseRelatedCount} of ${plural(stats.relatednessAnswers, "answer")}`
                   : ""
               }
               Icon={GraduationCap}
@@ -399,7 +398,7 @@ export default function Tracer() {
               value={topSalary ? topSalary.label : stats ? "—" : ""}
               sub={
                 topSalary
-                  ? `${topSalary.count} respondents`
+                  ? `${plural(topSalary.count, "respondent")}`
                   : stats
                     ? "No salary answers yet"
                     : ""
@@ -414,7 +413,7 @@ export default function Tracer() {
               value={topSkill ? topSkill.label : stats ? "—" : ""}
               sub={
                 topSkill
-                  ? `${topSkill.count} mentions`
+                  ? `${plural(topSkill.count, "mention")}`
                   : stats
                     ? "No skill answers yet"
                     : ""
@@ -430,7 +429,7 @@ export default function Tracer() {
             <div style={panelGrid}>
               <Panel
                 title="Employment status"
-                hint={`Among ${submitted} submitted responses`}
+                hint={`Among ${plural(submitted, "submitted response")}`}
               >
                 {stats.employment.map((item) => (
                   <DistRow
@@ -460,7 +459,7 @@ export default function Tracer() {
 
               <Panel
                 title="Monthly salary"
-                hint={`${salarySum} employed respondents`}
+                hint={`${plural(salarySum, "employed respondent")}`}
               >
                 {stats.salary.map((item) => (
                   <DistRow
@@ -701,6 +700,24 @@ export default function Tracer() {
           )}
         </>
       )}
+
+      {/* Stat-card grid lives here (not inline) because the 3-column desktop
+          rule needs a media query — inline styles can't express one. 3
+          fixed columns keep the sixth card in a tidy 3x2 at every desktop
+          width; auto-fit keeps narrow panes 2-up. */}
+      <style>{`
+        .tracer-stat-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+          gap: 16px;
+          margin-bottom: 16px;
+        }
+        @media (min-width: 900px) {
+          .tracer-stat-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+      `}</style>
     </div>
   );
 }
