@@ -4,6 +4,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Search, X, Eye, EyeOff, Check, ChevronDown } from "lucide-react";
 import { requestDiscardConfirm } from "./discardBus";
+import { useMenuAnchor } from "./useMenuAnchor";
 // StatCard renders skeleton blocks while loading. Circular with this file
 // (Skeleton imports card/cardGrid) but both sides only touch the imports
 // inside function bodies, so evaluation order is safe.
@@ -275,6 +276,12 @@ export const cardGrid = {
 };
 
 export const card = {
+  // Positioned so useMenuAnchor's owner-walk stops HERE for any menu inside
+  // the card: the flip then measures room against this card's own bottom
+  // (keeping the menu off neighbouring cards) and the z-index lift raises
+  // this card while its menu is open. Without it the walk reaches <body>,
+  // whose rect spans the whole document, and both behaviours silently no-op.
+  position: "relative",
   border: "1px solid var(--border)",
   borderRadius: "var(--radius-lg)", // portal card radius (13–14)
   padding: "16px 18px",
@@ -398,6 +405,10 @@ const TONE_BORDER = {
 export function ToneSelect({ value, options, onChange, tone = "muted", label, align = "right", minWidth = 118 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
+  const menuRef = useRef(null);
+  // Same flip + z-index lift as KebabMenu (shared hook): this dropdown sits
+  // in card headers and filter rows, so it had the identical spill problem.
+  const flipped = useMenuAnchor({ open, rootRef, menuRef });
 
   useEffect(() => {
     if (!open) return;
@@ -455,12 +466,15 @@ export function ToneSelect({ value, options, onChange, tone = "muted", label, al
 
       {open && (
         <div
+          ref={menuRef}
           role="menu"
           aria-label={label}
           style={{
             position: "absolute",
             [align]: 0,
-            top: "calc(100% + 6px)",
+            ...(flipped
+              ? { bottom: "calc(100% + 6px)" }
+              : { top: "calc(100% + 6px)" }),
             zIndex: 40,
             minWidth: "100%",
             width: "max-content",
