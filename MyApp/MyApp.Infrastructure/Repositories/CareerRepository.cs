@@ -107,5 +107,16 @@ namespace MyApp.Infrastructure.Repositories
             _context.CareerRecords.Update(record);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<int> CountPendingLatestAsync()
+        {
+            // Count students whose newest CareerRecord has Status == "Pending".
+            // This mirrors the Dashboard's CareerStatsDto.Pending:
+            // latest.Count(r => r.Status == "Pending") where latest = newest per StudentId.
+            return await _context.CareerRecords
+                .GroupBy(r => r.StudentId)
+                .Where(g => g.OrderByDescending(r => r.Id).First().Status == "Pending")
+                .CountAsync();
+        }
     }
 }

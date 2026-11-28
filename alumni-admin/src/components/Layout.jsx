@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getSession, clearSession } from "../services/api";
 import { API_BASE_URL } from "../config";
+import { pendingCountsApi } from "../services/pendingCountsApi";
 
 const FILE_ROOT = API_BASE_URL.replace("/api", "");
 
@@ -109,6 +110,7 @@ export default function Layout() {
   const location = useLocation();
   const session = getSession();
   const { isDark, toggle } = useAdminTheme();
+  const [pendingCounts, setPendingCounts] = useState({ "/suggestions": 0, "/careers": 0, "/students": 0 });
 
   async function handleLogout() {
     if (!(await askConfirm("Are you sure you want to sign out?"))) return;
@@ -143,7 +145,34 @@ export default function Layout() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Close the drawer on navigation; never leave it stuck open.
+  // Fetch badge counts on mount, every 60s, and when tab regains focus.
+  useEffect(() => {
+    let ignore = false;
+    async function refresh() {
+      try {
+        const res = await pendingCountsApi();
+        // Map API response { suggestions, careers, yearChangeRequests }
+        // to nav-path keys { "/suggestions", "/careers", "/students" }
+        if (!ignore) {
+          setPendingCounts({
+            "/suggestions": res.suggestions,
+            "/careers": res.careers,
+            "/students": res.yearChangeRequests,
+          });
+        }
+      } catch (_) { /* best-effort; badges should never break the UI */ }
+    }
+    refresh();
+    const timer = setInterval(refresh, 60_000);
+    const focusListener = () => { ignore = false; refresh(); };
+    window.addEventListener("focus", focusListener);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", focusListener);
+    };
+  }, []);
+
+// Close the drawer on navigation; never leave it stuck open.
   useEffect(() => {
     setNavOpen(false);
   }, [location.pathname]);
@@ -224,18 +253,59 @@ export default function Layout() {
                 {group.label}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {group.items.map(({ path, label, Icon }) => (
-                  <NavLink
-                    key={path}
-                    to={path}
-                    end={path === "/dashboard"}
-                    className="admin-nav-link"
-                    style={({ isActive }) => navItemStyle(isActive || location.pathname.startsWith(path))}
-                  >
-                    <Icon size={17} />
-                    {label}
-                  </NavLink>
-                ))}
+                {group.items.map(({ path, label, Icon }) => {
+                  const badge = pendingCounts[path] ?? 0;
+                  const badgeRendered = badge > 0 ? (
+                    <span
+                      style={{
+                        // Circle badge on the right side of the nav link
+                        // margin-left: auto pushes it to the right within the flex NavLink
+                        marginLeft: "auto",
+                        // 1:1 ratio ensures true circle, not oval
+                        width: 24,
+                        height: 24,
+                        // Center the number inside the circle
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        // True circle - 50% makes a perfect circle
+                        borderRadius: "50%",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        // Active tab: darker gold (#D6A62F) against pale-yellow active bg.
+                        // Inactive tab: bright soft yellow (#F1D66B) against dark-green sidebar.
+                        // Text color is always #18251D for readability.
+                        ...(location.pathname.startsWith(path)
+                          ? { background: "#D6A62F", color: "#18251D" }
+                          : { background: "#F1D66B", color: "#18251D" }),
+                        // Clip any overflow so the circle stays contained
+                        overflow: "hidden",
+                        // Subtle shadow for elevation
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                        // Transition for smooth state changes
+                        transition: "background 150ms ease, color 150ms ease",
+                        // Slight border for definition
+                        border: "1px solid rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      {badge}
+                    </span>
+                  ) : null;
+
+                  return (
+                    <NavLink
+                      key={path}
+                      to={path}
+                      end={path === "/dashboard"}
+                      className="admin-nav-link"
+                      style={({ isActive }) => navItemStyle(isActive || location.pathname.startsWith(path))}
+                    >
+                      <Icon size={17} />
+                      {label}
+                      {badgeRendered}
+                    </NavLink>
+                  );
+                })}
               </div>
             </div>
           ))}

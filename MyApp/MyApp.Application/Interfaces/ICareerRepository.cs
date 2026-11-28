@@ -25,6 +25,11 @@ namespace MyApp.Application.Interfaces
         // — the registrar's processing workload for the month.
         Task<int> CountReviewedBetweenAsync(DateTime from, DateTime to);
 
+        // Fast pending count — how many students have a Pending newest record.
+        // This matches the Dashboard's CareerStatsDto.Pending computation:
+        // latest.Count(r => r.Status == "Pending") where latest = newest per student.
+        Task<int> CountPendingLatestAsync();
+
         Task CreateAsync(CareerRecord record);
         Task UpdateAsync(CareerRecord record);
     }

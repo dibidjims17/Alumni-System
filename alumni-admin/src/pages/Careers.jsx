@@ -13,7 +13,7 @@ import { askConfirm } from "../components/confirmBus";
 import {
   SearchBox, cardGrid, card, cardTitle, cardMeta, pill, statusTone,
   ModalShell, Field, textInput, btn, btnPrimary, btnDanger,
-  toolbar, filterRow, EmptyState, pageWrap,
+  toolbar, filterRow, EmptyState, pageWrap, CompactStat,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
 
@@ -302,7 +302,8 @@ export default function Careers() {
 
   return (
     <div style={pageWrap}>
-      <div style={{ ...toolbar, justifyContent: "space-between" }}>
+      {/* ── Toolbar ──────────────────────────────────────── */}
+      <div style={{ ...toolbar, justifyContent: "space-between", marginBottom: 16 }}>
         <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
           Review the proof of occupation alumni submit from the mobile app.
         </p>
@@ -327,42 +328,27 @@ export default function Careers() {
         </div>
       </div>
 
-      {/* ── Stats ─────────────────────────────────────────── */}
+      {/* ── Stats ────────────────────────────────────────── */}
       {stats && (
         <>
-          {/* One shared five-column grid keeps every desktop tile identical
-              in width and all three groups on the same column lines. Group
-              labels span the full row to keep the sections readable. */}
           <div
             className="career-stat-grid"
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-              gap: 14,
-              marginTop: 4,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+              marginBottom: 12,
             }}
           >
-            <StatGroupLabel>Submissions</StatGroupLabel>
-            <StatTile icon={Users} label="Graduates" value={stats.totalGraduates} tone="info" />
-            <StatTile icon={Briefcase} label="Submitted" value={stats.submitted} tone="violet" />
-            <StatTile icon={Clock3} label="Pending" value={stats.pending} tone="warning" />
-            <StatTile icon={BadgeCheck} label="Approved" value={stats.approved} tone="success" />
-            <StatTile icon={XCircle} label="Rejected" value={stats.rejected} tone="danger" />
-
-            <StatGroupLabel>Employment outcomes</StatGroupLabel>
-            <StatTile icon={Briefcase} label="Employed" value={stats.employed} tone="success" />
-            <StatTile icon={Briefcase} label="Self-Employed" value={stats.selfEmployed} tone="success" />
-            <StatTile icon={XCircle} label="Unemployed" value={stats.unemployed} tone="warning" />
-            <StatTile icon={BadgeCheck} label="Further Studies" value={stats.furtherStudies} tone="info" />
-
-            <StatGroupLabel>Program alignment</StatGroupLabel>
-            <StatTile icon={Target} label="Program-Related" value={`${stats.alignmentRate}%`} tone="success" />
-            <StatTile icon={BadgeCheck} label="Aligned" value={stats.aligned} tone="success" />
-            <StatTile icon={Target} label="Related" value={stats.related} tone="info" />
-            <StatTile icon={XCircle} label="Not Aligned" value={stats.notAligned} tone="danger" />
-            <StatTile icon={Clock3} label="Unassessed" value={stats.unassessed} tone="warning" />
+            <CompactStat Icon={Clock3} label="Pending" value={stats.pending} accent="var(--warning)" />
+            <CompactStat Icon={BadgeCheck} label="Approved" value={stats.approved} accent="var(--success)" />
+            <CompactStat Icon={XCircle} label="Rejected" value={stats.rejected} accent="var(--danger)" />
+            <CompactStat Icon={Users} label="Graduates" value={stats.totalGraduates} accent="var(--primary)" />
+            <CompactStat Icon={Briefcase} label="Submitted" value={stats.submitted} accent="var(--primary)" />
+            <CompactStat Icon={Briefcase} label="Employed" value={stats.employed} accent="var(--success)" />
+            <CompactStat Icon={Target} label="Program-Related" value={`${stats.alignmentRate}%`} accent="var(--success)" />
           </div>
-          <p style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0 0" }}>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
             Employment and alignment figures count approved records only. Program-related includes Aligned and Related records among assessed paths.
           </p>
         </>

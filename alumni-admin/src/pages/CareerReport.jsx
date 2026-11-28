@@ -25,6 +25,7 @@ import {
   btn,
   textInput,
   StatCard,
+  CompactStat,
   Bar,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
@@ -58,9 +59,10 @@ const td = {
 };
 
 const statGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))",
+  display: "flex",
+  flexWrap: "wrap",
   gap: 16,
+  marginTop: 20,
   marginBottom: 16,
 };
 
@@ -201,7 +203,7 @@ export default function CareerReport() {
 
   return (
     <div style={pageWrap}>
-      <div style={{ ...pageHeader, margin: "16px 0 4px" }}>
+      <div style={{ ...pageHeader, margin: "20px 0 8px" }}>
         <p
           style={{
             margin: 0,
@@ -262,45 +264,35 @@ export default function CareerReport() {
       ) : (
         <>
           <div style={statGrid}>
-            <StatCard
-              label="Submitted"
-              value={report.submitted}
-              sub={`received in ${report.monthLabel}`}
-              Icon={Users}
-              accent="var(--primary)"
-              tint="var(--tile-bg)"
-            />
-            <StatCard
-              label="Reviewed this month"
-              value={report.reviewedThisMonth}
-              sub="reviews completed in the month"
-              Icon={Clock3}
-              accent="var(--gold)"
-              tint="var(--tile-bg)"
-            />
-            <StatCard
-              label="Approved"
-              value={report.approved}
-              sub={`${pctOf(report.approved, submitted)}% of the month's submissions`}
-              Icon={BadgeCheck}
-              accent="var(--success)"
-              tint="var(--success-tint)"
-            />
-            <StatCard
+            <CompactStat
               label="Pending"
               value={report.pending}
-              sub="awaiting review"
               Icon={Clock3}
               accent="var(--warning)"
-              tint="var(--warning-tint)"
             />
-            <StatCard
+            <CompactStat
+              label="Approved"
+              value={report.approved}
+              Icon={BadgeCheck}
+              accent="var(--success)"
+            />
+            <CompactStat
               label="Rejected"
               value={report.rejected}
-              sub="returned to alumni"
               Icon={XCircle}
               accent="var(--danger)"
-              tint="var(--danger-tint)"
+            />
+            <CompactStat
+              label="Submitted"
+              value={report.submitted}
+              Icon={Users}
+              accent="var(--primary)"
+            />
+            <CompactStat
+              label="Reviewed"
+              value={report.reviewedThisMonth}
+              Icon={Clock3}
+              accent="var(--gold)"
             />
           </div>
 

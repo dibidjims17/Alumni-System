@@ -10,5 +10,8 @@ namespace MyApp.Application.Interfaces
         Task<List<YearLevelChangeRequest>> GetByStudentAsync(int studentId);
         Task CreateAsync(YearLevelChangeRequest request);
         Task UpdateAsync(YearLevelChangeRequest request);
+
+        // Fast pending count — used by the admin nav badge.
+        Task<int> CountPendingAsync();
     }
 }

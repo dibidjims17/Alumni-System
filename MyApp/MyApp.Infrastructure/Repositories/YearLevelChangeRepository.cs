@@ -60,5 +60,12 @@ namespace MyApp.Infrastructure.Repositories
             _context.YearLevelChangeRequests.Update(request);
             await _context.SaveChangesAsync();
         }
+
+        // Fast pending count — used by the admin nav badge.
+        public async Task<int> CountPendingAsync()
+        {
+            return await _context.YearLevelChangeRequests
+                .CountAsync(r => r.Status == "Pending");
+        }
     }
 }

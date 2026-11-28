@@ -83,5 +83,11 @@ namespace MyApp.Infrastructure.Repositories
 
             return (items, total);
         }
+
+        public async Task<int> CountPendingAsync()
+        {
+            return await _context.NewsSuggestions
+                .CountAsync(s => s.Status == "Pending");
+        }
     }
 }

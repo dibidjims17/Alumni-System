@@ -15,7 +15,7 @@ import { getStudentStats } from "../services/studentsApi";
 import { getJobs } from "../services/jobsApi";
 import { getCareerStats } from "../services/careersApi";
 import { notifyError } from "../components/toastBus";
-import { pageWrap, card, EmptyState, btnPrimary, StatCard, Bar } from "../components/kit";
+import { pageWrap, card, EmptyState, btnPrimary, StatCard, CompactStat, Bar } from "../components/kit";
 import { Skeleton } from "../components/Skeleton";
 
 // Fill-viewport dashboard: hero + stat row + bottom row share the available
@@ -26,6 +26,7 @@ const statGrid = {
   gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
   gap: 16,
   width: "100%",
+  marginTop: 20,
 };
 
 const bottomGrid = {
@@ -251,12 +252,12 @@ export default function Dashboard() {
       ) : (
         <>
       <div className="dash-stat-grid" style={statGrid}>
-        <StatCard label="Total" value={derived.total} sub="All records" Icon={Users} accent="var(--primary)" tint="var(--tile-bg)" loading={loading} />
-        <StatCard label="Graduates" value={derived.grads} sub={`${derived.gradPct}% of total`} Icon={GraduationCap} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
-        <StatCard label="Verified Careers" value={derived.verified} sub={`${derived.verifiedPct}% of graduates`} Icon={BadgeCheck} accent="var(--success)" tint="var(--success-tint)" loading={loading} />
-        <StatCard label="Awaiting Review" value={derived.pending} sub="Career submissions" Icon={Clock3} accent="var(--warning)" tint="var(--warning-tint)" loading={loading} />
-        <StatCard label="Program-Related" value={`${derived.alignmentRate}%`} sub={`${derived.courseRelated} aligned or related`} Icon={Target} accent="var(--info)" tint="var(--info-tint)" loading={loading} />
-        <StatCard label="Jobs" value={activeJobsCount ?? 0} sub="Open roles" Icon={Briefcase} accent="var(--warning)" tint="var(--warning-tint)" loading={loading} />
+        <CompactStat label="Awaiting Review" value={derived.pending} Icon={Clock3} accent="var(--warning)" loading={loading} />
+        <CompactStat label="Verified Careers" value={derived.verified} Icon={BadgeCheck} accent="var(--success)" loading={loading} />
+        <CompactStat label="Program-Related" value={`${derived.alignmentRate}%`} Icon={Target} accent="var(--info)" loading={loading} />
+        <CompactStat label="Total" value={derived.total} Icon={Users} accent="var(--primary)" loading={loading} />
+        <CompactStat label="Graduates" value={derived.grads} Icon={GraduationCap} accent="var(--success)" loading={loading} />
+        <CompactStat label="Jobs" value={activeJobsCount ?? 0} Icon={Briefcase} accent="var(--warning)" loading={loading} />
       </div>
 
       <div className="dash-bottom-grid" style={bottomGrid}>

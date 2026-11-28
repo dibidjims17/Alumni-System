@@ -28,6 +28,7 @@ import {
   EmptyState,
   btn,
   StatCard,
+  CompactStat,
   Bar,
 } from "../components/kit";
 import { GridSkeleton } from "../components/Skeleton";
@@ -341,86 +342,46 @@ export default function Tracer() {
       ) : (
         <>
           <div className="tracer-stat-grid">
-            <StatCard
-              label="Response rate"
-              value={stats ? `${stats.responseRate}%` : "—"}
-              sub={
-                stats
-                  ? `${stats.submitted} of ${plural(stats.totalGraduates, "graduate")}`
-                  : ""
-              }
-              Icon={Users}
-              accent="var(--primary)"
-              tint="var(--tile-bg)"
-              loading={!stats}
-            />
-            <StatCard
+            <CompactStat
               label="Employed"
               value={stats ? `${employedPct}%` : "—"}
-              sub={
-                stats
-                  ? `${plural(stats.employedCount, "respondent")} in work`
-                  : ""
-              }
               Icon={Briefcase}
               accent="var(--success)"
-              tint="var(--success-tint)"
               loading={!stats}
             />
-            <StatCard
+            <CompactStat
               label="Program-related"
               value={stats ? `${relatedPct}%` : "—"}
-              sub={
-                stats
-                  ? `${stats.courseRelatedCount} of ${plural(stats.relatednessAnswers, "answer")}`
-                  : ""
-              }
               Icon={GraduationCap}
               accent="var(--success)"
-              tint="var(--success-tint)"
               loading={!stats}
             />
-            <StatCard
+            <CompactStat
+              label="Response rate"
+              value={stats ? `${stats.responseRate}%` : "—"}
+              Icon={Users}
+              accent="var(--primary)"
+              loading={!stats}
+            />
+            <CompactStat
               label="Satisfied"
               value={stats ? `${satisfiedPct}%` : "—"}
-              sub={
-                stats
-                  ? `${stats.satisfiedYes} satisfied with training`
-                  : ""
-              }
               Icon={ThumbsUp}
               accent="var(--primary)"
-              tint="var(--tile-bg)"
               loading={!stats}
             />
-            <StatCard
-              label="Top salary band"
+            <CompactStat
+              label="Top salary"
               value={topSalary ? topSalary.label : stats ? "—" : ""}
-              sub={
-                topSalary
-                  ? `${plural(topSalary.count, "respondent")}`
-                  : stats
-                    ? "No salary answers yet"
-                    : ""
-              }
               Icon={Banknote}
               accent="var(--warning)"
-              tint="var(--warning-tint)"
               loading={!stats}
             />
-            <StatCard
+            <CompactStat
               label="Top skill"
               value={topSkill ? topSkill.label : stats ? "—" : ""}
-              sub={
-                topSkill
-                  ? `${plural(topSkill.count, "mention")}`
-                  : stats
-                    ? "No skill answers yet"
-                    : ""
-              }
-              Icon={Wrench}
-              accent="var(--gold)"
-              tint="var(--tile-bg)"
+              Icon={ThumbsUp}
+              accent="var(--primary)"
               loading={!stats}
             />
           </div>
@@ -710,6 +671,7 @@ export default function Tracer() {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
           gap: 16px;
+          margin-top: 20px;
           margin-bottom: 16px;
         }
         @media (min-width: 900px) {

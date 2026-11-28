@@ -16,5 +16,8 @@ namespace MyApp.Application.Interfaces
         // ("" = all) and free-text search over title/content/submitter.
         Task<(List<NewsSuggestion> Items, int Total)> GetAllAsync(
             int page, int pageSize, string? status, string? search);
+
+        // Fast pending count — used by the admin nav badge.
+        Task<int> CountPendingAsync();
     }
 }

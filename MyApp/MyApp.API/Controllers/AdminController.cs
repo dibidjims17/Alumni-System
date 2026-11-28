@@ -13,13 +13,22 @@ namespace MyApp.API.Controllers
     {
         private readonly IAdminAuthService _adminAuthService;
         private readonly IAdminManagementService _adminManagementService;
+        private readonly INewsSuggestionRepository _suggestionsRepo;
+        private readonly ICareerRepository _careerRepo;
+        private readonly IYearLevelChangeRepository _yearChangeRepo;
 
         public AdminController(
             IAdminAuthService adminAuthService,
-            IAdminManagementService adminManagementService)
+            IAdminManagementService adminManagementService,
+            INewsSuggestionRepository suggestionsRepo,
+            ICareerRepository careerRepo,
+            IYearLevelChangeRepository yearChangeRepo)
         {
             _adminAuthService = adminAuthService;
             _adminManagementService = adminManagementService;
+            _suggestionsRepo = suggestionsRepo;
+            _careerRepo = careerRepo;
+            _yearChangeRepo = yearChangeRepo;
         }
 
         [HttpPost("login")]
@@ -153,6 +162,19 @@ namespace MyApp.API.Controllers
                 GetOwnId(), request, ipAddress);
             if (!success) return BadRequest(new { message });
             return Ok(new { message });
+        }
+
+        // ─── Admin nav badge counts ────────────────────────────────────
+        // Returns { suggestions: int, careers: int, yearChangeRequests: int }
+        // All counts are role-safe: Staff+ see everything SuperAdmin sees.
+        [Authorize(Roles = "SuperAdmin,Staff")]
+        [HttpGet("pending-counts")]
+        public async Task<IActionResult> GetPendingCounts()
+        {
+            int suggestions = await _suggestionsRepo.CountPendingAsync();
+            int careers = await _careerRepo.CountPendingLatestAsync();
+            int yearChangeRequests = await _yearChangeRepo.CountPendingAsync();
+            return Ok(new { suggestions, careers, yearChangeRequests });
         }
 
         [Authorize(Roles = "SuperAdmin")]

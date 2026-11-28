@@ -783,6 +783,74 @@ export const btnDanger = {
 };
 
 // ------------------------------------------------------------------
+// Compact stat tile for single-row layouts - smaller, action-first
+// ------------------------------------------------------------------
+export function CompactStat({ label, value, Icon, accent, loading }) {
+  if (loading) {
+    return (
+      <div
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          padding: "12px 16px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          minWidth: 160,
+          flex: "1 1 160px",
+        }}
+      >
+        <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--tile-bg)" }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ height: 10, width: 60, background: "var(--tile-bg)", borderRadius: 4, marginBottom: 6 }} />
+          <div style={{ height: 16, width: 40, background: "var(--tile-bg)", borderRadius: 4 }} />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: 10,
+        padding: "12px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        minWidth: 160,
+        flex: "1 1 160px",
+        boxShadow: "var(--stat-shadow)",
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background: accent || "var(--tile-bg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={18} color="var(--text)" />
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>
+          {label}
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text)", lineHeight: 1.2 }}>
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
 // Dashboard-style stat tile (extracted from Dashboard.jsx for reuse on
 // the Tracer Study screen). Signature gold left edge = portal pattern.
 // ------------------------------------------------------------------
